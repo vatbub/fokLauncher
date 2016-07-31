@@ -1,10 +1,17 @@
 package view;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import org.jdom2.JDOMException;
+
+import applist.App;
 import common.*;
 import javafx.application.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -25,6 +32,9 @@ public class MainWindow extends Application {
 
 	@FXML // URL location of the FXML file that was given to the FXMLLoader
 	private URL location;
+
+	@FXML // fx:id="appList"
+	private ListView<String> appList; // Value injected by FXMLLoader
 
 	@FXML // fx:id="enableSnapshotsCheckbox"
 	private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
@@ -70,7 +80,8 @@ public class MainWindow extends Application {
 			primaryStage.setScene(scene);
 
 			// Set Icon
-			// primaryStage.getIcons().add(new Image(MainWindow.class.getResourceAsStream("icon.png")));
+			// primaryStage.getIcons().add(new
+			// Image(MainWindow.class.getResourceAsStream("icon.png")));
 
 			primaryStage.show();
 		} catch (Exception e) {
@@ -81,11 +92,57 @@ public class MainWindow extends Application {
 	@FXML // This method is called by the FXMLLoader when initialization is
 			// complete
 	void initialize() {
+		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+
+		Thread getAppListThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							ObservableList<String> items = FXCollections
+									.observableArrayList(bundle.getString("WaitForAppList"));
+							appList.setItems(items);
+							appList.setDisable(true);
+						}
+
+					});
+
+					List<App> apps = App.getAppList();
+
+					ObservableList<String> items = FXCollections.observableArrayList();
+
+					for (App app : apps) {
+						items.add(app.getName());
+					}
+
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							appList.setItems(items);
+							appList.setDisable(false);
+						}
+
+					});
+
+				} catch (JDOMException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+
+		getAppListThread.setName("getAppListThread");
+		getAppListThread.start();
 
 	}
 
