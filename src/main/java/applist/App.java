@@ -134,19 +134,28 @@ public class App {
 	}
 
 	/**
+	 * Returns the currently installed version of the app or {@code null} if the
+	 * app is not yet installed locally.
+	 * 
 	 * @return the currentlyInstalledVersion
+	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-		if (currentlyInstalledVersion != null) {
-			return currentlyInstalledVersion;
+		if (isPresentOnHarddrive()) {
+			if (currentlyInstalledVersion != null) {
+				return currentlyInstalledVersion;
+			} else {
+				Version res = null;
+
+				// TODO: Get the currently installed version once app download
+				// is
+				// complete
+
+				currentlyInstalledVersion = res;
+				return res;
+			}
 		} else {
-			Version res = null;
-
-			// TODO: Get the currently installed version once app download is
-			// complete
-
-			currentlyInstalledVersion = res;
-			return res;
+			return null;
 		}
 	}
 
@@ -225,6 +234,16 @@ public class App {
 		this.mavenClassifier = mavenClassifier;
 	}
 
+	/**
+	 * Checks if this app is already downloaded
+	 * 
+	 * @return {@code true} if the app is already downloaded, {@code false}
+	 *         otherwise.
+	 */
+	public boolean isPresentOnHarddrive() {
+		return false;
+	}
+
 	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = new SAXBuilder().build(new URL(Config.getAppListXMLURL().toString()));
 		Element fokLauncherEl = doc.getRootElement();
@@ -252,7 +271,7 @@ public class App {
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
 			}
-			
+
 			res.add(newApp);
 		}
 
