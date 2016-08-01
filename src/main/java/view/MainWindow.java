@@ -12,6 +12,7 @@ import common.*;
 import javafx.application.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -26,6 +27,8 @@ public class MainWindow extends Application {
 	}
 
 	private ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
+	private static Prefs prefs;
+	private static String enableSnapshotsPrefKey = "enableSnapshots";
 
 	@FXML // ResourceBundle that was given to the FXMLLoader
 	private ResourceBundle resources;
@@ -46,6 +49,7 @@ public class MainWindow extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		try {
 			common.Common.setAppName("foklauncher");
+			prefs = new Prefs(MainWindow.class.getName());
 
 			Thread updateThread = new Thread() {
 				@Override
@@ -97,6 +101,8 @@ public class MainWindow extends Application {
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+		
+		enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")));
 
 		Thread getAppListThread = new Thread() {
 			@Override
@@ -144,5 +150,11 @@ public class MainWindow extends Application {
 		getAppListThread.start();
 
 	}
+	
+	// Handler for CheckBox[fx:id="enableSnapshotsCheckbox"] onAction
+    @FXML
+    void enableSnapshotsCheckboxOnAction(ActionEvent event) {
+        prefs.setPreference(enableSnapshotsPrefKey, Boolean.toString(enableSnapshotsCheckbox.isSelected()));
+    }
 
 }

@@ -16,7 +16,7 @@
     <Label style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="78.0" AnchorPane.leftAnchor="14.0" />
     <GridPane prefHeight="63.0" prefWidth="572.0" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
       <children>
-        <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" mnemonicParsing="false" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
       </children>
       <columnConstraints>
