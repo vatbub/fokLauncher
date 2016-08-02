@@ -10,6 +10,8 @@ import org.jdom2.JDOMException;
 import applist.App;
 import common.*;
 import javafx.application.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -32,6 +34,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static String enableSnapshotsPrefKey = "enableSnapshots";
 	private static List<App> apps;
 	private static Stage stage;
+	private static Thread downloadAndLaunchThread = new Thread();
 
 	@FXML // ResourceBundle that was given to the FXMLLoader
 	private ResourceBundle resources;
@@ -72,7 +75,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
 	void appListOnMouseClicked(MouseEvent event) {
-		launchButton.setDisable(false);
+		if (appList.getSelectionModel().getSelectedIndex() != -1) {
+			// Only enable the button if something was selected
+
+		}
 	}
 
 	@FXML
@@ -105,23 +111,35 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void launchButtonOnAction(ActionEvent event) {
 		MainWindow gui = this;
+		App app = apps.get(appList.getSelectionModel().getSelectedIndex());
 
-		Thread downloadAndLaunchThread = new Thread() {
-			@Override
-			public void run() {
-				try {
-					apps.get(appList.getSelectionModel().getSelectedIndex())
-							.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui);
-				} catch (IOException | JDOMException e) {
-					gui.showErrorMessage("An error occurred: " + e.getMessage());
-					e.printStackTrace();
+		if (!downloadAndLaunchThread.isAlive()) {
+			// Launch the download
+			downloadAndLaunchThread = new Thread() {
+				@Override
+				public void run() {
+					try {
+						app.downloadIfNecessaryAndLaunch(
+								enableSnapshotsCheckbox.isSelected(), gui, workOfflineCheckbox.isSelected());
+					} catch (IOException | JDOMException e) {
+						gui.showErrorMessage("An error occurred: " + e.getMessage());
+						e.printStackTrace();
+					}
+					;
 				}
-				;
-			}
-		};
+			};
 
-		downloadAndLaunchThread.setName("downloadAndLaunchThread");
-		downloadAndLaunchThread.start();
+			downloadAndLaunchThread.setName("downloadAndLaunchThread");
+			downloadAndLaunchThread.start();
+		} else {
+			app.cancelDownloadAndLaunch(gui);
+		}
+	}
+
+	// Handler for CheckBox[fx:id="workOfflineCheckbox"] onAction
+	@FXML
+	void workOfflineCheckboxOnAction(ActionEvent event) {
+		updateLaunchButton();
 	}
 
 	@Override
@@ -200,6 +218,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Disable multiselect
 		appList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
+		// Selection change listener
+		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				updateLaunchButton();
+			}
+		});
+
 		Thread getAppListThread = new Thread() {
 			@Override
 			public void run() {
@@ -247,6 +272,81 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	}
 
+	private void updateLaunchButton() {
+		launchButton.setDisable(true);
+		Thread getAppStatus = new Thread() {
+			@Override
+			public void run() {
+				App app = apps.get(appList.getSelectionModel().getSelectedIndex());
+				try {
+					if (!workOfflineCheckbox.isSelected()) {
+						// downloads are enabled
+						if (app.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+							// download required
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									launchButton.setDisable(false);
+									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+								}
+							});
+						} else if (app.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
+							// Update available
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									launchButton.setDisable(false);
+									launchButton.setText(bundle.getString("okButton.updateAndLaunch"));
+								}
+							});
+						} else {
+							// Can launch immediately
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									launchButton.setDisable(false);
+									launchButton.setText(bundle.getString("okButton.launch"));
+								}
+							});
+						}
+					} else {
+						// downloads disabled
+						if (app.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+							// download required but disabled
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									launchButton.setDisable(true);
+									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+								}
+							});
+						} else {
+							// Can launch immediately
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									launchButton.setDisable(false);
+									launchButton.setText(bundle.getString("okButton.launch"));
+								}
+							});
+						}
+					}
+				} catch (JDOMException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+
+		getAppStatus.setName("getAppStatus");
+		getAppStatus.start();
+	}
+
 	@Override
 	public void hide() {
 		Platform.runLater(new Runnable() {
@@ -261,6 +361,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	// Handler for CheckBox[fx:id="enableSnapshotsCheckbox"] onAction
 	@FXML
 	void enableSnapshotsCheckboxOnAction(ActionEvent event) {
+		updateLaunchButton();
 		prefs.setPreference(enableSnapshotsPrefKey, Boolean.toString(enableSnapshotsCheckbox.isSelected()));
 	}
 
@@ -270,8 +371,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
+				launchButton.setDisable(false);
+				launchButton.setText(bundle.getString("okButton.cancelLaunch"));
 				progressBar.setVisible(true);
-				progressBar.setProgress(0/4.0);
+				progressBar.setProgress(0 / 4.0);
 				progressLabel.setVisible(true);
 				progressLabel.setText(bundle.getString("progress.preparing"));
 			}
@@ -327,6 +430,20 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				alert.show();
 			}
 		});
+	}
+
+	@Override
+	public void operationCanceled() {
+		progressBar.setVisible(false);
+		progressLabel.setVisible(false);
+		updateLaunchButton();
+	}
+
+	@Override
+	public void cancelRequested() {
+		progressBar.setProgress(-1);
+		progressLabel.setText(bundle.getString("cancelRequested"));
+		launchButton.setDisable(true);
 	}
 
 }

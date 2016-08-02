@@ -32,6 +32,8 @@ public class App {
 
 	private Version latestOnlineSnapshotVersion;
 
+	private boolean cancelDownloadAndLaunch;
+
 	/**
 	 * Base URL of the maven repo where the artifact can be downloaded from.
 	 */
@@ -143,28 +145,28 @@ public class App {
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-					Version res = null;
+		Version res = null;
 
-			// Load the metadata.xml file
-			String destFolder = Common.getAppDataPath()
-					+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-			String fileName = destFolder + File.separator + Config.appMetadataFileName;
-			Document versionDoc;
+		// Load the metadata.xml file
+		String destFolder = Common.getAppDataPath()
+				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		Document versionDoc;
 
-			try {
-				versionDoc = new SAXBuilder().build(fileName);
-			} catch (JDOMException | IOException e) {
-				System.err.println("Cannot retreive currently installed version of app " + this.getName()
-						+ ", probably because it is not installed.");
-				e.printStackTrace();
-				return null;
-			}
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+		} catch (JDOMException | IOException e) {
+			System.err.println("Cannot retreive currently installed version of app " + this.getName()
+					+ ", probably because it is not installed.");
+			e.printStackTrace();
+			return null;
+		}
 
-			res = new Version(versionDoc.getRootElement().getChild("version").getValue());
-			res.setBuildNumber(versionDoc.getRootElement().getChild("buildNumber").getValue());
-			res.setTimestamp(versionDoc.getRootElement().getChild("timestamp").getValue());
+		res = new Version(versionDoc.getRootElement().getChild("version").getValue());
+		res.setBuildNumber(versionDoc.getRootElement().getChild("buildNumber").getValue());
+		res.setTimestamp(versionDoc.getRootElement().getChild("timestamp").getValue());
 
-			return res;
+		return res;
 	}
 
 	/**
@@ -316,6 +318,38 @@ public class App {
 
 	}
 
+	public boolean downloadRequired(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
+		if (this.isPresentOnHarddrive() && (!snapshotsEnabled) && this.getCurrentlyInstalledVersion().isSnapshot()) {
+			// App is downloaded, most current version on harddrive is a
+			// snapshot but snapshots are disabled, so download is required
+			return true;
+		} else if (this.isPresentOnHarddrive() && (!snapshotsEnabled)) {
+			// App is downloaded, most current version on harddrive is not a
+			// snapshot and snapshots are disabled, so no download is required
+			return false;
+		} else if (this.isPresentOnHarddrive() && snapshotsEnabled) {
+			// A version is available on the harddrive and snapshots are
+			// enabled, so we don't matter if the downloaded version is a
+			// snapshot or not.
+			return false;
+		} else {
+			// App not downloaded at all
+			return true;
+		}
+	}
+
+	public boolean updateAvailable(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
+		Version onlineVersion;
+
+		if (snapshotsEnabled) {
+			onlineVersion = this.getLatestOnlineSnapshotVersion();
+		} else {
+			onlineVersion = this.getLatestOnlineVersion();
+		}
+
+		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1;
+	}
+
 	public void downloadIfNecessaryAndLaunch() throws IOException, JDOMException {
 		downloadIfNecessaryAndLaunch(null);
 	}
@@ -335,27 +369,66 @@ public class App {
 
 	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
 			throws IOException, JDOMException {
+		downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, false);
+	}
+
+	public void launchWithoutDownload() throws IOException, JDOMException, IllegalStateException {
+		launchWithoutDownload(false);
+	}
+
+	public void launchSnapshotWithoutDownload() throws IOException, JDOMException, IllegalStateException {
+		launchWithoutDownload(true);
+	}
+
+	public void launchWithoutDownload(boolean snapshotsEnabled)
+			throws IOException, JDOMException, IllegalStateException {
+		launchWithoutDownload(snapshotsEnabled, null);
+	}
+
+	public void launchWithoutDownload(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
+			throws IOException, JDOMException, IllegalStateException {
+		downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, true);
+	}
+
+	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
+			boolean disableDownload) throws IOException, JDOMException {
+		cancelDownloadAndLaunch = false;
 		String destFolder = Common.getAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
 		Version destVersion;
-		Version onlineVersion;
 
-		if (snapshotsEnabled) {
-			onlineVersion = this.getLatestOnlineSnapshotVersion();
-		} else {
-			onlineVersion = this.getLatestOnlineVersion();
+		if (!disableDownload) {
+			// Continue by default, only cancel, when user cancelled
+			boolean downloadPerformed = true;
+
+			// download if necessary
+			if (this.downloadRequired(snapshotsEnabled)) {
+				// app not downloaded at all
+				System.out.println("Downloading package because it was never downloaded before...");
+				downloadPerformed = this.download(snapshotsEnabled, gui);
+			} else if (this.updateAvailable(snapshotsEnabled)) {
+				// newer version available
+				System.out.println("Downloading package because a newer version is available...");
+				downloadPerformed = this.download(snapshotsEnabled, gui);
+			}
+
+			if (!downloadPerformed) {
+				// Download was cancelled by the user so return
+				return;
+			}
+		} else if (this.downloadRequired(snapshotsEnabled)) {
+			// Download is disabled and app needs to be downloaded
+			throw new IllegalStateException(
+					"The artifact needs to be downloaded prior to launch but download is disabled.");
 		}
 
-		// download if necessary
-		if (!this.isPresentOnHarddrive()) {
-			// app not downloaded at all
-			System.out.println("Downloading package because it was never downloaded before...");
-			this.download(snapshotsEnabled, gui);
-		} else if (onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1) {
-			// newer version available
-			System.out.println("Downloading package because a newer version is available...");
-			this.download(snapshotsEnabled, gui);
+		// Perform Cancel if requested
+		if (cancelDownloadAndLaunch) {
+			if (gui != null) {
+				gui.operationCanceled();
+			}
+			return;
 		}
 
 		destVersion = this.getCurrentlyInstalledVersion();
@@ -391,23 +464,45 @@ public class App {
 		}
 	}
 
-	public void download() throws IOException, JDOMException {
-		download(null);
+	public boolean download() throws IOException, JDOMException {
+		return download(null);
 	}
 
-	public void download(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		download(false, gui);
+	public boolean download(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
+		return download(false, gui);
 	}
 
-	public void downloadSnapshot() throws IOException, JDOMException {
-		downloadSnapshot(null);
+	public boolean downloadSnapshot() throws IOException, JDOMException {
+		return downloadSnapshot(null);
 	}
 
-	public void downloadSnapshot(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		download(true, gui);
+	public boolean downloadSnapshot(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
+		return download(true, gui);
 	}
 
-	public void download(boolean isSnapshot, HidableUpdateProgressDialog gui) throws IOException, JDOMException {
+	/**
+	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * TODO: Copy javadoc to other callers
+	 * 
+	 * @param isSnapshot
+	 *            If {@code true}, the latest snapshot will be downloaded,
+	 *            otherwise, the latest release will be downloaded.
+	 * @param gui
+	 *            The {@link HidableUpdateProgressDialog} that represents the
+	 *            gui to inform the user about the progress.
+	 * @return {@code true} if the download finished successfully, {@code false}
+	 *         if the download was canelled using
+	 *         {@link #cancelDownloadAndLaunch()}
+	 * @throws MalformedURLException
+	 *             If the specified repository {@link URL} is malformed
+	 * @throws IOException
+	 *             If the version info cannot be read
+	 * @throws JDOMException
+	 *             If the version xml is malformed
+	 * 
+	 */
+	public boolean download(boolean isSnapshot, HidableUpdateProgressDialog gui)
+			throws MalformedURLException, IOException, JDOMException {
 		if (gui != null) {
 			gui.preparePhaseStarted();
 		}
@@ -418,6 +513,14 @@ public class App {
 		Version destVersion;
 		URL repoBaseURL;
 		URL artifactURL;
+
+		// Perform Cancel if requested
+		if (cancelDownloadAndLaunch) {
+			if (gui != null) {
+				gui.operationCanceled();
+			}
+			return false;
+		}
 
 		if (isSnapshot) {
 			// Snapshot
@@ -449,8 +552,24 @@ public class App {
 					+ ".jar";
 		}
 
+		// Perform Cancel if requested
+		if (cancelDownloadAndLaunch) {
+			if (gui != null) {
+				gui.operationCanceled();
+			}
+			return false;
+		}
+
 		// Create empty file
 		File outputFile = new File(destFolder + File.separator + destFilename);
+
+		// Perform Cancel if requested
+		if (cancelDownloadAndLaunch) {
+			if (gui != null) {
+				gui.operationCanceled();
+			}
+			return false;
+		}
 
 		// Download
 		if (gui != null) {
@@ -464,11 +583,34 @@ public class App {
 		// download version info
 		downloadVersionInfo(isSnapshot, destFolder);
 
+		// Perform Cancel if requested
+		if (cancelDownloadAndLaunch) {
+			if (gui != null) {
+				gui.operationCanceled();
+			}
+			return false;
+		}
+
 		// Perform install steps (none at the moment)
 		if (gui != null) {
 			gui.installStarted();
 		}
 
+		return true;
+
+	}
+
+	public void cancelDownloadAndLaunch() {
+		cancelDownloadAndLaunch(null);
+	}
+
+	public void cancelDownloadAndLaunch(HidableUpdateProgressDialog gui) {
+		cancelDownloadAndLaunch = true;
+		System.out.println("Requested to cancel the current operation, Cancel in progress...");
+
+		if (gui != null) {
+			gui.cancelRequested();
+		}
 	}
 
 	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
