@@ -2,22 +2,23 @@
 
 <?import java.lang.*?>
 <?import java.util.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.paint.*?>
 <?scenebuilder-preview-i18n-resource MainWindow.properties?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="508.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="view.MainWindow">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="585.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="view.MainWindow">
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
-    <ListView fx:id="appList" prefHeight="291.0" prefWidth="572.0" AnchorPane.bottomAnchor="152.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
-    <Button defaultButton="true" mnemonicParsing="false" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="112.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
-    <Label style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="78.0" AnchorPane.leftAnchor="14.0" />
-    <GridPane prefHeight="63.0" prefWidth="572.0" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+    <ListView fx:id="appList" onMouseClicked="#appListOnMouseClicked" prefHeight="222.0" prefWidth="572.0" AnchorPane.bottomAnchor="244.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
+    <Button fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="206.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+    <Label style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="110.0" AnchorPane.leftAnchor="14.0" />
+    <GridPane prefHeight="63.0" prefWidth="572.0" AnchorPane.bottomAnchor="41.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
       <children>
         <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-        <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" mnemonicParsing="false" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
       </children>
       <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -27,5 +28,18 @@
         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
       </rowConstraints>
     </GridPane>
+    <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="572.0" AnchorPane.bottomAnchor="7.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+      <children>
+        <Label text="%version.label" HBox.hgrow="ALWAYS" />
+        <Label fx:id="versionLabel" text="unknown" HBox.hgrow="ALWAYS">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </Label>
+        <Hyperlink fx:id="updateLink" onAction="#updateLinkOnAction" text="%updateLink" textFill="#0066ff" HBox.hgrow="ALWAYS" />
+      </children>
+    </HBox>
+    <ProgressBar fx:id="progressBar" prefWidth="572.0" progress="0.0" AnchorPane.bottomAnchor="170.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+    <Label fx:id="progressLabel" alignment="CENTER" contentDisplay="CENTER" prefWidth="572.0" text="Progress text will be shown here..." AnchorPane.bottomAnchor="140.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
   </children>
 </AnchorPane>

@@ -47,9 +47,9 @@ public class Config {
 	}
 	
 	/**
-	 * The subfolder in foklaunchers appdata folder where the actual apps will be downloaded to. {appName} will be replaced by the apps name. Begin and finish with a {@code File.separator}.
+	 * The subfolder in foklaunchers appdata folder where the actual apps will be downloaded to. {appName} will be replaced by the apps name.
 	 */
-	public static String subfolderToSaveApps = File.separator + "apps" + File.separator + "{appName}" + File.separator;
+	public static String subfolderToSaveApps = "apps" + File.separator + "{appName}";
 	
 	/**
 	 * The filename of the apps metadata file
