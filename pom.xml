@@ -28,6 +28,7 @@
 	<artifactId>foklauncher</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<inceptionYear>2016</inceptionYear>
 
 	<name>foklauncher</name>
 	<url>http://maven.apache.org</url>
