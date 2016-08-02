@@ -278,6 +278,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				App app = apps.get(appList.getSelectionModel().getSelectedIndex());
+				boolean progressVisibleBefore = progressLabel.isVisible();
+				Platform.runLater(new Runnable(){
+					@Override
+					public void run(){
+						progressLabel.setVisible(true);
+						progressBar.setVisible(true);
+						progressBar.setProgress(-1);
+						progressLabel.setText(bundle.getString("progress.checkingVersionInfo"));
+					}
+				});
+				
 				try {
 					if (!workOfflineCheckbox.isSelected()) {
 						// downloads are enabled
@@ -340,6 +351,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
+				Platform.runLater(new Runnable(){
+					@Override
+					public void run(){
+						progressLabel.setVisible(progressVisibleBefore);
+						progressBar.setVisible(progressVisibleBefore);
+					}
+				});
 			}
 		};
 
