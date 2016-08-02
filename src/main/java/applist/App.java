@@ -33,11 +33,6 @@ public class App {
 	private Version latestOnlineSnapshotVersion;
 
 	/**
-	 * The version of the app that is currently installed
-	 */
-	private Version currentlyInstalledVersion;
-
-	/**
 	 * Base URL of the maven repo where the artifact can be downloaded from.
 	 */
 	private URL mavenRepoBaseURL;
@@ -148,10 +143,7 @@ public class App {
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-		if (currentlyInstalledVersion != null) {
-			return currentlyInstalledVersion;
-		} else {
-			Version res = null;
+					Version res = null;
 
 			// Load the metadata.xml file
 			String destFolder = Common.getAppDataPath()
@@ -172,9 +164,7 @@ public class App {
 			res.setBuildNumber(versionDoc.getRootElement().getChild("buildNumber").getValue());
 			res.setTimestamp(versionDoc.getRootElement().getChild("timestamp").getValue());
 
-			currentlyInstalledVersion = res;
 			return res;
-		}
 	}
 
 	/**
@@ -368,7 +358,6 @@ public class App {
 			this.download(snapshotsEnabled, gui);
 		}
 
-		// TODO: Bug: Delete download dir -> Download release version -> Download snapshot -> Release version is launched (and not snapshot)
 		destVersion = this.getCurrentlyInstalledVersion();
 
 		if (this.getMavenClassifier().equals("")) {
