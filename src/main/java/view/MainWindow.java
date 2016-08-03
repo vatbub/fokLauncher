@@ -119,8 +119,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				@Override
 				public void run() {
 					try {
-						app.downloadIfNecessaryAndLaunch(
-								enableSnapshotsCheckbox.isSelected(), gui, workOfflineCheckbox.isSelected());
+						app.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
+								workOfflineCheckbox.isSelected());
 					} catch (IOException | JDOMException e) {
 						gui.showErrorMessage("An error occurred: " + e.getMessage());
 						e.printStackTrace();
@@ -224,12 +224,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				updateLaunchButton();
 			}
 		});
-		
-		if (!Internet.isConnected()){
+
+		if (!Internet.isConnected()) {
 			workOfflineCheckbox.setSelected(true);
 			workOfflineCheckbox.setDisable(true);
 		}
-		
+
 		MainWindow gui = this;
 
 		Thread getAppListThread = new Thread() {
@@ -268,7 +268,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					});
 
 				} catch (JDOMException | IOException e) {
-					gui.showErrorMessage(e.getMessage());
+					e.printStackTrace();
+					gui.showErrorMessage(e.getMessage(), true);
 				}
 			}
 		};
@@ -285,16 +286,16 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			public void run() {
 				App app = apps.get(appList.getSelectionModel().getSelectedIndex());
 				boolean progressVisibleBefore = progressLabel.isVisible();
-				Platform.runLater(new Runnable(){
+				Platform.runLater(new Runnable() {
 					@Override
-					public void run(){
+					public void run() {
 						progressLabel.setVisible(true);
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
 						progressLabel.setText(bundle.getString("progress.checkingVersionInfo"));
 					}
 				});
-				
+
 				try {
 					if (!workOfflineCheckbox.isSelected()) {
 						// downloads are enabled
@@ -357,10 +358,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				Platform.runLater(new Runnable(){
+
+				Platform.runLater(new Runnable() {
 					@Override
-					public void run(){
+					public void run() {
 						progressLabel.setVisible(progressVisibleBefore);
 						progressBar.setVisible(progressVisibleBefore);
 					}
@@ -447,12 +448,30 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	}
 
 	public void showErrorMessage(String message) {
+		showErrorMessage(message, false);
+	}
+
+	public void showErrorMessage(String message, boolean closeWhenDialogIsClosed) {
 		Platform.runLater(new Runnable() {
 
 			@Override
 			public void run() {
 				Alert alert = new Alert(Alert.AlertType.ERROR, message);
 				alert.show();
+
+				Thread t = new Thread() {
+					@Override
+					public void run() {
+						while (alert.isShowing()) {
+							// wait for dialog to be closed
+						}
+
+						System.err.println("Closing app after exception, good bye...");
+						Platform.exit();
+					}
+				};
+
+				t.start();
 			}
 		});
 	}

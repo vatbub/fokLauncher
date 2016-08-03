@@ -626,7 +626,7 @@ public class App {
 			try {
 				doc = new SAXBuilder().build(new File(fileName));
 			} catch (FileNotFoundException e1) {
-				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString() + " and app list cache not found.");
+				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString() + " and app list cache not found. \nPlease ensure a stable internet connection.");
 			}
 		}
 		Element fokLauncherEl = doc.getRootElement();
