@@ -224,6 +224,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				updateLaunchButton();
 			}
 		});
+		
+		if (!Internet.isConnected()){
+			workOfflineCheckbox.setSelected(true);
+			workOfflineCheckbox.setDisable(true);
+		}
+		
+		MainWindow gui = this;
 
 		Thread getAppListThread = new Thread() {
 			@Override
@@ -261,8 +268,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					});
 
 				} catch (JDOMException | IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					gui.showErrorMessage(e.getMessage());
 				}
 			}
 		};

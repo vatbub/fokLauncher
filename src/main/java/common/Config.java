@@ -55,4 +55,6 @@ public class Config {
 	 * The filename of the apps metadata file
 	 */
 	public static String appMetadataFileName = "metadata.xml";
+	
+	public static String appListCacheFileName = "appListCache.xml";
 }

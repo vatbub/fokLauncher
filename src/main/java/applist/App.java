@@ -1,10 +1,12 @@
 package applist;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -614,7 +616,19 @@ public class App {
 	}
 
 	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
-		Document doc = new SAXBuilder().build(new URL(Config.getAppListXMLURL().toString()));
+		Document doc = null;
+		String fileName = Common.getAppDataPath() + File.separator + Config.appListCacheFileName;
+		try {
+			doc = new SAXBuilder().build(Config.getAppListXMLURL());
+			
+			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
+		} catch (UnknownHostException e) {
+			try {
+				doc = new SAXBuilder().build(new File(fileName));
+			} catch (FileNotFoundException e1) {
+				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString() + " and app list cache not found.");
+			}
+		}
 		Element fokLauncherEl = doc.getRootElement();
 		String modelVersion = fokLauncherEl.getChild("modelVersion").getValue();
 
