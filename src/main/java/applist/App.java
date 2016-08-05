@@ -32,8 +32,14 @@ public class App {
 	 */
 	private Version latestOnlineVersion;
 
+	/**
+	 * The latest snapshot version of the app that is available online
+	 */
 	private Version latestOnlineSnapshotVersion;
 
+	/**
+	 * {@code true} if the user requested to cancel the current action.
+	 */
 	private boolean cancelDownloadAndLaunch;
 
 	/**
@@ -81,8 +87,11 @@ public class App {
 	/**
 	 * @return the latestOnlineVersion
 	 * @throws IOException
+	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
 	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
 	 */
 	public Version getLatestOnlineVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineVersion != null) {
@@ -106,8 +115,11 @@ public class App {
 	/**
 	 * @return the latestOnlineSnapshotVersion
 	 * @throws IOException
+	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
 	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
 	 */
 	public Version getLatestOnlineSnapshotVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineSnapshotVersion != null) {
@@ -261,6 +273,20 @@ public class App {
 		return metadata.exists();
 	}
 
+	/**
+	 * Downloads the version info and saves it as a xml file in the app folder.
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @param destFolder
+	 *            The folder where apps should be saved into
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
 	private void downloadVersionInfo(boolean snapshotsEnabled, String destFolder)
 			throws MalformedURLException, JDOMException, IOException {
 		Version onlineVersion;
@@ -301,6 +327,20 @@ public class App {
 
 	}
 
+	/**
+	 * Gets the Maven Metadata file and converts it into a
+	 * {@code JDOM-}{@link Document}
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @return A {@link Document} representation of the maven Metadata file
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
 	private Document getMavenMetadata(boolean snapshotsEnabled)
 			throws MalformedURLException, JDOMException, IOException {
 
@@ -320,6 +360,20 @@ public class App {
 
 	}
 
+	/**
+	 * Checks if this artifact needs to be downloaded proir to launching it.
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @return {@code true} if this artifact needs to be downloaded prior to
+	 *         launching it, {@code false} otherwise
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
 	public boolean downloadRequired(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
 		if (this.isPresentOnHarddrive() && (!snapshotsEnabled) && this.getCurrentlyInstalledVersion().isSnapshot()) {
 			// App is downloaded, most current version on harddrive is a
@@ -340,6 +394,19 @@ public class App {
 		}
 	}
 
+	/**
+	 * Checks if an update is available for this artifact.
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @return {@code true} if an update is available, {@code false} otherwise
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
 	public boolean updateAvailable(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
 		Version onlineVersion;
 
@@ -352,48 +419,169 @@ public class App {
 		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1;
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards. Does not
+	 * take snapshots into account
+	 * 
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 */
 	public void downloadIfNecessaryAndLaunch() throws IOException, JDOMException {
 		downloadIfNecessaryAndLaunch(null);
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards. Does not
+	 * take snapshots into account
+	 * 
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 */
 	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
 		downloadIfNecessaryAndLaunch(false, gui);
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards. Only
+	 * takes snapshots into account
+	 * 
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 */
 	public void downloadSnapshotIfNecessaryAndLaunch() throws IOException, JDOMException {
 		downloadSnapshotIfNecessaryAndLaunch(null);
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards. Only
+	 * takes snapshots into account
+	 * 
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 */
 	public void downloadSnapshotIfNecessaryAndLaunch(HidableUpdateProgressDialog gui)
 			throws IOException, JDOMException {
 		downloadIfNecessaryAndLaunch(true, gui);
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 */
 	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
 			throws IOException, JDOMException {
 		downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, false);
 	}
 
+	/**
+	 * Launches the artifact and forces offline mode. Does not take snapshots
+	 * into account.
+	 * 
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code this.downloadRequired()==true} too
+	 */
 	public void launchWithoutDownload() throws IOException, JDOMException, IllegalStateException {
 		launchWithoutDownload(false);
 	}
 
+	/**
+	 * Launches the artifact and forces offline mode. Only launches snapshots.
+	 * 
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code this.downloadRequired()==true} too
+	 */
 	public void launchSnapshotWithoutDownload() throws IOException, JDOMException, IllegalStateException {
 		launchWithoutDownload(true);
 	}
 
+	/**
+	 * Launches the artifact and forces offline mode
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code this.downloadRequired()==true} too
+	 */
 	public void launchWithoutDownload(boolean snapshotsEnabled)
 			throws IOException, JDOMException, IllegalStateException {
 		launchWithoutDownload(snapshotsEnabled, null);
 	}
 
+	/**
+	 * Launches the artifact and forces offline mode
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code this.downloadRequired()==true} too
+	 */
 	public void launchWithoutDownload(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
 			throws IOException, JDOMException, IllegalStateException {
 		downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, true);
 	}
 
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards
+	 * 
+	 * @param snapshotsEnabled
+	 *            {@code true} if snapshots shall be taken into account.
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * @param disableDownload
+	 *            If {@code true}, the method will be forced to work offline.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code disableDownload==true} but
+	 *             {@code this.downloadRequired()==true} too
+	 */
 	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
-			boolean disableDownload) throws IOException, JDOMException {
+			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
 		String destFolder = Common.getAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
@@ -466,25 +654,82 @@ public class App {
 		}
 	}
 
+	/**
+	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * Does not take snapshots into account.
+	 * 
+	 * @return {@code true} if the download finished successfully, {@code false}
+	 *         if the download was cancelled using
+	 *         {@link #cancelDownloadAndLaunch()}
+	 * @throws IOException
+	 *             If the version info cannot be read
+	 * @throws JDOMException
+	 *             If the version xml is malformed
+	 * 
+	 */
 	public boolean download() throws IOException, JDOMException {
 		return download(null);
 	}
 
+	/**
+	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * Does not take snapshots into account.
+	 * 
+	 * @param gui
+	 *            The {@link HidableUpdateProgressDialog} that represents the
+	 *            gui to inform the user about the progress.
+	 * @return {@code true} if the download finished successfully, {@code false}
+	 *         if the download was cancelled using
+	 *         {@link #cancelDownloadAndLaunch()}
+	 * @throws IOException
+	 *             If the version info cannot be read
+	 * @throws JDOMException
+	 *             If the version xml is malformed
+	 * 
+	 */
 	public boolean download(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
 		return download(false, gui);
 	}
 
+	/**
+	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * Only takes snapshots into account.
+	 * 
+	 * @return {@code true} if the download finished successfully, {@code false}
+	 *         if the download was cancelled using
+	 *         {@link #cancelDownloadAndLaunch()}
+	 * @throws IOException
+	 *             If the version info cannot be read
+	 * @throws JDOMException
+	 *             If the version xml is malformed
+	 * 
+	 */
 	public boolean downloadSnapshot() throws IOException, JDOMException {
 		return downloadSnapshot(null);
 	}
 
+	/**
+	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * Only takes snapshots into account.
+	 * 
+	 * @param gui
+	 *            The {@link HidableUpdateProgressDialog} that represents the
+	 *            gui to inform the user about the progress.
+	 * @return {@code true} if the download finished successfully, {@code false}
+	 *         if the download was cancelled using
+	 *         {@link #cancelDownloadAndLaunch()}
+	 * @throws IOException
+	 *             If the version info cannot be read
+	 * @throws JDOMException
+	 *             If the version xml is malformed
+	 * 
+	 */
 	public boolean downloadSnapshot(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
 		return download(true, gui);
 	}
 
 	/**
 	 * Downloads this artifact to the location specified in the {@link Config}.
-	 * TODO: Copy javadoc to other callers
 	 * 
 	 * @param isSnapshot
 	 *            If {@code true}, the latest snapshot will be downloaded,
@@ -493,7 +738,7 @@ public class App {
 	 *            The {@link HidableUpdateProgressDialog} that represents the
 	 *            gui to inform the user about the progress.
 	 * @return {@code true} if the download finished successfully, {@code false}
-	 *         if the download was canelled using
+	 *         if the download was cancelled using
 	 *         {@link #cancelDownloadAndLaunch()}
 	 * @throws MalformedURLException
 	 *             If the specified repository {@link URL} is malformed
@@ -602,10 +847,20 @@ public class App {
 
 	}
 
+	/**
+	 * Cancels the download and launch process.
+	 */
 	public void cancelDownloadAndLaunch() {
 		cancelDownloadAndLaunch(null);
 	}
 
+	/**
+	 * Cancels the download and launch process.
+	 * 
+	 * @param gui
+	 *            The {@link HidableUpdateProgressDialog} that represents the
+	 *            gui to inform the user about the progress.
+	 */
 	public void cancelDownloadAndLaunch(HidableUpdateProgressDialog gui) {
 		cancelDownloadAndLaunch = true;
 		System.out.println("Requested to cancel the current operation, Cancel in progress...");
@@ -615,18 +870,31 @@ public class App {
 		}
 	}
 
+	/**
+	 * Get a {@link List} of available apps from the server.
+	 * 
+	 * @return A {@link List} of available apps from the server.
+	 * @throws MalformedURLException
+	 *             If the maven repo base url of an app is malformed. The base
+	 *             urls are downloaded from the server.
+	 * @throws JDOMException
+	 *             If the xml-app list on the server is malformed
+	 * @throws IOException
+	 *             If the app list or metadata of some apps cannot bedownloaded.
+	 */
 	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
 		String fileName = Common.getAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
 			doc = new SAXBuilder().build(Config.getAppListXMLURL());
-			
+
 			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
 		} catch (UnknownHostException e) {
 			try {
 				doc = new SAXBuilder().build(new File(fileName));
 			} catch (FileNotFoundException e1) {
-				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString() + " and app list cache not found. \nPlease ensure a stable internet connection.");
+				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString()
+						+ " and app list cache not found. \nPlease ensure a stable internet connection.");
 			}
 		}
 		Element fokLauncherEl = doc.getRootElement();
