@@ -33,6 +33,11 @@ public class App {
 	private Version latestOnlineVersion;
 
 	/**
+	 * A {@link List} of all available online Versions
+	 */
+	private List<Version> onlineVersionList;
+
+	/**
 	 * The latest snapshot version of the app that is available online
 	 */
 	private Version latestOnlineSnapshotVersion;
@@ -82,6 +87,43 @@ public class App {
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/**
+	 * Returns a list that contains all versions of the artifact available
+	 * online
+	 * 
+	 * @return A list that contains all versions of the artifact available
+	 *         online
+	 * @throws IOException
+	 *             If the maven metadata file can't be read or downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 */
+	public List<Version> getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
+		if (onlineVersionList != null) {
+			return onlineVersionList;
+		} else {
+			Document mavenMetadata = getMavenMetadata(false);
+
+			List<Version> res = new ArrayList<Version>();
+			List<Element> versions = mavenMetadata.getRootElement().getChild("versioning").getChild("versions")
+					.getChildren("version");
+
+			for (Element versionElement : versions) {
+				Version version = new Version(versionElement.getValue());
+
+				if (!version.isSnapshot()) {
+					// Version is not a snapshot so add it to the list
+					res.add(version);
+				}
+			}
+
+			onlineVersionList = res;
+			return res;
+		}
 	}
 
 	/**
@@ -273,11 +315,58 @@ public class App {
 		return metadata.exists();
 	}
 
+	public boolean isPresentOnHarddrive(Version ver) {
+		String destFolder = Common.getAppDataPath()
+				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+
+		Element root;
+		Document versionDoc;
+		Element artifactId;
+		Element groupId;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+
+			root = versionDoc.getRootElement();
+
+			artifactId = root.getChild("artifactId");
+			groupId = root.getChild("groupId");
+			versions = root.getChild("versions");
+
+			// Check if one of those elements is not defined
+			if (artifactId == null) {
+				throw new NullPointerException("artifactId is null");
+			} else if (groupId == null) {
+				throw new NullPointerException("groupId is null");
+			} else if (versions == null) {
+				throw new NullPointerException("versions is null");
+			}
+
+			// Go through all versions
+			for (Element version : versions.getChildren()) {
+				if (ver.equals(new Version(version.getChild("version").getValue(),
+						version.getChild("buildNumber").getValue(), version.getChild("timestamp").getValue()))) {
+					// Match found
+					return true;
+				}
+			}
+
+			// No match found, return false
+			return false;
+
+		} catch (JDOMException | IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	/**
 	 * Downloads the version info and saves it as a xml file in the app folder.
 	 * 
-	 * @param snapshotsEnabled
-	 *            {@code true} if snapshots shall be taken into account.
+	 * @param versionToGet
+	 *            The version to get the info for
 	 * @param destFolder
 	 *            The folder where apps should be saved into
 	 * @throws MalformedURLException
@@ -287,42 +376,69 @@ public class App {
 	 * @throws IOException
 	 *             If the maven metadata file cannot be downloaded
 	 */
-	private void downloadVersionInfo(boolean snapshotsEnabled, String destFolder)
+	private void downloadVersionInfo(Version versionToGet, String destFolder)
 			throws MalformedURLException, JDOMException, IOException {
-		Version onlineVersion;
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 
-		if (snapshotsEnabled) {
-			onlineVersion = this.getLatestOnlineSnapshotVersion();
-		} else {
-			onlineVersion = this.getLatestOnlineVersion();
+		Element root;
+		Document versionDoc;
+		Element artifactId;
+		Element groupId;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+			root = versionDoc.getRootElement();
+
+			artifactId = root.getChild("artifactId");
+			groupId = root.getChild("groupId");
+			versions = root.getChild("versions");
+
+			// Check if one of those elements is not defined
+			if (artifactId == null) {
+				throw new NullPointerException("artifactId is null");
+			} else if (groupId == null) {
+				throw new NullPointerException("groupId is null");
+			} else if (versions == null) {
+				throw new NullPointerException("versions is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("artifactInfo");
+			versionDoc = new Document(root);
+
+			artifactId = new Element("artifactId");
+			groupId = new Element("groupId");
+			versions = new Element("versions");
+
+			root.addContent(artifactId);
+			root.addContent(groupId);
+			root.addContent(versions);
 		}
-
-		Element root = new Element("artifactInfo");
-		Document versionDoc = new Document(root);
-
-		Element artifactId = new Element("artifactId");
-		Element groupId = new Element("groupId");
-		Element version = new Element("version");
-		Element buildNumber = new Element("buildNumber");
-		Element timestamp = new Element("timestamp");
 
 		artifactId.setText(this.getMavenArtifactID());
 		groupId.setText(this.getMavenGroupID());
-		version.setText(onlineVersion.getVersion());
 
-		if (snapshotsEnabled) {
-			buildNumber.setText(onlineVersion.getBuildNumber());
-			timestamp.setText(onlineVersion.getTimestamp());
+		// Check if the specified version is already present
+		if (!this.isPresentOnHarddrive(versionToGet)) {
+			Element version = new Element("version");
+			Element versionNumber = new Element("version");
+			Element buildNumber = new Element("buildNumber");
+			Element timestamp = new Element("timestamp");
+			versionNumber.setText(versionToGet.getVersion());
+
+			if (versionToGet.isSnapshot()) {
+				buildNumber.setText(versionToGet.getBuildNumber());
+				timestamp.setText(versionToGet.getTimestamp());
+			}
+
+			version.addContent(buildNumber);
+			version.addContent(timestamp);
+			
+			versions.addContent(version);
 		}
 
-		root.addContent(artifactId);
-		root.addContent(groupId);
-		root.addContent(version);
-		root.addContent(buildNumber);
-		root.addContent(timestamp);
-
 		// Write xml-File
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 		(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
 	}
@@ -828,7 +944,7 @@ public class App {
 		FileUtils.copyURLToFile(artifactURL, outputFile);
 
 		// download version info
-		downloadVersionInfo(isSnapshot, destFolder);
+		downloadVersionInfo(destVersion, destFolder);
 
 		// Perform Cancel if requested
 		if (cancelDownloadAndLaunch) {
