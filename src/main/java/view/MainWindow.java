@@ -10,7 +10,6 @@ import org.jdom2.JDOMException;
 import applist.App;
 import common.*;
 import javafx.application.*;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -76,7 +75,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
 	void appListOnMouseClicked(MouseEvent event) {
-		// Currently not used
+		if (appList.getSelectionModel().getSelectedIndex() != -1) {
+			// Only enable the button if something was selected
+
+		}
 	}
 
 	@FXML
@@ -274,43 +276,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		getAppListThread.setName("getAppListThread");
 		getAppListThread.start();
-		
-		// Build the context menu
-		appList.setCellFactory(lv -> {
-
-            ListCell<String> cell = new ListCell<>();
-
-            ContextMenu contextMenu = new ContextMenu();
-
-
-            MenuItem launchSpecificVersionItem = new MenuItem();
-            launchSpecificVersionItem.textProperty().bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
-            launchSpecificVersionItem.setOnAction(event -> {
-                String item = cell.getItem();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Launching a specific version is not implemented yet :(");
-                alert.show();
-            });
-            MenuItem deleteItem = new MenuItem();
-            deleteItem.textProperty().bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
-            deleteItem.setOnAction(event -> {
-            	String item = cell.getItem();
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Deleting software is not implemented yet :(");
-                alert.show();
-            });
-            contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem);
-
-            cell.textProperty().bind(cell.itemProperty());
-
-            cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
-                if (isNowEmpty) {
-                    cell.setContextMenu(null);
-                } else {
-                    cell.setContextMenu(contextMenu);
-                }
-            });
-            return cell ;
-        });
-
 
 	}
 
