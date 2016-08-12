@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -35,7 +36,7 @@ public class App {
 	/**
 	 * A {@link List} of all available online Versions
 	 */
-	private List<Version> onlineVersionList;
+	private VersionList onlineVersionList;
 
 	/**
 	 * The latest snapshot version of the app that is available online
@@ -102,13 +103,13 @@ public class App {
 	 * @throws MalformedURLException
 	 *             If the repo base url is malformed
 	 */
-	public List<Version> getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
+	public VersionList getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
 		if (onlineVersionList != null) {
 			return onlineVersionList;
 		} else {
 			Document mavenMetadata = getMavenMetadata(false);
 
-			List<Version> res = new ArrayList<Version>();
+			VersionList res = new VersionList();
 			List<Element> versions = mavenMetadata.getRootElement().getChild("versioning").getChild("versions")
 					.getChildren("version");
 
@@ -201,7 +202,18 @@ public class App {
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-		Version res = null;
+		Version res = Collections.max(getCurrentlyInstalledVersions());
+
+		return res;
+	}
+
+	/**
+	 * Returns a list of currently installed versions
+	 * 
+	 * @return A list of currently installed versions
+	 */
+	public VersionList getCurrentlyInstalledVersions() {
+		VersionList res = new VersionList();
 
 		// Load the metadata.xml file
 		String destFolder = Common.getAppDataPath()
@@ -218,9 +230,11 @@ public class App {
 			return null;
 		}
 
-		res = new Version(versionDoc.getRootElement().getChild("version").getValue());
-		res.setBuildNumber(versionDoc.getRootElement().getChild("buildNumber").getValue());
-		res.setTimestamp(versionDoc.getRootElement().getChild("timestamp").getValue());
+		for (Element versionEl : versionDoc.getRootElement().getChild("versions").getChildren()) {
+			Version tempVer = new Version(versionEl.getChild("version").getValue(),
+					versionEl.getChild("buildNumber").getValue(), versionEl.getChild("timestamp").getValue());
+			res.add(tempVer);
+		}
 
 		return res;
 	}
@@ -301,10 +315,10 @@ public class App {
 	}
 
 	/**
-	 * Checks if this app is already downloaded
+	 * Checks if any version of this app is already downloaded
 	 * 
-	 * @return {@code true} if the app is already downloaded, {@code false}
-	 *         otherwise.
+	 * @return {@code true} if any version of this app is already downloaded,
+	 *         {@code false} otherwise.
 	 */
 	public boolean isPresentOnHarddrive() {
 		// Check if metadata file is present
@@ -315,6 +329,14 @@ public class App {
 		return metadata.exists();
 	}
 
+	/**
+	 * Checks if the specified version of this app is already downloaded
+	 * 
+	 * @param ver
+	 *            The version to check
+	 * @return {@code true} if the specified version of this app is already
+	 *         downloaded, {@code false} otherwise.
+	 */
 	public boolean isPresentOnHarddrive(Version ver) {
 		String destFolder = Common.getAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
@@ -419,8 +441,18 @@ public class App {
 		artifactId.setText(this.getMavenArtifactID());
 		groupId.setText(this.getMavenGroupID());
 
+		boolean versionFound = false;
+
+		for (Element el : versions.getChildren()) {
+			Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
+					el.getChild("timestamp").getValue());
+			if (ver.equals(versionToGet)) {
+				versionFound = true;
+			}
+		}
+
 		// Check if the specified version is already present
-		if (!this.isPresentOnHarddrive(versionToGet)) {
+		if (!versionFound) {
 			Element version = new Element("version");
 			Element versionNumber = new Element("version");
 			Element buildNumber = new Element("buildNumber");
@@ -432,9 +464,10 @@ public class App {
 				timestamp.setText(versionToGet.getTimestamp());
 			}
 
+			version.addContent(versionNumber);
 			version.addContent(buildNumber);
 			version.addContent(timestamp);
-			
+
 			versions.addContent(version);
 		}
 
@@ -491,7 +524,8 @@ public class App {
 	 *             If the maven metadata file cannot be downloaded
 	 */
 	public boolean downloadRequired(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
-		if (this.isPresentOnHarddrive() && (!snapshotsEnabled) && this.getCurrentlyInstalledVersion().isSnapshot()) {
+		if (this.isPresentOnHarddrive() && (!snapshotsEnabled)
+				&& !this.getCurrentlyInstalledVersions().containsRelease()) {
 			// App is downloaded, most current version on harddrive is a
 			// snapshot but snapshots are disabled, so download is required
 			return true;
@@ -533,6 +567,23 @@ public class App {
 		}
 
 		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1;
+	}
+
+	/**
+	 * Checks if an update is available for the specified artifact version.
+	 * 
+	 * @param versionToCheck
+	 *            The version to be checked. * @return {@code true} if an update
+	 *            is available, {@code false} otherwise
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
+	public boolean updateAvailable(Version versionToCheck) throws MalformedURLException, JDOMException, IOException {
+		return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) == 1;
 	}
 
 	/**
@@ -698,6 +749,38 @@ public class App {
 	 */
 	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
+		Version versionToLaunch;
+
+		if (snapshotsEnabled) {
+			versionToLaunch = this.getLatestOnlineSnapshotVersion();
+		} else {
+			versionToLaunch = this.getLatestOnlineVersion();
+		}
+
+		downloadIfNecessaryAndLaunch(gui, versionToLaunch, disableDownload);
+	}
+
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards
+	 * 
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * 
+	 * @param versionToLaunch
+	 *            The version of the app to be downloaded and launched.
+	 * @param disableDownload
+	 *            If {@code true}, the method will be forced to work offline.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code disableDownload==true} but
+	 *             {@code this.downloadRequired()==true} too
+	 */
+	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
+			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
 		String destFolder = Common.getAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
@@ -709,21 +792,17 @@ public class App {
 			boolean downloadPerformed = true;
 
 			// download if necessary
-			if (this.downloadRequired(snapshotsEnabled)) {
+			if (!this.isPresentOnHarddrive(versionToLaunch)) {
 				// app not downloaded at all
 				System.out.println("Downloading package because it was never downloaded before...");
-				downloadPerformed = this.download(snapshotsEnabled, gui);
-			} else if (this.updateAvailable(snapshotsEnabled)) {
-				// newer version available
-				System.out.println("Downloading package because a newer version is available...");
-				downloadPerformed = this.download(snapshotsEnabled, gui);
+				downloadPerformed = this.download(versionToLaunch, gui);
 			}
 
 			if (!downloadPerformed) {
 				// Download was cancelled by the user so return
 				return;
 			}
-		} else if (this.downloadRequired(snapshotsEnabled)) {
+		} else if (!this.isPresentOnHarddrive(versionToLaunch)) {
 			// Download is disabled and app needs to be downloaded
 			throw new IllegalStateException(
 					"The artifact needs to be downloaded prior to launch but download is disabled.");
@@ -784,7 +863,8 @@ public class App {
 	 * 
 	 */
 	public boolean download() throws IOException, JDOMException {
-		return download(null);
+		HidableUpdateProgressDialog gui = null;
+		return download(gui);
 	}
 
 	/**
@@ -804,7 +884,7 @@ public class App {
 	 * 
 	 */
 	public boolean download(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		return download(false, gui);
+		return download(this.getLatestOnlineVersion(), gui);
 	}
 
 	/**
@@ -821,7 +901,8 @@ public class App {
 	 * 
 	 */
 	public boolean downloadSnapshot() throws IOException, JDOMException {
-		return downloadSnapshot(null);
+		HidableUpdateProgressDialog gui = null;
+		return downloadSnapshot(gui);
 	}
 
 	/**
@@ -841,7 +922,7 @@ public class App {
 	 * 
 	 */
 	public boolean downloadSnapshot(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		return download(true, gui);
+		return download(this.getLatestOnlineSnapshotVersion(), gui);
 	}
 
 	/**
@@ -864,7 +945,7 @@ public class App {
 	 *             If the version xml is malformed
 	 * 
 	 */
-	public boolean download(boolean isSnapshot, HidableUpdateProgressDialog gui)
+	public boolean download(Version versionToDownload, HidableUpdateProgressDialog gui)
 			throws MalformedURLException, IOException, JDOMException {
 		if (gui != null) {
 			gui.preparePhaseStarted();
@@ -873,7 +954,6 @@ public class App {
 		String destFolder = Common.getAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
-		Version destVersion;
 		URL repoBaseURL;
 		URL artifactURL;
 
@@ -885,33 +965,31 @@ public class App {
 			return false;
 		}
 
-		if (isSnapshot) {
+		if (versionToDownload.isSnapshot()) {
 			// Snapshot
-			destVersion = this.getLatestOnlineSnapshotVersion();
 			repoBaseURL = this.getMavenSnapshotRepoBaseURL();
 		} else {
 			// Not a snapshot
-			destVersion = this.getLatestOnlineVersion();
 			repoBaseURL = this.getMavenRepoBaseURL();
 		}
 
 		// Construct the download url
 		if (this.getMavenClassifier().equals("")) {
 			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID + "/" + this.getMavenArtifactID()
-					+ "/" + destVersion.getVersion() + "/" + this.getMavenArtifactID() + "-" + destVersion.toString()
+					+ "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-" + versionToDownload.toString()
 					+ ".jar");
 		} else {
 			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID() + "/"
-					+ this.getMavenArtifactID() + "/" + destVersion.getVersion() + "/" + this.getMavenArtifactID() + "-"
-					+ destVersion.toString() + "-" + this.getMavenClassifier() + ".jar");
+					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-"
+					+ versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
 		}
 
 		// Construct file name of output file
 		if (this.getMavenClassifier().equals("")) {
 			// No classifier
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + "-" + this.getMavenClassifier()
+			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + "-" + this.getMavenClassifier()
 					+ ".jar";
 		}
 
@@ -944,7 +1022,7 @@ public class App {
 		FileUtils.copyURLToFile(artifactURL, outputFile);
 
 		// download version info
-		downloadVersionInfo(destVersion, destFolder);
+		downloadVersionInfo(versionToDownload, destFolder);
 
 		// Perform Cancel if requested
 		if (cancelDownloadAndLaunch) {
