@@ -216,7 +216,7 @@ public class App {
 		VersionList res = new VersionList();
 
 		// Load the metadata.xml file
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 		Document versionDoc;
@@ -322,7 +322,7 @@ public class App {
 	 */
 	public boolean isPresentOnHarddrive() {
 		// Check if metadata file is present
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 		File metadata = new File(fileName);
@@ -338,7 +338,7 @@ public class App {
 	 *         downloaded, {@code false} otherwise.
 	 */
 	public boolean isPresentOnHarddrive(Version ver) {
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 
@@ -782,7 +782,7 @@ public class App {
 	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
 		Version destVersion;
@@ -951,7 +951,7 @@ public class App {
 			gui.preparePhaseStarted();
 		}
 
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
 		URL repoBaseURL;
@@ -1078,10 +1078,10 @@ public class App {
 	 */
 	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
-		String fileName = Common.getAppDataPath() + File.separator + Config.appListCacheFileName;
+		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
 			doc = new SAXBuilder().build(Config.getAppListXMLURL());
-
+			
 			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
 		} catch (UnknownHostException e) {
 			try {
