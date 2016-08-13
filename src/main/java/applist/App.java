@@ -816,13 +816,11 @@ public class App {
 			return;
 		}
 
-		destVersion = this.getCurrentlyInstalledVersion();
-
 		if (this.getMavenClassifier().equals("")) {
 			// No classifier
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + "-" + this.getMavenClassifier()
+			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + "-" + this.getMavenClassifier()
 					+ ".jar";
 		}
 
