@@ -785,7 +785,6 @@ public class App {
 		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
-		Version destVersion;
 
 		if (!disableDownload) {
 			// Continue by default, only cancel, when user cancelled
@@ -820,8 +819,8 @@ public class App {
 			// No classifier
 			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + "-" + this.getMavenClassifier()
-					+ ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + "-"
+					+ this.getMavenClassifier() + ".jar";
 		}
 
 		if (gui != null) {
@@ -974,12 +973,12 @@ public class App {
 		// Construct the download url
 		if (this.getMavenClassifier().equals("")) {
 			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID + "/" + this.getMavenArtifactID()
-					+ "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-" + versionToDownload.toString()
-					+ ".jar");
+					+ "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-"
+					+ versionToDownload.toString() + ".jar");
 		} else {
 			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID() + "/"
-					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-"
-					+ versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
+					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
+					+ "-" + versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
 		}
 
 		// Construct file name of output file
@@ -987,8 +986,8 @@ public class App {
 			// No classifier
 			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + "-" + this.getMavenClassifier()
-					+ ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + "-"
+					+ this.getMavenClassifier() + ".jar";
 		}
 
 		// Perform Cancel if requested
@@ -1079,7 +1078,7 @@ public class App {
 		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
 			doc = new SAXBuilder().build(Config.getAppListXMLURL());
-			
+
 			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
 		} catch (UnknownHostException e) {
 			try {
@@ -1119,5 +1118,63 @@ public class App {
 		}
 
 		return res;
+	}
+
+	/**
+	 * Deletes the specified artifact version.
+	 * 
+	 * @param versionToDelete
+	 *            The version to be deleted.
+	 * @return {@code true} if the artifact was successfully deleted,
+	 *         {@code false} otherwise
+	 */
+	public boolean delete(Version versionToDelete) {
+
+		// Delete from metadata
+		String destFolder = Common.getAndCreateAppDataPath()
+				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		Document versionDoc;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+			versions = versionDoc.getRootElement().getChild("versions");
+		} catch (JDOMException | IOException e) {
+			System.err.println("Cannot retreive currently installed version of app " + this.getName()
+					+ ", probably because it is not installed.");
+			e.printStackTrace();
+			return false;
+		}
+
+		Element elementToDelete = null;
+
+		// Find the version node to be deleted
+		for (Element el : versions.getChildren()) {
+			Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
+					el.getChild("timestamp").getValue());
+			if (ver.equals(versionToDelete)) {
+				elementToDelete = el;
+			}
+		}
+
+		// Delete the node
+		if (elementToDelete != null) {
+			elementToDelete.detach();
+		}
+
+		// Delete the file
+		String appFileName;
+		if (this.getMavenClassifier().equals("")) {
+			// No classifier
+			appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + ".jar";
+		} else {
+			appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + "-" + this.getMavenClassifier()
+					+ ".jar";
+		}
+		
+		File appFile = new File(appFileName);
+
+		return appFile.delete();
 	}
 }
