@@ -74,6 +74,10 @@ public class App {
 	 * used.
 	 */
 	private String mavenClassifier;
+	
+	private boolean specificVersionListLoaded = false;
+	
+	private boolean deletableVersionListLoaded = false;
 
 	/**
 	 * @return the name
@@ -312,6 +316,34 @@ public class App {
 	 */
 	public void setMavenClassifier(String mavenClassifier) {
 		this.mavenClassifier = mavenClassifier;
+	}
+
+	/**
+	 * @return the specificVersionListLoaded
+	 */
+	public boolean isSpecificVersionListLoaded() {
+		return specificVersionListLoaded;
+	}
+
+	/**
+	 * @param specificVersionListLoaded the specificVersionListLoaded to set
+	 */
+	public void setSpecificVersionListLoaded(boolean specificVersionListLoaded) {
+		this.specificVersionListLoaded = specificVersionListLoaded;
+	}
+
+	/**
+	 * @return the deletableVersionListLoaded
+	 */
+	public boolean isDeletableVersionListLoaded() {
+		return deletableVersionListLoaded;
+	}
+
+	/**
+	 * @param deletableVersionListLoaded the deletableVersionListLoaded to set
+	 */
+	public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
+		this.deletableVersionListLoaded = deletableVersionListLoaded;
 	}
 
 	/**
@@ -1113,6 +1145,10 @@ public class App {
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
 			}
+			
+			// Cache version lists
+			// newApp.getAllOnlineVersions();
+			// newApp.getLatestOnlineSnapshotVersion();
 
 			res.add(newApp);
 		}
