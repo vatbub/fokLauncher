@@ -2,9 +2,8 @@ package view;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 import org.jdom2.JDOMException;
 
@@ -25,9 +24,12 @@ import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.*;
+import logging.FOKLogger;
 import view.updateAvailableDialog.UpdateAvailableDialog;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
+
+	private static FOKLogger log;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -124,7 +126,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								workOfflineCheckbox.isSelected());
 					} catch (IOException | JDOMException e) {
 						gui.showErrorMessage("An error occurred: " + e.getMessage());
-						e.printStackTrace();
+						log.getLogger().log(Level.SEVERE, "An error occurred", e);
 					}
 				}
 			};
@@ -147,6 +149,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		stage = primaryStage;
 		try {
 			common.Common.setAppName("foklauncher");
+			log = new FOKLogger(MainWindow.class.getName());
 			prefs = new Prefs(MainWindow.class.getName());
 
 			Thread updateThread = new Thread() {
@@ -186,7 +189,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			primaryStage.show();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 		}
 	}
 
@@ -275,7 +278,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							Thread buildContextMenuThread = new Thread() {
 								@Override
 								public void run() {
-									System.out.println("Getting available online versions...");
+									log.getLogger().info("Getting available online versions...");
 									App app = apps.get(cell.getIndex());
 
 									// Get available versions
@@ -331,7 +334,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 														 */
 													} catch (IOException | JDOMException e) {
 														gui.showErrorMessage("An error occurred: " + e.getMessage());
-														e.printStackTrace();
+														log.getLogger().log(Level.SEVERE, "An error occurred", e);
 													}
 												}
 											};
@@ -378,7 +381,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							if (!app.isDeletableVersionListLoaded()) {
 								// Get deletabel versions
 								app.setDeletableVersionListLoaded(true);
-								System.out.println("Getting deletable versions...");
+								log.getLogger().info("Getting deletable versions...");
 								deleteItem.getItems().clear();
 
 								VersionList verList = new VersionList();
@@ -397,8 +400,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 											apps.get(appList.getSelectionModel().getSelectedIndex())
 													.delete(menuItem.getVersion());
 										} catch (IOException e) {
-											// TODO Auto-generated catch block
-											e.printStackTrace();
+											log.getLogger().log(Level.SEVERE, "An error occurred", e);
 										}
 										// Update the list the next time the
 										// user opens it as it has changed
@@ -454,10 +456,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					});
 
-				} catch (JDOMException |
-
-						IOException e) {
-					e.printStackTrace();
+				} catch (JDOMException | IOException e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
 					gui.showErrorMessage(e.getMessage(), true);
 				}
 			}
@@ -469,7 +469,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	private void updateLaunchButton() {
 		apps.reloadContextMenuEntriesOnShow();
-		
+
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
@@ -545,8 +545,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					}
 				} catch (JDOMException | IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
 				}
 
 				Platform.runLater(new Runnable() {

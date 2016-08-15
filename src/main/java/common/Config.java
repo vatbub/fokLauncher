@@ -5,16 +5,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+
+import logging.FOKLogger;
 
 public class Config {
+	private static FOKLogger log = new FOKLogger(Config.class.getName());
+	
 	// Project setup
 	public static URL getUpdateRepoBaseURL() {
 		URL res = null;
 		try {
 			res = new URL("http://dl.bintray.com/vatbub/fokprojectsSnapshots");
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 		}
 
 		return res;
@@ -31,8 +35,7 @@ public class Config {
 		try {
 			res = new URL("https://www.dropbox.com/s/muikjvx0x2tpetb/fokprojectsOnLauncher.xml?dl=1");
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 		}
 
 		return res;

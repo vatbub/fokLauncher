@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
 import org.jdom2.Document;
@@ -20,8 +20,11 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
 import common.*;
+import logging.FOKLogger;
 
 public class App {
+	
+	FOKLogger log = new FOKLogger(App.class.getName());
 
 	/**
 	 * The name of the app
@@ -230,7 +233,7 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			return null;
 		}
 
@@ -413,7 +416,7 @@ public class App {
 			return false;
 
 		} catch (JDOMException | IOException e) {
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			return false;
 		}
 	}
@@ -831,7 +834,7 @@ public class App {
 			// download if necessary
 			if (!this.isPresentOnHarddrive(versionToLaunch)) {
 				// app not downloaded at all
-				System.out.println("Downloading package because it was never downloaded before...");
+				log.getLogger().info("Downloading package because it was never downloaded before...");
 				downloadPerformed = this.download(versionToLaunch, gui);
 			}
 
@@ -865,7 +868,7 @@ public class App {
 			gui.launchStarted();
 		}
 
-		System.out.println("Launching app using the command: java -jar " + destFolder + File.separator + destFilename
+		log.getLogger().info("Launching app using the command: java -jar " + destFolder + File.separator + destFilename
 				+ " disableUpdateChecks");
 		ProcessBuilder pb = new ProcessBuilder("java", "-jar", destFolder + File.separator + destFilename,
 				"disableUpdateChecks").inheritIO();
@@ -873,9 +876,9 @@ public class App {
 		if (gui != null) {
 			gui.hide();
 
-			System.out.println("------------------------------------------------------------------");
-			System.out.println("The following output is coming from " + destFilename);
-			System.out.println("------------------------------------------------------------------");
+			log.getLogger().info("------------------------------------------------------------------");
+			log.getLogger().info("The following output is coming from " + destFilename);
+			log.getLogger().info("------------------------------------------------------------------");
 
 			pb.start();
 		} else {
@@ -1052,8 +1055,8 @@ public class App {
 			gui.downloadStarted();
 		}
 
-		System.out.println("Downloading artifact from " + artifactURL.toString() + "...");
-		System.out.println("Downloading to: " + outputFile.getAbsolutePath());
+		log.getLogger().info("Downloading artifact from " + artifactURL.toString() + "...");
+		log.getLogger().info("Downloading to: " + outputFile.getAbsolutePath());
 		FileUtils.copyURLToFile(artifactURL, outputFile);
 
 		// download version info
@@ -1092,7 +1095,7 @@ public class App {
 	 */
 	public void cancelDownloadAndLaunch(HidableUpdateProgressDialog gui) {
 		cancelDownloadAndLaunch = true;
-		System.out.println("Requested to cancel the current operation, Cancel in progress...");
+		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
 
 		if (gui != null) {
 			gui.cancelRequested();
@@ -1186,7 +1189,7 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			return false;
 		}
 
@@ -1208,7 +1211,7 @@ public class App {
 				(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			}
 		}
 
