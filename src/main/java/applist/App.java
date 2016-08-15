@@ -31,17 +31,17 @@ public class App {
 	/**
 	 * The latest version of the app that is available online
 	 */
-	private Version latestOnlineVersion;
+	Version latestOnlineVersion;
 
 	/**
 	 * A {@link List} of all available online Versions
 	 */
-	private VersionList onlineVersionList;
+	VersionList onlineVersionList;
 
 	/**
 	 * The latest snapshot version of the app that is available online
 	 */
-	private Version latestOnlineSnapshotVersion;
+	Version latestOnlineSnapshotVersion;
 
 	/**
 	 * {@code true} if the user requested to cancel the current action.
@@ -1111,7 +1111,7 @@ public class App {
 	 * @throws IOException
 	 *             If the app list or metadata of some apps cannot bedownloaded.
 	 */
-	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
+	public static AppList getAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
 		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
@@ -1136,7 +1136,7 @@ public class App {
 							+ modelVersion + ")");
 		}
 
-		List<App> res = new ArrayList<App>();
+		AppList res = new AppList();
 
 		for (Element app : fokLauncherEl.getChild("apps").getChildren("app")) {
 			App newApp = new App();

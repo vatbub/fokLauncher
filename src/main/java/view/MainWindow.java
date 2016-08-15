@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 import org.jdom2.JDOMException;
 
 import applist.App;
+import applist.AppList;
 import common.*;
 import extended.VersionMenuItem;
 import javafx.application.*;
@@ -35,7 +36,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
 	private static Prefs prefs;
 	private static String enableSnapshotsPrefKey = "enableSnapshots";
-	private static List<App> apps;
+	private static AppList apps;
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
 
@@ -399,7 +400,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 											// TODO Auto-generated catch block
 											e.printStackTrace();
 										}
-										// Update the list the next time the user opens it as it has changed
+										// Update the list the next time the
+										// user opens it as it has changed
 										app.setDeletableVersionListLoaded(false);
 										/*
 										 * .downloadIfNecessaryAndLaunch(
@@ -466,7 +468,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	}
 
 	private void updateLaunchButton() {
-		launchButton.setDisable(true);
+		apps.reloadContextMenuEntriesOnShow();
+		
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
@@ -475,6 +478,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
+						launchButton.setDisable(true);
 						progressLabel.setVisible(true);
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
@@ -553,10 +557,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					}
 				});
 			}
+
 		};
 
-		getAppStatus.setName("getAppStatus");
-		getAppStatus.start();
+		// Only update the button caption if no download is running
+		if (!downloadAndLaunchThread.isAlive()) {
+			getAppStatus.setName("getAppStatus");
+			getAppStatus.start();
+		}
 	}
 
 	@Override
@@ -583,6 +591,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
+				appList.setDisable(true);
 				launchButton.setDisable(false);
 				launchButton.setText(bundle.getString("okButton.cancelLaunch"));
 				progressBar.setVisible(true);
@@ -664,6 +673,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void operationCanceled() {
+		appList.setDisable(true);
 		progressBar.setVisible(false);
 		progressLabel.setVisible(false);
 		updateLaunchButton();
