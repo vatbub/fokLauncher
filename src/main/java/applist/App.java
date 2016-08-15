@@ -74,9 +74,9 @@ public class App {
 	 * used.
 	 */
 	private String mavenClassifier;
-	
+
 	private boolean specificVersionListLoaded = false;
-	
+
 	private boolean deletableVersionListLoaded = false;
 
 	/**
@@ -326,7 +326,8 @@ public class App {
 	}
 
 	/**
-	 * @param specificVersionListLoaded the specificVersionListLoaded to set
+	 * @param specificVersionListLoaded
+	 *            the specificVersionListLoaded to set
 	 */
 	public void setSpecificVersionListLoaded(boolean specificVersionListLoaded) {
 		this.specificVersionListLoaded = specificVersionListLoaded;
@@ -340,7 +341,8 @@ public class App {
 	}
 
 	/**
-	 * @param deletableVersionListLoaded the deletableVersionListLoaded to set
+	 * @param deletableVersionListLoaded
+	 *            the deletableVersionListLoaded to set
 	 */
 	public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
 		this.deletableVersionListLoaded = deletableVersionListLoaded;
@@ -783,10 +785,14 @@ public class App {
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		Version versionToLaunch;
 
-		if (snapshotsEnabled) {
-			versionToLaunch = this.getLatestOnlineSnapshotVersion();
+		if (!disableDownload) {
+			if (snapshotsEnabled) {
+				versionToLaunch = this.getLatestOnlineSnapshotVersion();
+			} else {
+				versionToLaunch = this.getLatestOnlineVersion();
+			}
 		} else {
-			versionToLaunch = this.getLatestOnlineVersion();
+			versionToLaunch = this.getCurrentlyInstalledVersion();
 		}
 
 		downloadIfNecessaryAndLaunch(gui, versionToLaunch, disableDownload);
@@ -1145,7 +1151,7 @@ public class App {
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
 			}
-			
+
 			// Cache version lists
 			// newApp.getAllOnlineVersions();
 			// newApp.getLatestOnlineSnapshotVersion();
@@ -1163,8 +1169,9 @@ public class App {
 	 *            The version to be deleted.
 	 * @return {@code true} if the artifact was successfully deleted,
 	 *         {@code false} otherwise
+	 * @throws IOException
 	 */
-	public boolean delete(Version versionToDelete) {
+	public boolean delete(Version versionToDelete) throws IOException {
 
 		// Delete from metadata
 		String destFolder = Common.getAndCreateAppDataPath()
@@ -1197,6 +1204,12 @@ public class App {
 		// Delete the node
 		if (elementToDelete != null) {
 			elementToDelete.detach();
+			try {
+				(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		// Delete the file
@@ -1208,8 +1221,8 @@ public class App {
 			appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + "-" + this.getMavenClassifier()
 					+ ".jar";
 		}
-		
-		File appFile = new File(appFileName);
+
+		File appFile = new File(destFolder + File.separator + appFileName);
 
 		return appFile.delete();
 	}

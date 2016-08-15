@@ -392,8 +392,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 										// apps.get(appList.getSelectionModel().getSelectedIndex());
 
 										// Delete the file
-										apps.get(appList.getSelectionModel().getSelectedIndex())
-												.delete(menuItem.getVersion());
+										try {
+											apps.get(appList.getSelectionModel().getSelectedIndex())
+													.delete(menuItem.getVersion());
+										} catch (IOException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
 										// Update the list the next time the user opens it as it has changed
 										app.setDeletableVersionListLoaded(false);
 										/*
