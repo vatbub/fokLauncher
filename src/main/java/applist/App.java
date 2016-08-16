@@ -112,7 +112,7 @@ public class App {
 	 */
 	public VersionList getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
 		if (onlineVersionList != null) {
-			return onlineVersionList;
+			return onlineVersionList.clone();
 		} else {
 			Document mavenMetadata = getMavenMetadata(false);
 
@@ -145,7 +145,7 @@ public class App {
 	 */
 	public Version getLatestOnlineVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineVersion != null) {
-			return latestOnlineVersion;
+			return latestOnlineVersion.clone();
 		} else {
 			Document mavenMetadata = getMavenMetadata(false);
 
@@ -173,7 +173,7 @@ public class App {
 	 */
 	public Version getLatestOnlineSnapshotVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineSnapshotVersion != null) {
-			return latestOnlineSnapshotVersion;
+			return latestOnlineSnapshotVersion.clone();
 		} else {
 			Document mavenMetadata = getMavenMetadata(true);
 
