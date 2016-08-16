@@ -129,7 +129,7 @@ public class App {
 				}
 			}
 
-			onlineVersionList = res;
+			onlineVersionList = res.clone();
 			return res;
 		}
 	}
@@ -157,7 +157,7 @@ public class App {
 						"Latest version in this repository is a snapshot and not a release. This might happen if you host snapshots and releases in the same repository (which is not recommended). If you still need this case to be covered, please submit an issue at https://github.com/vatbub/fokLauncher/issues");
 			}
 
-			latestOnlineVersion = res;
+			latestOnlineVersion = res.clone();
 			return res;
 		}
 	}
@@ -196,7 +196,7 @@ public class App {
 			res.setTimestamp(snapshotMetadata.getRootElement().getChild("versioning").getChild("snapshot")
 					.getChild("timestamp").getValue());
 
-			latestOnlineSnapshotVersion = res;
+			latestOnlineSnapshotVersion = res.clone();
 			return res;
 		}
 	}
