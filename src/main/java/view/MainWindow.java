@@ -325,13 +325,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 																.downloadIfNecessaryAndLaunch(gui,
 																		menuItem.getVersion(),
 																		workOfflineCheckbox.isSelected());
-														/*
-														 * .downloadIfNecessaryAndLaunch(
-														 * enableSnapshotsCheckbox
-														 * .isSelected(), gui,
-														 * workOfflineCheckbox.
-														 * isSelected());
-														 */
 													} catch (IOException | JDOMException e) {
 														gui.showErrorMessage("An error occurred: " + e.getMessage());
 														log.getLogger().log(Level.SEVERE, "An error occurred", e);
@@ -379,7 +372,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							App app = apps.get(cell.getIndex());
 
 							if (!app.isDeletableVersionListLoaded()) {
-								// Get deletabel versions
+								// Get deletable versions
 								app.setDeletableVersionListLoaded(true);
 								log.getLogger().info("Getting deletable versions...");
 								deleteItem.getItems().clear();
@@ -401,16 +394,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 													.delete(menuItem.getVersion());
 										} catch (IOException e) {
 											log.getLogger().log(Level.SEVERE, "An error occurred", e);
+										}finally{
+											updateLaunchButton();
 										}
 										// Update the list the next time the
 										// user opens it as it has changed
 										app.setDeletableVersionListLoaded(false);
-										/*
-										 * .downloadIfNecessaryAndLaunch(
-										 * enableSnapshotsCheckbox
-										 * .isSelected(), gui,
-										 * workOfflineCheckbox. isSelected());
-										 */
+										
 
 									});
 									Platform.runLater(new Runnable() {
