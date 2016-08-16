@@ -875,10 +875,12 @@ public class App {
 
 		if (gui != null) {
 			gui.hide();
+			
+			log.getLogger().info("Launching application " + destFilename);
 
-			log.getLogger().info("------------------------------------------------------------------");
-			log.getLogger().info("The following output is coming from " + destFilename);
-			log.getLogger().info("------------------------------------------------------------------");
+			System.out.println("------------------------------------------------------------------");
+			System.out.println("The following output is coming from " + destFilename);
+			System.out.println("------------------------------------------------------------------");
 
 			pb.start();
 		} else {
@@ -1155,10 +1157,6 @@ public class App {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
 			}
 
-			// Cache version lists
-			// newApp.getAllOnlineVersions();
-			// newApp.getLatestOnlineSnapshotVersion();
-
 			res.add(newApp);
 		}
 
@@ -1210,7 +1208,6 @@ public class App {
 			try {
 				(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			}
 		}
