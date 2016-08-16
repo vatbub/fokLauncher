@@ -394,13 +394,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 													.delete(menuItem.getVersion());
 										} catch (IOException e) {
 											log.getLogger().log(Level.SEVERE, "An error occurred", e);
-										}finally{
+										} finally {
 											updateLaunchButton();
 										}
 										// Update the list the next time the
 										// user opens it as it has changed
 										app.setDeletableVersionListLoaded(false);
-										
 
 									});
 									Platform.runLater(new Runnable() {
@@ -662,10 +661,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void operationCanceled() {
-		appList.setDisable(true);
+		appList.setDisable(false);
 		progressBar.setVisible(false);
 		progressLabel.setVisible(false);
-		updateLaunchButton();
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				updateLaunchButton();
+			}
+		});
 	}
 
 	@Override
