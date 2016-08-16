@@ -43,6 +43,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
 
+	private static App currentlySelectedApp = null;
+
 	@FXML // ResourceBundle that was given to the FXMLLoader
 	private ResourceBundle resources;
 
@@ -115,7 +117,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void launchButtonOnAction(ActionEvent event) {
 		MainWindow gui = this;
-		App app = apps.get(appList.getSelectionModel().getSelectedIndex());
 
 		if (!downloadAndLaunchThread.isAlive()) {
 			// Launch the download
@@ -123,7 +124,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				@Override
 				public void run() {
 					try {
-						app.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
+						currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
 								workOfflineCheckbox.isSelected());
 					} catch (IOException | JDOMException e) {
 						gui.showErrorMessage("An error occurred: " + e.getMessage());
@@ -135,7 +136,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			downloadAndLaunchThread.setName("downloadAndLaunchThread");
 			downloadAndLaunchThread.start();
 		} else {
-			app.cancelDownloadAndLaunch(gui);
+			currentlySelectedApp.cancelDownloadAndLaunch(gui);
 		}
 	}
 
@@ -194,6 +195,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 	}
 
+	@Override
+	public void stop() {
+		try {
+			currentlySelectedApp.cancelDownloadAndLaunch(this);
+		} catch (Exception e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.", e);
+		}
+	}
+
 	@FXML // This method is called by the FXMLLoader when initialization is
 			// complete
 	void initialize() {
@@ -225,6 +235,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Selection change listener
 		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
 				updateLaunchButton();
 			}
 		});
@@ -320,18 +331,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 										menuItem.setVersion(ver);
 										menuItem.setText(ver.toString(false));
 										menuItem.setOnAction(event2 -> {
-											// App app =
-											// apps.get(appList.getSelectionModel().getSelectedIndex());
-
 											// Launch the download
 											downloadAndLaunchThread = new Thread() {
 												@Override
 												public void run() {
 													try {
-														apps.get(appList.getSelectionModel().getSelectedIndex())
-																.downloadIfNecessaryAndLaunch(gui,
-																		menuItem.getVersion(),
-																		workOfflineCheckbox.isSelected());
+														currentlySelectedApp.downloadIfNecessaryAndLaunch(gui,
+																menuItem.getVersion(),
+																workOfflineCheckbox.isSelected());
 													} catch (IOException | JDOMException e) {
 														gui.showErrorMessage("An error occurred: " + e.getMessage());
 														log.getLogger().log(Level.SEVERE, "An error occurred", e);
@@ -394,13 +401,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 									menuItem.setVersion(ver);
 									menuItem.setText(ver.toString(false));
 									menuItem.setOnAction(event2 -> {
-										// App app =
-										// apps.get(appList.getSelectionModel().getSelectedIndex());
-
 										// Delete the file
 										try {
-											apps.get(appList.getSelectionModel().getSelectedIndex())
-													.delete(menuItem.getVersion());
+											currentlySelectedApp.delete(menuItem.getVersion());
 										} catch (IOException e) {
 											log.getLogger().log(Level.SEVERE, "An error occurred", e);
 										} finally {
@@ -471,7 +474,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
-				App app = apps.get(appList.getSelectionModel().getSelectedIndex());
 				boolean progressVisibleBefore = progressLabel.isVisible();
 				Platform.runLater(new Runnable() {
 					@Override
@@ -487,7 +489,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				try {
 					if (!workOfflineCheckbox.isSelected()) {
 						// downloads are enabled
-						if (app.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required
 							Platform.runLater(new Runnable() {
 
@@ -497,7 +499,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
 								}
 							});
-						} else if (app.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
+						} else if (currentlySelectedApp.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
 							// Update available
 							Platform.runLater(new Runnable() {
 
@@ -520,7 +522,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					} else {
 						// downloads disabled
-						if (app.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required but disabled
 							Platform.runLater(new Runnable() {
 
