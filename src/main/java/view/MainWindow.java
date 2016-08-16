@@ -610,7 +610,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(2 / 4.0);
+				progressBar.setProgress(1.0/2.0);
 				progressLabel.setText(bundle.getString("progress.installing"));
 			}
 
@@ -623,7 +623,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(3 / 4.0);
+				progressBar.setProgress(2.0/2.0);
 				progressLabel.setText(bundle.getString("progress.launching"));
 			}
 
@@ -677,6 +677,18 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		progressBar.setProgress(-1);
 		progressLabel.setText(bundle.getString("cancelRequested"));
 		launchButton.setDisable(true);
+	}
+
+	@Override
+	public void downloadProgressChanged(double kilobytesDownloaded, double totalFileSizeInKB) {
+		Platform.runLater(new Runnable() {
+
+			@Override
+			public void run() {
+				progressBar.setProgress(kilobytesDownloaded/totalFileSizeInKB);
+			}
+
+		});
 	}
 
 }
