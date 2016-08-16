@@ -41,6 +41,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static AppList apps;
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
+	private static boolean launchSpecificVersionMenuCanceled = false;
 
 	@FXML // ResourceBundle that was given to the FXMLLoader
 	private ResourceBundle resources;
@@ -274,7 +275,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						MenuItem dummyVersion = new MenuItem();
 						dummyVersion.setText(bundle.getString("waitForVersionList"));
 						launchSpecificVersionItem.getItems().add(dummyVersion);
+						launchSpecificVersionItem.setOnHiding(event2 -> {
+							launchSpecificVersionMenuCanceled = true;
+						});
 						launchSpecificVersionItem.setOnShown(event -> {
+							launchSpecificVersionMenuCanceled = false;
 							Thread buildContextMenuThread = new Thread() {
 								@Override
 								public void run() {
@@ -282,13 +287,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 									App app = apps.get(cell.getIndex());
 
 									// Get available versions
-									Platform.runLater(new Runnable() {
-
-										@Override
-										public void run() {
-											launchSpecificVersionItem.getItems().clear();
-										}
-									});
 									VersionList verList = new VersionList();
 									if (!workOfflineCheckbox.isSelected()) {
 										// Online mode enabled
@@ -307,6 +305,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 										// Offline mode enabled
 										verList = app.getCurrentlyInstalledVersions();
 									}
+
+									// Clear previous list
+									Platform.runLater(new Runnable() {
+
+										@Override
+										public void run() {
+											launchSpecificVersionItem.getItems().clear();
+										}
+									});
 
 									for (Version ver : verList) {
 										VersionMenuItem menuItem = new VersionMenuItem();
@@ -347,8 +354,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 										@Override
 										public void run() {
-											launchSpecificVersionItem.hide();
-											launchSpecificVersionItem.show();
+											if (!launchSpecificVersionMenuCanceled) {
+												launchSpecificVersionItem.hide();
+												launchSpecificVersionItem.show();
+											}
 										}
 									});
 								}
@@ -610,7 +619,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(1.0/2.0);
+				progressBar.setProgress(1.0 / 2.0);
 				progressLabel.setText(bundle.getString("progress.installing"));
 			}
 
@@ -623,7 +632,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(2.0/2.0);
+				progressBar.setProgress(2.0 / 2.0);
 				progressLabel.setText(bundle.getString("progress.launching"));
 			}
 
@@ -685,7 +694,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(kilobytesDownloaded/totalFileSizeInKB);
+				progressBar.setProgress(kilobytesDownloaded / totalFileSizeInKB);
 			}
 
 		});
