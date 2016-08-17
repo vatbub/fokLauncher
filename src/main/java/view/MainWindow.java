@@ -2,6 +2,7 @@ package view;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
@@ -395,6 +396,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 								VersionList verList = new VersionList();
 								verList = app.getCurrentlyInstalledVersions();
+								Collections.sort(verList);
 
 								for (Version ver : verList) {
 									VersionMenuItem menuItem = new VersionMenuItem();
