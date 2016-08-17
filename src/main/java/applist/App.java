@@ -510,6 +510,11 @@ public class App {
 		}
 
 		// Write xml-File
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
 	}
@@ -1067,6 +1072,7 @@ public class App {
 			long completeFileSize = httpConnection.getContentLength();
 
 			java.io.BufferedInputStream in = new java.io.BufferedInputStream(httpConnection.getInputStream());
+			outputFile.getParentFile().mkdirs();
 			java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
 			java.io.BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
 			byte[] data = new byte[1024];
