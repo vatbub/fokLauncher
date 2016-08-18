@@ -167,6 +167,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	void workOfflineCheckboxOnAction(ActionEvent event) {
 		updateLaunchButton();
 	}
+	
+	// Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
+    @FXML
+    void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
+        // TODO: Implement saving this option
+    }
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
