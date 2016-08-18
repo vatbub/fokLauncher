@@ -890,8 +890,8 @@ public class App {
 
 			pb.start();
 		} else {
-			System.exit(0);
 			pb.start();
+			System.exit(0);
 		}
 	}
 
