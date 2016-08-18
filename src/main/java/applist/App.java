@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,10 +22,11 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
 import common.*;
+import javafx.application.Platform;
 import logging.FOKLogger;
 
 public class App {
-	
+
 	FOKLogger log = new FOKLogger(App.class.getName());
 
 	/**
@@ -82,6 +84,12 @@ public class App {
 	private boolean specificVersionListLoaded = false;
 
 	private boolean deletableVersionListLoaded = false;
+
+	/**
+	 * A list of event handlers that handle the event that this app was launched
+	 * and exited then
+	 */
+	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<Runnable>();
 
 	/**
 	 * @return the name
@@ -878,21 +886,30 @@ public class App {
 				+ " disableUpdateChecks");
 		ProcessBuilder pb = new ProcessBuilder("java", "-jar", destFolder + File.separator + destFilename,
 				"disableUpdateChecks").inheritIO();
+		Process process;
 
 		if (gui != null) {
 			gui.hide();
-			
+
 			log.getLogger().info("Launching application " + destFilename);
 
 			System.out.println("------------------------------------------------------------------");
 			System.out.println("The following output is coming from " + destFilename);
 			System.out.println("------------------------------------------------------------------");
 
-			pb.start();
+			process = pb.start();
 		} else {
-			pb.start();
-			System.exit(0);
+			process = pb.start();
 		}
+
+		try {
+			process.waitFor();
+		} catch (InterruptedException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+
+		fireLaunchedAppExits();
+
 	}
 
 	/**
@@ -1277,5 +1294,65 @@ public class App {
 		File appFile = new File(destFolder + File.separator + appFileName);
 
 		return appFile.delete();
+	}
+
+	/**
+	 * Adds a handler for the event that the launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to add.
+	 */
+	public void addEventHandlerWhenLaunchedAppExits(Runnable handler) {
+		// Only add handler if it was not already added
+		if (!this.isEventHandlerWhenLaunchedAppExitsAttached(handler)) {
+			eventHandlersWhenLaunchedAppExits.add(handler);
+		}
+	}
+
+	/**
+	 * Removes a handler for the event that the launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to remove.
+	 */
+	public void removeEventHandlerWhenLaunchedAppExits(Runnable handler) {
+		// Only remove handler if it was already added
+		if (this.isEventHandlerWhenLaunchedAppExitsAttached(handler)) {
+			eventHandlersWhenLaunchedAppExits.remove(handler);
+		}
+	}
+
+	/**
+	 * checks if the specified handler is already attached to the event that the
+	 * launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to be checked.
+	 * @return {@code true} if the handler is already attached, {@code false}
+	 *         otherwise
+	 */
+	public boolean isEventHandlerWhenLaunchedAppExitsAttached(Runnable handler) {
+		return eventHandlersWhenLaunchedAppExits.contains(handler);
+	}
+
+	/**
+	 * Fires all handlers registered for the launchedAppExits event.
+	 */
+	private void fireLaunchedAppExits() {
+		log.getLogger().info("The launched app exited and the LaunchedAppExits event is now fired.");
+		for (Runnable handler : eventHandlersWhenLaunchedAppExits) {
+			try {
+				handler.run();
+			} catch (IllegalStateException e) {
+				log.getLogger().log(Level.INFO,
+						"An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
+						e);
+				try {
+					Platform.runLater(handler);
+				} catch (Exception e2) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e2);
+				}
+			}
+		}
 	}
 }
