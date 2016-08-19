@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import org.jdom2.Document;
@@ -218,9 +219,11 @@ public class App {
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-		Version res = Collections.max(getCurrentlyInstalledVersions());
-
-		return res;
+		try {
+			return Collections.max(getCurrentlyInstalledVersions());
+		} catch (NoSuchElementException e) {
+			return null;
+		}
 	}
 
 	/**
