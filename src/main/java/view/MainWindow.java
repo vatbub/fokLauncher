@@ -44,6 +44,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
 
+	/**
+	 * This reference always refers to the currently used instance of the
+	 * MainWidow. The purpose of this field that {@code this} can be accessed in
+	 * a convenient way in static methods.
+	 */
+	private static MainWindow currentMainWindowInstance;
+
 	private static App currentlySelectedApp = null;
 
 	@FXML // ResourceBundle that was given to the FXMLLoader
@@ -60,9 +67,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML // fx:id="launchButton"
 	private Button launchButton; // Value injected by FXMLLoader
-	
+
 	@FXML // fx:id="launchLauncherAfterAppExitCheckbox"
-    private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by FXMLLoader
+	private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
+															// FXMLLoader
 
 	@FXML // fx:id="progressBar"
 	private ProgressBar progressBar; // Value injected by FXMLLoader
@@ -90,12 +98,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	void appListOnMouseClicked(MouseEvent event) {
 		// Currently not used
 	}
-	
+
 	private static Runnable showLauncherAgain = new Runnable(){
 		@Override
 		public void run() {
 			
-			stage.show();
+			// reset the ui
+			try {
+				currentMainWindowInstance.start(stage);
+			} catch (Exception e) {
+				log.getLogger().log(Level.INFO,
+						"An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
+						e);
+			}
 			Platform.setImplicitExit(true);
 		}
 	};
@@ -138,14 +153,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				public void run() {
 					try {
 						// Attach the on app exit handler if required
-						if (launchLauncherAfterAppExitCheckbox.isSelected()){
+						if (launchLauncherAfterAppExitCheckbox.isSelected()) {
 							Platform.setImplicitExit(false);
 							currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-						}else {
+						} else {
 							Platform.setImplicitExit(true);
 							currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
 						}
-						
+
 						currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
 								workOfflineCheckbox.isSelected());
 					} catch (IOException | JDOMException e) {
@@ -167,12 +182,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	void workOfflineCheckboxOnAction(ActionEvent event) {
 		updateLaunchButton();
 	}
-	
+
 	// Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
-    @FXML
-    void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
-        // TODO: Implement saving this option
-    }
+	@FXML
+	void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
+		// TODO: Implement saving this option
+	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -228,7 +243,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		try {
 			currentlySelectedApp.cancelDownloadAndLaunch(this);
 		} catch (Exception e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.", e);
+			log.getLogger().log(Level.SEVERE,
+					"An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.",
+					e);
 		}
 	}
 
@@ -236,17 +253,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			// complete
 	void initialize() {
 		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert progressLabel != null : "fx:id=\"progressLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert progressLabel != null : "fx:id=\"progressLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+		
+		currentMainWindowInstance = this;
 
 		enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")));
 		try {
@@ -365,13 +384,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 												@Override
 												public void run() {
 													try {
-														// Attach the on app exit handler if required
-														if (launchLauncherAfterAppExitCheckbox.isSelected()){
+														// Attach the on app
+														// exit handler if
+														// required
+														if (launchLauncherAfterAppExitCheckbox.isSelected()) {
 															Platform.setImplicitExit(false);
-															currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-														}else {
+															currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(
+																	showLauncherAgain);
+														} else {
 															Platform.setImplicitExit(true);
-															currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+															currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(
+																	showLauncherAgain);
 														}
 														currentlySelectedApp.downloadIfNecessaryAndLaunch(gui,
 																menuItem.getVersion(),

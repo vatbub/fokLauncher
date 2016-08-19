@@ -1344,18 +1344,7 @@ public class App {
 	private void fireLaunchedAppExits() {
 		log.getLogger().info("The launched app exited and the LaunchedAppExits event is now fired.");
 		for (Runnable handler : eventHandlersWhenLaunchedAppExits) {
-			try {
-				handler.run();
-			} catch (IllegalStateException e) {
-				log.getLogger().log(Level.INFO,
-						"An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
-						e);
-				try {
-					Platform.runLater(handler);
-				} catch (Exception e2) {
-					log.getLogger().log(Level.SEVERE, "An error occurred", e2);
-				}
-			}
+			Platform.runLater(handler);
 		}
 	}
 }
