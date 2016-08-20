@@ -63,6 +63,8 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<!-- Build a windows executable -->
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
@@ -101,6 +103,30 @@
 								<internalName>${project.artifactId}</internalName>
 								<originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe</originalFilename>
 							</versionInfo>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Attach the windows executable to the deployed artifacts -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>attach-artifacts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>attach-artifact</goal>
+						</goals>
+						<configuration>
+							<artifacts>
+								<artifact>
+									<file>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</file>
+									<type>exe</type>
+									<classifier>WindowsExecutable</classifier>
+								</artifact>
+							</artifacts>
 						</configuration>
 					</execution>
 				</executions>
