@@ -620,8 +620,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		};
 
-		// Only update the button caption if no download is running
-		if (!downloadAndLaunchThread.isAlive()) {
+		// Only update the button caption if no download is running and an app is selected
+		if (!downloadAndLaunchThread.isAlive() && currentlySelectedApp!=null) {
 			getAppStatus.setName("getAppStatus");
 			getAppStatus.start();
 		}
