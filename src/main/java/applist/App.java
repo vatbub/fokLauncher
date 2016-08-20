@@ -210,17 +210,33 @@ public class App {
 			return res;
 		}
 	}
-
+	
 	/**
 	 * Returns the currently installed version of the app or {@code null} if the
-	 * app is not yet installed locally.
+	 * app is not yet installed locally. Takes snapshots into account.
 	 * 
 	 * @return the currentlyInstalledVersion
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
+		return getCurrentlyInstalledVersion(true);
+	}
+
+	/**
+	 * Returns the currently installed version of the app or {@code null} if the
+	 * app is not yet installed locally.
+	 * 
+	 * @param snapshotsEnabled If {@code false}, snapshots will be removed from this list.
+	 * @return the currentlyInstalledVersion
+	 * @see #isPresentOnHarddrive()
+	 */
+	public Version getCurrentlyInstalledVersion(boolean snapshotsEnabled) {
 		try {
-			return Collections.max(getCurrentlyInstalledVersions());
+			VersionList vers = getCurrentlyInstalledVersions();
+			if (!snapshotsEnabled){
+				vers.removeSnapshots();
+			}
+			return Collections.max(vers);
 		} catch (NoSuchElementException e) {
 			return null;
 		}
@@ -371,11 +387,7 @@ public class App {
 	 */
 	public boolean isPresentOnHarddrive() {
 		// Check if metadata file is present
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
-		File metadata = new File(fileName);
-		return metadata.exists();
+		return this.getCurrentlyInstalledVersion()!=null;
 	}
 
 	/**
@@ -620,7 +632,7 @@ public class App {
 			onlineVersion = this.getLatestOnlineVersion();
 		}
 
-		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1;
+		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion(snapshotsEnabled)) == 1;
 	}
 
 	/**
