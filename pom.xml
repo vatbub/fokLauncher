@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<repositories>
@@ -23,22 +24,23 @@
 		<artifactId>parentPom</artifactId>
 		<version>0.0.10-SNAPSHOT</version>
 	</parent>
-	
+
 	<scm>
 		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
 		<url>scm:git:git@github.com:vatbub/foklauncher.git</url>
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 
 	<artifactId>foklauncher</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<inceptionYear>2016</inceptionYear>
 
-	<name>foklauncher</name>
-	<url>http://maven.apache.org</url>
-	
+	<name>FOK Launcher</name>
+	<description>A Launcher for FOK Projects.</description>
+	<url>http://fokprojects.mo-mar.de/</url>
+
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
@@ -57,6 +59,48 @@
 									<mainClass>view.MainWindow</mainClass>
 								</manifest>
 							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.akathist.maven.plugins.launch4j</groupId>
+				<artifactId>launch4j-maven-plugin</artifactId>
+				<version>1.5.1</version>
+				<executions>
+					<execution>
+						<id>l4j-clui</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<headerType>gui</headerType>
+							<jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
+							<outfile>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</outfile>
+							<dontWrapJar>false</dontWrapJar>
+							<downloadUrl>http://java.com/download</downloadUrl>
+							<classPath>
+								<mainClass>view.MainWindow</mainClass>
+								<preCp>anything</preCp>
+							</classPath>
+							<icon>src/main/resources/view/icon.ico</icon>
+							<jre>
+								<minVersion>1.8.0</minVersion>
+								<jdkPreference>preferJre</jdkPreference>
+							</jre>
+							<versionInfo>
+								<fileVersion>1.0.0.0</fileVersion>
+								<txtFileVersion>${project.version}</txtFileVersion>
+								<fileDescription>${project.description}</fileDescription>
+								<copyright>2016 Frederik Kammel</copyright>
+								<productVersion>1.0.0.0</productVersion>
+								<txtProductVersion>${project.version}</txtProductVersion>
+								<productName>${project.name}</productName>
+								<companyName>FOK Projects</companyName>
+								<internalName>${project.artifactId}</internalName>
+								<originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe</originalFilename>
+							</versionInfo>
 						</configuration>
 					</execution>
 				</executions>
