@@ -5,8 +5,7 @@ addons:
   apt:
     packages:
       - oracle-java8-installer
-      - ia32-libs-multiarch
-      - ia32-libs
+      - libc6-i386
 cache:
   directories:
   - "$HOME/.m2"
