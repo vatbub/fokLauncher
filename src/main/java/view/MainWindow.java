@@ -128,7 +128,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(Config.getUpdateRepoBaseURL(),
-						Config.groupID, Config.artifactID, Config.updateFileClassifier);
+						Config.groupID, Config.artifactID, Config.getUpdateFileClassifier(), Common.getPackaging());
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
@@ -195,13 +195,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		try {
 			common.Common.setAppName("foklauncher");
 			log = new FOKLogger(MainWindow.class.getName());
+			log.getLogger().info(Common.getPackaging());
 			prefs = new Prefs(MainWindow.class.getName());
 
 			Thread updateThread = new Thread() {
 				@Override
 				public void run() {
 					UpdateInfo update = UpdateChecker.isUpdateAvailable(Config.getUpdateRepoBaseURL(), Config.groupID,
-							Config.artifactID, Config.updateFileClassifier);
+							Config.artifactID, Config.getUpdateFileClassifier(), Common.getPackaging());
 					if (update.showAlert) {
 						Platform.runLater(new Runnable() {
 

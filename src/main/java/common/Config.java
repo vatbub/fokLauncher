@@ -26,7 +26,14 @@ public class Config {
 
 	public static String artifactID = "foklauncher";
 	public static String groupID = "fokprojects";
-	public static String updateFileClassifier = "jar-with-dependencies";
+	
+	public static String getUpdateFileClassifier(){
+		if (Common.getPackaging().equals("exe")){
+			return "WindowsExecutable";
+		}else {
+			return "jar-with-dependencies";
+		}
+	}
 	
 	//AppList
 	
