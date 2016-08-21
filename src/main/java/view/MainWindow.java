@@ -43,10 +43,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				String version = arg.substring(arg.toLowerCase().indexOf('=') + 1);
 				Common.setMockAppVersion(version);
 			} else if (arg.toLowerCase().matches("mockbuildnumber=.*")) {
-				// Set the mock version
+				// Set the mock build number
 				String buildnumber = arg.substring(arg.toLowerCase().indexOf('=') + 1);
 				Common.setMockBuildNumber(buildnumber);
-				;
+			} else if (arg.toLowerCase().matches("mockpackaging=.*")) {
+				// Set the mock packaging
+				String packaging = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				Common.setMockPackaging(packaging);
 			}
 		}
 		
