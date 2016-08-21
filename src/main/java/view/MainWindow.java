@@ -195,7 +195,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		try {
 			common.Common.setAppName("foklauncher");
 			log = new FOKLogger(MainWindow.class.getName());
-			log.getLogger().info(Common.getPackaging());
 			prefs = new Prefs(MainWindow.class.getName());
 
 			Thread updateThread = new Thread() {
