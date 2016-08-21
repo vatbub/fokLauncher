@@ -237,7 +237,7 @@ public class App {
 				vers.removeSnapshots();
 			}
 			return Collections.max(vers);
-		} catch (NoSuchElementException e) {
+		} catch (Exception e) {
 			return null;
 		}
 	}
@@ -897,9 +897,16 @@ public class App {
 			gui.launchStarted();
 		}
 
-		log.getLogger().info("Launching app using the command: java -jar " + destFolder + File.separator + destFilename
+		String jarFileName = destFolder + File.separator + destFilename;
+		
+		// throw exception if the jar can't be found for some unlikely reason 
+		if (!(new File(jarFileName)).exists()){
+			throw new FileNotFoundException(jarFileName);
+		}
+		
+		log.getLogger().info("Launching app using the command: java -jar " + jarFileName
 				+ " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", destFolder + File.separator + destFilename,
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName,
 				"disableUpdateChecks").inheritIO();
 		Process process;
 

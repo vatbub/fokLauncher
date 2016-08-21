@@ -164,7 +164,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
 								workOfflineCheckbox.isSelected());
 					} catch (IOException | JDOMException e) {
-						gui.showErrorMessage("An error occurred: " + e.getMessage());
+						gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
 						log.getLogger().log(Level.SEVERE, "An error occurred", e);
 					}
 				}
@@ -400,7 +400,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 																menuItem.getVersion(),
 																workOfflineCheckbox.isSelected());
 													} catch (IOException | JDOMException e) {
-														gui.showErrorMessage("An error occurred: " + e.getMessage());
+														gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
 														log.getLogger().log(Level.SEVERE, "An error occurred", e);
 													}
 												}
@@ -520,7 +520,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 				} catch (JDOMException | IOException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
-					gui.showErrorMessage(e.getMessage(), true);
+					gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
 				}
 			}
 		};
@@ -711,7 +711,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				Alert alert = new Alert(Alert.AlertType.ERROR, message);
+				Alert alert = new Alert(Alert.AlertType.ERROR, message + "\n\n" + "The app needs to close now.");
 				alert.show();
 
 				Thread t = new Thread() {
