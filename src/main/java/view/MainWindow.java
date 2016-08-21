@@ -33,6 +33,23 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static FOKLogger log;
 
 	public static void main(String[] args) {
+		common.Common.setAppName("foklauncher");
+		log = new FOKLogger(MainWindow.class.getName());
+		prefs = new Prefs(MainWindow.class.getName());
+		
+		for (String arg : args) {
+			if (arg.toLowerCase().matches("mockappversion=.*")) {
+				// Set the mock version
+				String version = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				Common.setMockAppVersion(version);
+			} else if (arg.toLowerCase().matches("mockbuildnumber=.*")) {
+				// Set the mock version
+				String buildnumber = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				Common.setMockBuildNumber(buildnumber);
+				;
+			}
+		}
+		
 		launch(args);
 	}
 
@@ -193,10 +210,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	public void start(Stage primaryStage) throws Exception {
 		stage = primaryStage;
 		try {
-			common.Common.setAppName("foklauncher");
-			log = new FOKLogger(MainWindow.class.getName());
-			prefs = new Prefs(MainWindow.class.getName());
-
 			Thread updateThread = new Thread() {
 				@Override
 				public void run() {
