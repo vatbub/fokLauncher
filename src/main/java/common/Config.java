@@ -11,7 +11,7 @@ import logging.FOKLogger;
 
 public class Config {
 	private static FOKLogger log = new FOKLogger(Config.class.getName());
-	
+
 	// Project setup
 	public static URL getUpdateRepoBaseURL() {
 		URL res = null;
@@ -26,17 +26,23 @@ public class Config {
 
 	public static String artifactID = "foklauncher";
 	public static String groupID = "fokprojects";
-	
-	public static String getUpdateFileClassifier(){
-		if (Common.getPackaging().equals("exe")){
-			return "WindowsExecutable";
-		}else {
+
+	public static String getUpdateFileClassifier() {
+		String packaging = Common.getPackaging();
+		if (packaging != null) {
+			if (packaging.equals("exe")) {
+				return "WindowsExecutable";
+			} else {
+				return "jar-with-dependencies";
+			}
+		} else {
+			// no packaging found
 			return "jar-with-dependencies";
 		}
 	}
-	
-	//AppList
-	
+
+	// AppList
+
 	public static URL getAppListXMLURL() {
 		URL res = null;
 		try {
@@ -47,24 +53,25 @@ public class Config {
 
 		return res;
 	}
-	
-	public static List<String> getSupportedFOKConfigModelVersion(){
+
+	public static List<String> getSupportedFOKConfigModelVersion() {
 		List<String> res = new ArrayList<String>();
-		
+
 		res.add("0.0.1");
-		
+
 		return res;
 	}
-	
+
 	/**
-	 * The subfolder in foklaunchers appdata folder where the actual apps will be downloaded to. {appName} will be replaced by the apps name.
+	 * The subfolder in foklaunchers appdata folder where the actual apps will
+	 * be downloaded to. {appName} will be replaced by the apps name.
 	 */
 	public static String subfolderToSaveApps = "apps" + File.separator + "{appName}";
-	
+
 	/**
 	 * The filename of the apps metadata file
 	 */
 	public static String appMetadataFileName = "metadata.xml";
-	
+
 	public static String appListCacheFileName = "appListCache.xml";
 }
