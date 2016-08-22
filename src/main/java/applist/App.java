@@ -190,7 +190,7 @@ public class App {
 					mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
 
 			Document snapshotMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString()
-					+ "/" + mavenGroupID + "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
+					+ "/" + mavenGroupID.replace('.',  '/') + "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
 
 			if (!res.isSnapshot()) {
 				throw new IllegalStateException(
@@ -563,10 +563,10 @@ public class App {
 		if (snapshotsEnabled) {
 			// Snapshots enabled
 			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/"
-					+ this.getMavenGroupID() + "/" + this.getMavenArtifactID() + "/maven-metadata.xml"));
+					+ this.getMavenGroupID().replace('.',  '/') + "/" + this.getMavenArtifactID() + "/maven-metadata.xml"));
 		} else {
 			// Snapshots disabled
-			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/" + mavenGroupID
+			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/" + this.getMavenGroupID().replace('.',  '/')
 					+ "/" + mavenArtifactID + "/maven-metadata.xml"));
 		}
 
@@ -1059,11 +1059,11 @@ public class App {
 
 		// Construct the download url
 		if (this.getMavenClassifier().equals("")) {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID + "/" + this.getMavenArtifactID()
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID.replace('.',  '/') + "/" + this.getMavenArtifactID()
 					+ "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-"
 					+ versionToDownload.toString() + ".jar");
 		} else {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID() + "/"
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID().replace('.',  '/') + "/"
 					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
 					+ "-" + versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
 		}
