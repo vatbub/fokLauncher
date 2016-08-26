@@ -24,8 +24,8 @@ public class Config {
 		return res;
 	}
 
-	public static String artifactID = "foklauncher";
-	public static String groupID = "fokprojects";
+	public static final String artifactID = "foklauncher";
+	public static final String groupID = "fokprojects";
 
 	public static String getUpdateFileClassifier() {
 		String packaging = Common.getPackaging();
@@ -66,12 +66,12 @@ public class Config {
 	 * The subfolder in foklaunchers appdata folder where the actual apps will
 	 * be downloaded to. {appName} will be replaced by the apps name.
 	 */
-	public static String subfolderToSaveApps = "apps" + File.separator + "{appName}";
+	public static final String subfolderToSaveApps = "apps" + File.separator + "{appName}";
 
 	/**
 	 * The filename of the apps metadata file
 	 */
-	public static String appMetadataFileName = "metadata.xml";
+	public static final String appMetadataFileName = "metadata.xml";
 
-	public static String appListCacheFileName = "appListCache.xml";
+	public static final String appListCacheFileName = "appListCache.xml";
 }
