@@ -385,6 +385,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 										// Offline mode enabled
 										verList = app.getCurrentlyInstalledVersions();
 									}
+									
+									// Sort the list
+									Collections.sort(verList);
 
 									// Clear previous list
 									Platform.runLater(new Runnable() {
