@@ -36,7 +36,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		common.Common.setAppName("foklauncher");
 		log = new FOKLogger(MainWindow.class.getName());
 		prefs = new Prefs(MainWindow.class.getName());
-		
+
 		for (String arg : args) {
 			if (arg.toLowerCase().matches("mockappversion=.*")) {
 				// Set the mock version
@@ -52,13 +52,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Common.setMockPackaging(packaging);
 			}
 		}
-		
+
 		launch(args);
 	}
 
 	private ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
 	private static Prefs prefs;
-	private static String enableSnapshotsPrefKey = "enableSnapshots";
+	private static final String enableSnapshotsPrefKey = "enableSnapshots";
+	private static final String showLauncherAgainPrefKey = "showLauncherAgain";
 	private static AppList apps;
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
@@ -119,10 +120,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Currently not used
 	}
 
-	private static Runnable showLauncherAgain = new Runnable(){
+	private static Runnable showLauncherAgain = new Runnable() {
 		@Override
 		public void run() {
-			
+
 			// reset the ui
 			try {
 				currentMainWindowInstance.start(stage);
@@ -206,7 +207,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	// Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
 	@FXML
 	void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
-		// TODO: Implement saving this option
+		prefs.setPreference(showLauncherAgainPrefKey,
+				Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
 	}
 
 	@Override
@@ -280,10 +282,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
-		
+
 		currentMainWindowInstance = this;
 
 		enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")));
+		launchLauncherAfterAppExitCheckbox
+				.setSelected(Boolean.parseBoolean(prefs.getPreference(showLauncherAgainPrefKey, "false")));
+
 		try {
 			versionLabel.setText(new Version(Common.getAppVersion(), Common.getBuildNumber()).toString(false));
 		} catch (IllegalArgumentException e) {
@@ -416,7 +421,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 																menuItem.getVersion(),
 																workOfflineCheckbox.isSelected());
 													} catch (IOException | JDOMException e) {
-														gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+														gui.showErrorMessage("An error occurred: \n"
+																+ e.getClass().getName() + "\n" + e.getMessage());
 														log.getLogger().log(Level.SEVERE, "An error occurred", e);
 													}
 												}
@@ -636,8 +642,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		};
 
-		// Only update the button caption if no download is running and an app is selected
-		if (!downloadAndLaunchThread.isAlive() && currentlySelectedApp!=null) {
+		// Only update the button caption if no download is running and an app
+		// is selected
+		if (!downloadAndLaunchThread.isAlive() && currentlySelectedApp != null) {
 			getAppStatus.setName("getAppStatus");
 			getAppStatus.start();
 		}
