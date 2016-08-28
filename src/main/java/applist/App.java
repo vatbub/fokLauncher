@@ -189,8 +189,9 @@ public class App {
 			Version res = new Version(
 					mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
 
-			Document snapshotMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString()
-					+ "/" + mavenGroupID.replace('.',  '/') + "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
+			Document snapshotMetadata = new SAXBuilder()
+					.build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/" + mavenGroupID.replace('.', '/')
+							+ "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
 
 			if (!res.isSnapshot()) {
 				throw new IllegalStateException(
@@ -209,7 +210,7 @@ public class App {
 			return res;
 		}
 	}
-	
+
 	/**
 	 * Returns the currently installed version of the app or {@code null} if the
 	 * app is not yet installed locally. Takes snapshots into account.
@@ -225,14 +226,15 @@ public class App {
 	 * Returns the currently installed version of the app or {@code null} if the
 	 * app is not yet installed locally.
 	 * 
-	 * @param snapshotsEnabled If {@code false}, snapshots will be removed from this list.
+	 * @param snapshotsEnabled
+	 *            If {@code false}, snapshots will be removed from this list.
 	 * @return the currentlyInstalledVersion
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion(boolean snapshotsEnabled) {
 		try {
 			VersionList vers = getCurrentlyInstalledVersions();
-			if (!snapshotsEnabled){
+			if (!snapshotsEnabled) {
 				vers.removeSnapshots();
 			}
 			return Collections.max(vers);
@@ -386,7 +388,7 @@ public class App {
 	 */
 	public boolean isPresentOnHarddrive() {
 		// Check if metadata file is present
-		return this.getCurrentlyInstalledVersion()!=null;
+		return this.getCurrentlyInstalledVersion() != null;
 	}
 
 	/**
@@ -562,12 +564,13 @@ public class App {
 
 		if (snapshotsEnabled) {
 			// Snapshots enabled
-			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/"
-					+ this.getMavenGroupID().replace('.',  '/') + "/" + this.getMavenArtifactID() + "/maven-metadata.xml"));
+			mavenMetadata = new SAXBuilder().build(new URL(
+					this.getMavenSnapshotRepoBaseURL().toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
+							+ this.getMavenArtifactID() + "/maven-metadata.xml"));
 		} else {
 			// Snapshots disabled
-			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/" + this.getMavenGroupID().replace('.',  '/')
-					+ "/" + mavenArtifactID + "/maven-metadata.xml"));
+			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/"
+					+ this.getMavenGroupID().replace('.', '/') + "/" + mavenArtifactID + "/maven-metadata.xml"));
 		}
 
 		return mavenMetadata;
@@ -897,16 +900,14 @@ public class App {
 		}
 
 		String jarFileName = destFolder + File.separator + destFilename;
-		
-		// throw exception if the jar can't be found for some unlikely reason 
-		if (!(new File(jarFileName)).exists()){
+
+		// throw exception if the jar can't be found for some unlikely reason
+		if (!(new File(jarFileName)).exists()) {
 			throw new FileNotFoundException(jarFileName);
 		}
-		
-		log.getLogger().info("Launching app using the command: java -jar " + jarFileName
-				+ " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName,
-				"disableUpdateChecks").inheritIO();
+
+		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks").inheritIO();
 		Process process;
 
 		if (gui != null) {
@@ -927,6 +928,15 @@ public class App {
 			process.waitFor();
 		} catch (InterruptedException e) {
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+		
+		// Check the status code of the process
+		if (process.exitValue()!=0){
+			// Something went wrong
+			log.getLogger().log(Level.SEVERE, "The java process returned with exit code "  + process.exitValue());
+			if (gui!=null){
+				gui.showErrorMessage("Something happened while launching the selected app. Try to launch it again and if this error occurs again, try to delete the app and download it again.");
+			}
 		}
 
 		fireLaunchedAppExits();
@@ -1059,11 +1069,11 @@ public class App {
 
 		// Construct the download url
 		if (this.getMavenClassifier().equals("")) {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID.replace('.',  '/') + "/" + this.getMavenArtifactID()
-					+ "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID() + "-"
-					+ versionToDownload.toString() + ".jar");
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID.replace('.', '/') + "/"
+					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
+					+ "-" + versionToDownload.toString() + ".jar");
 		} else {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID().replace('.',  '/') + "/"
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
 					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
 					+ "-" + versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
 		}
@@ -1105,51 +1115,45 @@ public class App {
 		log.getLogger().info("Downloading to: " + outputFile.getAbsolutePath());
 		// FileUtils.copyURLToFile(artifactURL, outputFile);
 
-		try {
-			HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
-			long completeFileSize = httpConnection.getContentLength();
+		HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
+		long completeFileSize = httpConnection.getContentLength();
 
-			java.io.BufferedInputStream in = new java.io.BufferedInputStream(httpConnection.getInputStream());
-			outputFile.getParentFile().mkdirs();
-			java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
-			java.io.BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
-			byte[] data = new byte[1024];
-			long downloadedFileSize = 0;
-			int x = 0;
-			while ((x = in.read(data, 0, 1024)) >= 0) {
-				downloadedFileSize += x;
+		java.io.BufferedInputStream in = new java.io.BufferedInputStream(httpConnection.getInputStream());
+		outputFile.getParentFile().mkdirs();
+		java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
+		java.io.BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
+		byte[] data = new byte[1024];
+		long downloadedFileSize = 0;
+		int x = 0;
+		while ((x = in.read(data, 0, 1024)) >= 0) {
+			downloadedFileSize += x;
 
-				// calculate progress
-				// final int currentProgress = (int)
-				// ((((double)downloadedFileSize) / ((double)completeFileSize))
-				// * 100000d);
+			// calculate progress
+			// final int currentProgress = (int)
+			// ((((double)downloadedFileSize) / ((double)completeFileSize))
+			// * 100000d);
 
-				// update progress bar
-				if (gui != null) {
-					gui.downloadProgressChanged((double) (downloadedFileSize / 1024.0),
-							(double) (completeFileSize / 1024.0));
-				}
-
-				bout.write(data, 0, x);
-
-				// Perform Cancel if requested
-				if (cancelDownloadAndLaunch) {
-					bout.close();
-					in.close();
-					outputFile.delete();
-					if (gui != null) {
-						gui.operationCanceled();
-					}
-					return false;
-				}
+			// update progress bar
+			if (gui != null) {
+				gui.downloadProgressChanged((double) (downloadedFileSize / 1024.0),
+						(double) (completeFileSize / 1024.0));
 			}
-			bout.close();
-			in.close();
-		} catch (FileNotFoundException e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred", e);
-		} catch (IOException e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+
+			bout.write(data, 0, x);
+
+			// Perform Cancel if requested
+			if (cancelDownloadAndLaunch) {
+				bout.close();
+				in.close();
+				outputFile.delete();
+				if (gui != null) {
+					gui.operationCanceled();
+				}
+				return false;
+			}
 		}
+		bout.close();
+		in.close();
 
 		// download version info
 		downloadVersionInfo(versionToDownload, destFolder);
