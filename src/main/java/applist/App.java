@@ -95,6 +95,12 @@ public class App {
 	}
 
 	/**
+	 * Specifies if the info of this app was imported from a file or gatheerd
+	 * from the remote server.
+	 */
+	private boolean imported;
+
+	/**
 	 * The name of the app
 	 */
 	private String name;
@@ -413,6 +419,13 @@ public class App {
 	 */
 	public void setMavenClassifier(String mavenClassifier) {
 		this.mavenClassifier = mavenClassifier;
+	}
+
+	/**
+	 * @return the imported
+	 */
+	public boolean isImported() {
+		return imported;
 	}
 
 	/**
@@ -1471,6 +1484,7 @@ public class App {
 	 *             the launcher has no permission to read the file.
 	 */
 	private void importInfo(File fileToImport) throws IOException {
+		this.imported = true;
 		if (!fileToImport.isFile()) {
 			// Not a file
 			throw new IOException("The specified file is not a file");
