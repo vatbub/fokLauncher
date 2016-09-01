@@ -1,5 +1,6 @@
 package view;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
@@ -385,7 +386,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 										// Offline mode enabled
 										verList = app.getCurrentlyInstalledVersions();
 									}
-									
+
 									// Sort the list
 									Collections.sort(verList);
 
@@ -519,7 +520,29 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							}
 						});
 
-						contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem);
+						MenuItem exportInfoItem = new MenuItem();
+						exportInfoItem.setText("Export Info about this app...");
+						exportInfoItem.setOnAction(event2 -> {
+							FileChooser fileChooser = new FileChooser();
+							fileChooser.getExtensionFilters().addAll(
+									new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher")
+					            );
+							fileChooser.setTitle("Save Image");
+							File file = fileChooser.showSaveDialog(stage);
+							if (file != null) {
+								log.getLogger().info("Exporting info...");
+								App app = apps.get(cell.getIndex());
+								try {
+									System.out.println(file.getAbsolutePath());
+									app.exportInfo(file);
+								} catch (IOException e) {
+									log.getLogger().log(Level.SEVERE, "An error occurred", e);
+									gui.showErrorMessage(e.toString());
+								}
+							}
+						});
+
+						contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, exportInfoItem);
 
 						cell.textProperty().bind(cell.itemProperty());
 

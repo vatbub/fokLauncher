@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -12,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import org.jdom2.Document;
@@ -28,6 +30,69 @@ import logging.FOKLogger;
 public class App {
 
 	FOKLogger log = new FOKLogger(App.class.getName());
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId) {
+		this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, "");
+	}
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 * @param mavenClassifier
+	 *            The artifacts classifier or {@code ""} if the default artifact
+	 *            shall be used.
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId, String mavenClassifier) {
+		this.setName(name);
+		this.setMavenRepoBaseURL(mavenRepoBaseURL);
+		this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
+		this.setMavenGroupID(mavenGroupId);
+		this.setMavenArtifactID(mavenArtifactId);
+		this.setMavenClassifier(mavenClassifier);
+	}
+
+	/**
+	 * Creates a new app and imports its info from the specified file
+	 * 
+	 * @param fileToImportFrom
+	 *            The file to import the info from. Must be a *.foklauncher file
+	 * @throws IOException
+	 *             If the specified file is not a file (but a directory) or if
+	 *             the launcher has no permission to read the file.
+	 */
+	public App(File fileToImportFrom) throws IOException {
+		this.importInfo(fileToImportFrom);
+	}
 
 	/**
 	 * The name of the app
@@ -929,13 +994,14 @@ public class App {
 		} catch (InterruptedException e) {
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 		}
-		
+
 		// Check the status code of the process
-		if (process.exitValue()!=0){
+		if (process.exitValue() != 0) {
 			// Something went wrong
-			log.getLogger().log(Level.SEVERE, "The java process returned with exit code "  + process.exitValue());
-			if (gui!=null){
-				gui.showErrorMessage("Something happened while launching the selected app. Try to launch it again and if this error occurs again, try to delete the app and download it again.");
+			log.getLogger().log(Level.SEVERE, "The java process returned with exit code " + process.exitValue());
+			if (gui != null) {
+				gui.showErrorMessage(
+						"Something happened while launching the selected app. Try to launch it again and if this error occurs again, try to delete the app and download it again.");
 			}
 		}
 
@@ -1238,13 +1304,9 @@ public class App {
 		AppList res = new AppList();
 
 		for (Element app : fokLauncherEl.getChild("apps").getChildren("app")) {
-			App newApp = new App();
-
-			newApp.setName(app.getChild("name").getValue());
-			newApp.setMavenRepoBaseURL(new URL(app.getChild("repoBaseURL").getValue()));
-			newApp.setMavenSnapshotRepoBaseURL(new URL(app.getChild("snapshotRepoBaseURL").getValue()));
-			newApp.setMavenGroupID(app.getChild("groupId").getValue());
-			newApp.setMavenArtifactID(app.getChild("artifactId").getValue());
+			App newApp = new App(app.getChild("name").getValue(), new URL(app.getChild("repoBaseURL").getValue()),
+					new URL(app.getChild("snapshotRepoBaseURL").getValue()), app.getChild("groupId").getValue(),
+					app.getChild("artifactId").getValue());
 
 			// Add classifier only if one is defined
 			if (app.getChild("classifier") != null) {
@@ -1368,5 +1430,66 @@ public class App {
 		for (Runnable handler : eventHandlersWhenLaunchedAppExits) {
 			Platform.runLater(handler);
 		}
+	}
+
+	/**
+	 * Exports the info of this app to a *.foklauncher file
+	 * 
+	 * @param fileToWrite
+	 *            The {@link File} to be written to. If the file already exists
+	 *            on the disk, it will be overwritten.
+	 * @throws IOException
+	 *             If something happens while saving the file
+	 */
+	public void exportInfo(File fileToWrite) throws IOException {
+		if (!fileToWrite.exists()) {
+			// Create a new file
+			fileToWrite.createNewFile();
+		}
+
+		// We either have an empty file or a file that needs to be overwritten
+		Properties props = new Properties();
+
+		props.setProperty("name", this.getName());
+		props.setProperty("repoBaseURL", this.getMavenRepoBaseURL().toString());
+		props.setProperty("snapshotRepoBaseURL", this.getMavenSnapshotRepoBaseURL().toString());
+		props.setProperty("groupId", this.getMavenGroupID());
+		props.setProperty("artifactId", this.getMavenArtifactID());
+		props.setProperty("classifier", this.getMavenClassifier());
+
+		FileOutputStream out = new FileOutputStream(fileToWrite);
+		props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
+	}
+
+	/**
+	 * Imports the info of this app from a *.foklauncher file
+	 * 
+	 * @param fileToImport
+	 *            The {@link File} to be read from.
+	 * @throws IOException
+	 *             If the specified file is not a file (but a directory) or if
+	 *             the launcher has no permission to read the file.
+	 */
+	private void importInfo(File fileToImport) throws IOException {
+		if (!fileToImport.isFile()) {
+			// Not a file
+			throw new IOException("The specified file is not a file");
+		} else if (!fileToImport.canRead()) {
+			// Cannot write to file
+			throw new IOException("The specified file is read-only");
+		}
+
+		Properties props = new Properties();
+		if (fileToImport.exists()) {
+			// Load the properties
+			props.load(new FileReader(fileToImport));
+		}
+
+		this.setName(props.getProperty("name"));
+		this.setMavenRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
+		this.setMavenSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
+		this.setMavenGroupID(props.getProperty("groupId"));
+		this.setMavenArtifactID(props.getProperty("artifactId"));
+		this.setMavenClassifier(props.getProperty("classifier"));
 	}
 }
