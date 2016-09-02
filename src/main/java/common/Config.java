@@ -73,5 +73,10 @@ public class Config {
 	 */
 	public static final String appMetadataFileName = "metadata.xml";
 
+	/**
+	 * The file name where the app list cache is saved
+	 */
 	public static final String appListCacheFileName = "appListCache.xml";
+	
+	public static final String importedAppListFileName = "importedApps.xml";
 }
