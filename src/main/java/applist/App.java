@@ -1704,13 +1704,19 @@ public class App {
 		}
 
 		modelVersion.setText("0.0.1");
+		
+		List<Element> appsToDetach = new ArrayList<Element>();
 
 		for (Element app : appsElement.getChildren()) {
-			System.out.println(this.getImportFile().getAbsolutePath());
 			if (app.getChild("fileName").getValue().equals(this.getImportFile().getAbsolutePath())) {
-				// Delete it from the xml
-				app.detach();
+				// Collect elements to be detached
+				appsToDetach.add(app);
 			}
+		}
+		
+		// Detach them
+		for (Element app:appsToDetach){
+			app.detach();
 		}
 
 		// Write xml-File
