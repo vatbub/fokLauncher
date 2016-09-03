@@ -4,30 +4,58 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
-import org.jdom2.JDOMException;
-
 import applist.App;
 import applist.AppList;
-import common.*;
+import common.Common;
+import common.Config;
+import common.HidableUpdateProgressDialog;
+import common.Internet;
+import common.Prefs;
+import common.UpdateChecker;
+import common.UpdateInfo;
+import common.Version;
+import common.VersionList;
 import extended.VersionMenuItem;
-import javafx.application.*;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.fxml.*;
-import javafx.scene.control.*;
-import javafx.scene.*;
-import javafx.scene.image.*;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.image.Image;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.*;
+import javafx.scene.input.TransferMode;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import logging.FOKLogger;
 import view.updateAvailableDialog.UpdateAvailableDialog;
+
+import org.apache.commons.io.FilenameUtils;
+import org.jdom2.JDOMException;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
@@ -65,6 +93,294 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
+
+	private Runnable getAppListRunnable = new Runnable() {
+		@Override
+		public void run() {
+			try {
+
+				Platform.runLater(new Runnable() {
+
+					@Override
+					public void run() {
+						ObservableList<String> items = FXCollections
+								.observableArrayList(bundle.getString("WaitForAppList"));
+						appList.setItems(items);
+						appList.setDisable(true);
+					}
+
+				});
+
+				apps = App.getAppList();
+
+				ObservableList<String> items = FXCollections.observableArrayList();
+
+				for (App app : apps) {
+					items.add(app.getName());
+				}
+
+				// Build the context menu
+				appList.setCellFactory(lv -> {
+
+					ListCell<String> cell = new ListCell<>();
+
+					ContextMenu contextMenu = new ContextMenu();
+
+					Menu launchSpecificVersionItem = new Menu();
+					launchSpecificVersionItem.textProperty()
+							.bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
+
+					MenuItem dummyVersion = new MenuItem();
+					dummyVersion.setText(bundle.getString("waitForVersionList"));
+					launchSpecificVersionItem.getItems().add(dummyVersion);
+					launchSpecificVersionItem.setOnHiding(event2 -> {
+						launchSpecificVersionMenuCanceled = true;
+					});
+					launchSpecificVersionItem.setOnShown(event -> {
+						launchSpecificVersionMenuCanceled = false;
+						Thread buildContextMenuThread = new Thread() {
+							@Override
+							public void run() {
+								log.getLogger().info("Getting available online versions...");
+								App app = apps.get(cell.getIndex());
+
+								// Get available versions
+								VersionList verList = new VersionList();
+								if (!workOfflineCheckbox.isSelected()) {
+									// Online mode enabled
+									try {
+										verList = app.getAllOnlineVersions();
+										if (enableSnapshotsCheckbox.isSelected()) {
+											verList.add(app.getLatestOnlineSnapshotVersion());
+										}
+									} catch (Exception e) {
+										// Something happened, pretend
+										// offline mode
+										verList = app.getCurrentlyInstalledVersions();
+									}
+
+								} else {
+									// Offline mode enabled
+									verList = app.getCurrentlyInstalledVersions();
+								}
+
+								// Sort the list
+								Collections.sort(verList);
+
+								// Clear previous list
+								Platform.runLater(new Runnable() {
+
+									@Override
+									public void run() {
+										launchSpecificVersionItem.getItems().clear();
+									}
+								});
+
+								for (Version ver : verList) {
+									VersionMenuItem menuItem = new VersionMenuItem();
+									menuItem.setVersion(ver);
+									menuItem.setText(ver.toString(false));
+									menuItem.setOnAction(event2 -> {
+										// Launch the download
+										downloadAndLaunchThread = new Thread() {
+											@Override
+											public void run() {
+												try {
+													// Attach the on app
+													// exit handler if
+													// required
+													if (launchLauncherAfterAppExitCheckbox.isSelected()) {
+														Platform.setImplicitExit(false);
+														currentlySelectedApp
+																.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+													} else {
+														Platform.setImplicitExit(true);
+														currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(
+																showLauncherAgain);
+													}
+													currentlySelectedApp.downloadIfNecessaryAndLaunch(
+															currentMainWindowInstance, menuItem.getVersion(),
+															workOfflineCheckbox.isSelected());
+												} catch (IOException | JDOMException e) {
+													currentMainWindowInstance.showErrorMessage("An error occurred: \n"
+															+ e.getClass().getName() + "\n" + e.getMessage());
+													log.getLogger().log(Level.SEVERE, "An error occurred", e);
+												}
+											}
+										};
+
+										downloadAndLaunchThread.setName("downloadAndLaunchThread");
+										downloadAndLaunchThread.start();
+									});
+									Platform.runLater(new Runnable() {
+
+										@Override
+										public void run() {
+											launchSpecificVersionItem.getItems().add(menuItem);
+										}
+									});
+								}
+								Platform.runLater(new Runnable() {
+
+									@Override
+									public void run() {
+										if (!launchSpecificVersionMenuCanceled) {
+											launchSpecificVersionItem.hide();
+											launchSpecificVersionItem.show();
+										}
+									}
+								});
+							}
+						};
+
+						if (!apps.get(cell.getIndex()).isSpecificVersionListLoaded()) {
+							buildContextMenuThread.setName("buildContextMenuThread");
+							buildContextMenuThread.start();
+							apps.get(cell.getIndex()).setSpecificVersionListLoaded(true);
+						}
+					});
+
+					Menu deleteItem = new Menu();
+					deleteItem.textProperty()
+							.bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
+					MenuItem dummyVersion2 = new MenuItem();
+					dummyVersion2.setText(bundle.getString("waitForVersionList"));
+					deleteItem.getItems().add(dummyVersion2);
+
+					deleteItem.setOnShown(event -> {
+						App app = apps.get(cell.getIndex());
+
+						if (!app.isDeletableVersionListLoaded()) {
+							// Get deletable versions
+							app.setDeletableVersionListLoaded(true);
+							log.getLogger().info("Getting deletable versions...");
+							deleteItem.getItems().clear();
+
+							VersionList verList = new VersionList();
+							verList = app.getCurrentlyInstalledVersions();
+							Collections.sort(verList);
+
+							for (Version ver : verList) {
+								VersionMenuItem menuItem = new VersionMenuItem();
+								menuItem.setVersion(ver);
+								menuItem.setText(ver.toString(false));
+								menuItem.setOnAction(event2 -> {
+									// Delete the file
+									try {
+										currentlySelectedApp.delete(menuItem.getVersion());
+									} catch (IOException e) {
+										log.getLogger().log(Level.SEVERE, "An error occurred", e);
+									} finally {
+										updateLaunchButton();
+									}
+									// Update the list the next time the
+									// user opens it as it has changed
+									app.setDeletableVersionListLoaded(false);
+
+								});
+								Platform.runLater(new Runnable() {
+
+									@Override
+									public void run() {
+										deleteItem.getItems().add(menuItem);
+									}
+								});
+							}
+							Platform.runLater(new Runnable() {
+
+								@Override
+								public void run() {
+									deleteItem.hide();
+									deleteItem.show();
+								}
+							});
+						}
+					});
+
+					MenuItem exportInfoItem = new MenuItem();
+					exportInfoItem.setText("Export Info about this app...");
+					exportInfoItem.setOnAction(event2 -> {
+						FileChooser fileChooser = new FileChooser();
+						fileChooser.getExtensionFilters()
+								.addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
+						fileChooser.setTitle("Save Image");
+						File file = fileChooser.showSaveDialog(stage);
+						if (file != null) {
+							log.getLogger().info("Exporting info...");
+							App app = apps.get(cell.getIndex());
+
+							try {
+								System.out.println(file.getAbsolutePath());
+								app.exportInfo(file);
+							} catch (IOException e) {
+								log.getLogger().log(Level.SEVERE, "An error occurred", e);
+								currentMainWindowInstance.showErrorMessage(e.toString());
+							}
+						}
+					});
+
+					contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, exportInfoItem);
+
+					MenuItem removeImportedApp = new MenuItem();
+					contextMenu.setOnShowing(event5 -> {
+						App app = apps.get(cell.getIndex());
+						if (app.isImported()) {
+							removeImportedApp.setText("Remove this app from this list");
+							removeImportedApp.setOnAction(event3 -> {
+								try {
+									app.removeFromImportedAppList();
+									currentMainWindowInstance.loadAppList();
+								} catch (IOException e) {
+									log.getLogger().log(Level.SEVERE, "An error occurred", e);
+									currentMainWindowInstance.showErrorMessage(e.toString());
+								}
+							});
+
+							contextMenu.getItems().add(removeImportedApp);
+						}
+					});
+
+					contextMenu.setOnHidden(event5 -> {
+						// Remove the removeImportedApp-Item again if it exists
+						if (contextMenu.getItems().contains(removeImportedApp)) {
+							contextMenu.getItems().remove(removeImportedApp);
+						}
+					});
+
+					cell.textProperty().bind(cell.itemProperty());
+
+					cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+						if (isNowEmpty) {
+							cell.setContextMenu(null);
+						} else {
+							cell.setContextMenu(contextMenu);
+						}
+					});
+					return cell;
+				});
+
+				Platform.runLater(new Runnable() {
+
+					@Override
+					public void run() {
+						appList.setItems(items);
+						appList.setDisable(false);
+					}
+
+				});
+
+			} catch (JDOMException | IOException e) {
+				log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				currentMainWindowInstance
+						.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+			}
+		}
+	};
+
+	/**
+	 * The thread that gets the app list
+	 */
+	private Thread getAppListThread;
 
 	/**
 	 * This reference always refers to the currently used instance of the
@@ -119,6 +435,44 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void appListOnMouseClicked(MouseEvent event) {
 		// Currently not used
+	}
+
+	// Handler for ListView[fx:id="appList"] onDragOver
+	@FXML
+	void mainFrameOnDragOver(DragEvent event) {
+		Dragboard db = event.getDragboard();
+		// Only allow drag'n'drop for files and if no app list is currently
+		// loading
+		if (db.hasFiles() && !getAppListThread.isAlive()) {
+			// Don't accept the drag if any file contained in the drag does not have the *.foklauncher extension
+			for (File f:db.getFiles()){
+				if (!FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")){
+					event.consume();
+					return;
+				}
+			}
+			
+			event.acceptTransferModes(TransferMode.LINK);
+		} else {
+			event.consume();
+		}
+	}
+
+	@FXML
+	void mainFrameOnDragDropped(DragEvent event) {
+		// event.acceptTransferModes(TransferMode.ANY);
+		List<File> files = event.getDragboard().getFiles();
+
+		for (File f : files) {
+			log.getLogger().info("Importing app from " + f.getAbsolutePath() + "...");
+			try {
+				App.addImportedApp(f);
+				currentMainWindowInstance.loadAppList();
+			} catch (IOException e) {
+				log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				currentMainWindowInstance.showErrorMessage(e.toString(), false);
+			}
+		}
 	}
 
 	private static Runnable showLauncherAgain = new Runnable() {
@@ -315,264 +669,22 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			workOfflineCheckbox.setDisable(true);
 		}
 
-		MainWindow gui = this;
+		loadAppList();
+	}
 
-		Thread getAppListThread = new Thread() {
-			@Override
-			public void run() {
-				try {
-
-					Platform.runLater(new Runnable() {
-
-						@Override
-						public void run() {
-							ObservableList<String> items = FXCollections
-									.observableArrayList(bundle.getString("WaitForAppList"));
-							appList.setItems(items);
-							appList.setDisable(true);
-						}
-
-					});
-
-					apps = App.getAppList();
-
-					ObservableList<String> items = FXCollections.observableArrayList();
-
-					for (App app : apps) {
-						items.add(app.getName());
-					}
-
-					// Build the context menu
-					appList.setCellFactory(lv -> {
-
-						ListCell<String> cell = new ListCell<>();
-
-						ContextMenu contextMenu = new ContextMenu();
-
-						Menu launchSpecificVersionItem = new Menu();
-						launchSpecificVersionItem.textProperty()
-								.bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
-
-						MenuItem dummyVersion = new MenuItem();
-						dummyVersion.setText(bundle.getString("waitForVersionList"));
-						launchSpecificVersionItem.getItems().add(dummyVersion);
-						launchSpecificVersionItem.setOnHiding(event2 -> {
-							launchSpecificVersionMenuCanceled = true;
-						});
-						launchSpecificVersionItem.setOnShown(event -> {
-							launchSpecificVersionMenuCanceled = false;
-							Thread buildContextMenuThread = new Thread() {
-								@Override
-								public void run() {
-									log.getLogger().info("Getting available online versions...");
-									App app = apps.get(cell.getIndex());
-
-									// Get available versions
-									VersionList verList = new VersionList();
-									if (!workOfflineCheckbox.isSelected()) {
-										// Online mode enabled
-										try {
-											verList = app.getAllOnlineVersions();
-											if (enableSnapshotsCheckbox.isSelected()) {
-												verList.add(app.getLatestOnlineSnapshotVersion());
-											}
-										} catch (Exception e) {
-											// Something happened, pretend
-											// offline mode
-											verList = app.getCurrentlyInstalledVersions();
-										}
-
-									} else {
-										// Offline mode enabled
-										verList = app.getCurrentlyInstalledVersions();
-									}
-
-									// Sort the list
-									Collections.sort(verList);
-
-									// Clear previous list
-									Platform.runLater(new Runnable() {
-
-										@Override
-										public void run() {
-											launchSpecificVersionItem.getItems().clear();
-										}
-									});
-
-									for (Version ver : verList) {
-										VersionMenuItem menuItem = new VersionMenuItem();
-										menuItem.setVersion(ver);
-										menuItem.setText(ver.toString(false));
-										menuItem.setOnAction(event2 -> {
-											// Launch the download
-											downloadAndLaunchThread = new Thread() {
-												@Override
-												public void run() {
-													try {
-														// Attach the on app
-														// exit handler if
-														// required
-														if (launchLauncherAfterAppExitCheckbox.isSelected()) {
-															Platform.setImplicitExit(false);
-															currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(
-																	showLauncherAgain);
-														} else {
-															Platform.setImplicitExit(true);
-															currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(
-																	showLauncherAgain);
-														}
-														currentlySelectedApp.downloadIfNecessaryAndLaunch(gui,
-																menuItem.getVersion(),
-																workOfflineCheckbox.isSelected());
-													} catch (IOException | JDOMException e) {
-														gui.showErrorMessage("An error occurred: \n"
-																+ e.getClass().getName() + "\n" + e.getMessage());
-														log.getLogger().log(Level.SEVERE, "An error occurred", e);
-													}
-												}
-											};
-
-											downloadAndLaunchThread.setName("downloadAndLaunchThread");
-											downloadAndLaunchThread.start();
-										});
-										Platform.runLater(new Runnable() {
-
-											@Override
-											public void run() {
-												launchSpecificVersionItem.getItems().add(menuItem);
-											}
-										});
-									}
-									Platform.runLater(new Runnable() {
-
-										@Override
-										public void run() {
-											if (!launchSpecificVersionMenuCanceled) {
-												launchSpecificVersionItem.hide();
-												launchSpecificVersionItem.show();
-											}
-										}
-									});
-								}
-							};
-
-							if (!apps.get(cell.getIndex()).isSpecificVersionListLoaded()) {
-								buildContextMenuThread.setName("buildContextMenuThread");
-								buildContextMenuThread.start();
-								apps.get(cell.getIndex()).setSpecificVersionListLoaded(true);
-							}
-						});
-
-						Menu deleteItem = new Menu();
-						deleteItem.textProperty()
-								.bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
-						MenuItem dummyVersion2 = new MenuItem();
-						dummyVersion2.setText(bundle.getString("waitForVersionList"));
-						deleteItem.getItems().add(dummyVersion2);
-
-						deleteItem.setOnShown(event -> {
-							App app = apps.get(cell.getIndex());
-
-							if (!app.isDeletableVersionListLoaded()) {
-								// Get deletable versions
-								app.setDeletableVersionListLoaded(true);
-								log.getLogger().info("Getting deletable versions...");
-								deleteItem.getItems().clear();
-
-								VersionList verList = new VersionList();
-								verList = app.getCurrentlyInstalledVersions();
-								Collections.sort(verList);
-
-								for (Version ver : verList) {
-									VersionMenuItem menuItem = new VersionMenuItem();
-									menuItem.setVersion(ver);
-									menuItem.setText(ver.toString(false));
-									menuItem.setOnAction(event2 -> {
-										// Delete the file
-										try {
-											currentlySelectedApp.delete(menuItem.getVersion());
-										} catch (IOException e) {
-											log.getLogger().log(Level.SEVERE, "An error occurred", e);
-										} finally {
-											updateLaunchButton();
-										}
-										// Update the list the next time the
-										// user opens it as it has changed
-										app.setDeletableVersionListLoaded(false);
-
-									});
-									Platform.runLater(new Runnable() {
-
-										@Override
-										public void run() {
-											deleteItem.getItems().add(menuItem);
-										}
-									});
-								}
-								Platform.runLater(new Runnable() {
-
-									@Override
-									public void run() {
-										deleteItem.hide();
-										deleteItem.show();
-									}
-								});
-							}
-						});
-
-						MenuItem exportInfoItem = new MenuItem();
-						exportInfoItem.setText("Export Info about this app...");
-						exportInfoItem.setOnAction(event2 -> {
-							FileChooser fileChooser = new FileChooser();
-							fileChooser.getExtensionFilters().addAll(
-									new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher")
-					            );
-							fileChooser.setTitle("Save Image");
-							File file = fileChooser.showSaveDialog(stage);
-							if (file != null) {
-								log.getLogger().info("Exporting info...");
-								App app = apps.get(cell.getIndex());
-								try {
-									System.out.println(file.getAbsolutePath());
-									app.exportInfo(file);
-								} catch (IOException e) {
-									log.getLogger().log(Level.SEVERE, "An error occurred", e);
-									gui.showErrorMessage(e.toString());
-								}
-							}
-						});
-
-						contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, exportInfoItem);
-
-						cell.textProperty().bind(cell.itemProperty());
-
-						cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
-							if (isNowEmpty) {
-								cell.setContextMenu(null);
-							} else {
-								cell.setContextMenu(contextMenu);
-							}
-						});
-						return cell;
-					});
-
-					Platform.runLater(new Runnable() {
-
-						@Override
-						public void run() {
-							appList.setItems(items);
-							appList.setDisable(false);
-						}
-
-					});
-
-				} catch (JDOMException | IOException e) {
-					log.getLogger().log(Level.SEVERE, "An error occurred", e);
-					gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
-				}
+	/**
+	 * Loads the app list using the {@link App#getAppList()}-method
+	 */
+	private void loadAppList() {
+		if (getAppListThread != null) {
+			// If thread is not null and running, quit
+			if (getAppListThread.isAlive()) {
+				return;
 			}
-		};
+		}
 
+		// Thread is either null or not running anymore
+		getAppListThread = new Thread(getAppListRunnable);
 		getAppListThread.setName("getAppListThread");
 		getAppListThread.start();
 	}

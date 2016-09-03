@@ -29,7 +29,7 @@ import logging.FOKLogger;
 
 public class App {
 
-	FOKLogger log = new FOKLogger(App.class.getName());
+	private static FOKLogger log = new FOKLogger(App.class.getName());
 
 	/**
 	 * Creates a new App with the specified coordinates.
@@ -82,16 +82,34 @@ public class App {
 	}
 
 	/**
-	 * Creates a new app and imports its info from the specified file
+	 * Creates a new app and imports its info from the specified file. If the
+	 * specified file cannot be imported for some reason, this app will
+	 * automatically be deleted from the imported apps list.
 	 * 
 	 * @param fileToImportFrom
 	 *            The file to import the info from. Must be a *.foklauncher file
+	 * @throws FileNotFoundException
+	 *             This app cannot be imported for some reason and cannot be
+	 *             deleted from the imported apps list because the xml file of
+	 *             the imported apps list does not exist.
 	 * @throws IOException
 	 *             If the specified file is not a file (but a directory) or if
-	 *             the launcher has no permission to read the file.
+	 *             the launcher has no permission to read the file and this app
+	 *             cannot be deleted from the imported app list for some erason.
+	 * @see App#removeFromImportedAppList()
 	 */
-	public App(File fileToImportFrom) throws IOException {
-		this.importInfo(fileToImportFrom);
+	public App(File fileToImportFrom) throws FileNotFoundException, IOException {
+		try {
+			this.importInfo(fileToImportFrom);
+		} catch (IOException e) {
+			log.getLogger().log(Level.SEVERE,
+					"The app that should be imported from " + fileToImportFrom.getAbsolutePath()
+							+ " is automatically deleted from the imported apps list because something went wrong during the import. We probably didn't find the file to import.",
+					e);
+			this.removeFromImportedAppList();
+			// Propagate the Exception
+			throw e;
+		}
 	}
 
 	/**
@@ -99,6 +117,12 @@ public class App {
 	 * from the remote server.
 	 */
 	private boolean imported;
+
+	/**
+	 * Specifies the file from which this app was imported from (if it was
+	 * imported)
+	 */
+	private File importFile;
 
 	/**
 	 * The name of the app
@@ -426,6 +450,13 @@ public class App {
 	 */
 	public boolean isImported() {
 		return imported;
+	}
+
+	/**
+	 * @return the importFile
+	 */
+	public File getImportFile() {
+		return importFile;
 	}
 
 	/**
@@ -1278,6 +1309,33 @@ public class App {
 	}
 
 	/**
+	 * Returns a combined list of imported apps and apps from the server.
+	 * 
+	 * @return A combined list of imported apps and apps from the server.
+	 * @throws MalformedURLException
+	 *             If the maven repo base url of an app is malformed. The base
+	 *             urls are downloaded from the server.
+	 * @throws JDOMException
+	 *             If the xml-app list on the server or the xml file containing
+	 *             info about the imported apps is malformed
+	 * @throws IOException
+	 *             If the app list or metadata of some apps cannot be downloaded
+	 *             or if the xml file containing the info about the imported
+	 *             apps cannot be read.
+	 * @see App#getOnlineAppList()
+	 * @see App#getImportedAppList()
+	 */
+	public static AppList getAppList() throws MalformedURLException, JDOMException, IOException {
+		AppList res = getOnlineAppList();
+		try {
+			res.addAll(getImportedAppList());
+		} catch (JDOMException | IOException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+		return res;
+	}
+
+	/**
 	 * Get a {@link List} of available apps from the server.
 	 * 
 	 * @return A {@link List} of available apps from the server.
@@ -1287,9 +1345,10 @@ public class App {
 	 * @throws JDOMException
 	 *             If the xml-app list on the server is malformed
 	 * @throws IOException
-	 *             If the app list or metadata of some apps cannot bedownloaded.
+	 *             If the app list or metadata of some apps cannot be
+	 *             downloaded.
 	 */
-	public static AppList getAppList() throws MalformedURLException, JDOMException, IOException {
+	public static AppList getOnlineAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
 		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
@@ -1330,6 +1389,45 @@ public class App {
 		}
 
 		return res;
+	}
+
+	/**
+	 * Returns the list of apps that were imported by the user. If any app
+	 * cannot be imported, it will be removed from the list permanently
+	 * 
+	 * @return The list of apps that were imported by the user.
+	 * @throws IOException
+	 *             If the xml list cannot be read
+	 * @throws JDOMException
+	 *             If the xml list is malformed
+	 */
+	public static AppList getImportedAppList() throws JDOMException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		try {
+			AppList res = new AppList();
+
+			Document appsDoc = new SAXBuilder().build(fileName);
+			Element root = appsDoc.getRootElement();
+
+			@SuppressWarnings("unused")
+			Element modelVersion = root.getChild("modelVersion");
+			Element appsElement = root.getChild("importedApps");
+
+			for (Element app : appsElement.getChildren()) {
+				// import the info of every app
+				try {
+					App a = new App(new File(app.getChild("fileName").getValue()));
+					res.add(a);
+				} catch (IOException e) {
+					// Exception is already logged by the constructor
+				}
+			}
+
+			return res;
+		} catch (FileNotFoundException e) {
+			return new AppList();
+		}
 	}
 
 	/**
@@ -1475,7 +1573,7 @@ public class App {
 	}
 
 	/**
-	 * Imports the info of this app from a *.foklauncher file
+	 * Imports the info of this app from a *.foklauncher file.
 	 * 
 	 * @param fileToImport
 	 *            The {@link File} to be read from.
@@ -1485,6 +1583,7 @@ public class App {
 	 */
 	private void importInfo(File fileToImport) throws IOException {
 		this.imported = true;
+		this.importFile = fileToImport;
 		if (!fileToImport.isFile()) {
 			// Not a file
 			throw new IOException("The specified file is not a file");
@@ -1505,5 +1604,121 @@ public class App {
 		this.setMavenGroupID(props.getProperty("groupId"));
 		this.setMavenArtifactID(props.getProperty("artifactId"));
 		this.setMavenClassifier(props.getProperty("classifier"));
+	}
+
+	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		Element root;
+		Document appsDoc;
+		Element modelVersion;
+		Element appsElement;
+
+		try {
+			appsDoc = new SAXBuilder().build(fileName);
+			root = appsDoc.getRootElement();
+
+			modelVersion = root.getChild("modelVersion");
+			appsElement = root.getChild("importedApps");
+
+			// Check if one of those elements is not defined
+			if (modelVersion == null) {
+				throw new NullPointerException("modelVersion is null");
+			} else if (appsElement == null) {
+				throw new NullPointerException("appsElement is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("fokLauncher");
+			appsDoc = new Document(root);
+
+			modelVersion = new Element("modelVersion");
+			appsElement = new Element("importedApps");
+
+			root.addContent(modelVersion);
+			root.addContent(appsElement);
+		}
+
+		modelVersion.setText("0.0.1");
+
+		boolean fileFound = false;
+
+		for (Element app : appsElement.getChildren()) {
+			if (app.getChild("fileName").getValue().equals(infoFile.getAbsolutePath())) {
+				fileFound = true;
+			}
+		}
+
+		// Check if the specified version is already present
+		if (!fileFound) {
+			Element app = new Element("app");
+			Element fileNameElement = new Element("fileName");
+
+			fileNameElement.setText(infoFile.getAbsolutePath());
+
+			app.addContent(fileNameElement);
+
+			appsElement.addContent(app);
+		}
+
+		// Write xml-File
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
+		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+	}
+
+	public void removeFromImportedAppList() throws FileNotFoundException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		Element root;
+		Document appsDoc;
+		Element modelVersion;
+		Element appsElement;
+
+		try {
+			appsDoc = new SAXBuilder().build(fileName);
+			root = appsDoc.getRootElement();
+
+			modelVersion = root.getChild("modelVersion");
+			appsElement = root.getChild("importedApps");
+
+			// Check if one of those elements is not defined
+			if (modelVersion == null) {
+				throw new NullPointerException("modelVersion is null");
+			} else if (appsElement == null) {
+				throw new NullPointerException("appsElement is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("fokLauncher");
+			appsDoc = new Document(root);
+
+			modelVersion = new Element("modelVersion");
+			appsElement = new Element("importedApps");
+
+			root.addContent(modelVersion);
+			root.addContent(appsElement);
+		}
+
+		modelVersion.setText("0.0.1");
+
+		for (Element app : appsElement.getChildren()) {
+			System.out.println(this.getImportFile().getAbsolutePath());
+			if (app.getChild("fileName").getValue().equals(this.getImportFile().getAbsolutePath())) {
+				// Delete it from the xml
+				app.detach();
+			}
+		}
+
+		// Write xml-File
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
+		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 }

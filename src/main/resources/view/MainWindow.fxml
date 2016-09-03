@@ -8,7 +8,7 @@
 <?import javafx.scene.paint.*?>
 <?scenebuilder-preview-i18n-resource MainWindow.properties?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="608.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="view.MainWindow">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onDragDropped="#mainFrameOnDragDropped" onDragOver="#mainFrameOnDragOver" prefHeight="608.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="view.MainWindow">
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
