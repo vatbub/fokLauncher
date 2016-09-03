@@ -268,8 +268,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 									// Delete the file
 									try {
 										currentlySelectedApp.delete(menuItem.getVersion());
-									} catch (IOException e) {
-										log.getLogger().log(Level.SEVERE, "An error occurred", e);
 									} finally {
 										updateLaunchButton();
 									}

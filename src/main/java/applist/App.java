@@ -750,8 +750,8 @@ public class App {
 	 * Checks if an update is available for the specified artifact version.
 	 * 
 	 * @param versionToCheck
-	 *            The version to be checked. * @return {@code true} if an update
-	 *            is available, {@code false} otherwise
+	 *            The version to be checked.
+	 * @return {@code true} if an update is available, {@code false} otherwise
 	 * @throws MalformedURLException
 	 *             If the repo base url is malformed
 	 * @throws JDOMException
@@ -1132,9 +1132,8 @@ public class App {
 	/**
 	 * Downloads this artifact to the location specified in the {@link Config}.
 	 * 
-	 * @param isSnapshot
-	 *            If {@code true}, the latest snapshot will be downloaded,
-	 *            otherwise, the latest release will be downloaded.
+	 * @param versionToDownload
+	 *            The {@link Version} to be downloaded.
 	 * @param gui
 	 *            The {@link HidableUpdateProgressDialog} that represents the
 	 *            gui to inform the user about the progress.
@@ -1437,9 +1436,8 @@ public class App {
 	 *            The version to be deleted.
 	 * @return {@code true} if the artifact was successfully deleted,
 	 *         {@code false} otherwise
-	 * @throws IOException
 	 */
-	public boolean delete(Version versionToDelete) throws IOException {
+	public boolean delete(Version versionToDelete) {
 
 		// Delete from metadata
 		String destFolder = Common.getAndCreateAppDataPath()
@@ -1704,7 +1702,7 @@ public class App {
 		}
 
 		modelVersion.setText("0.0.1");
-		
+
 		List<Element> appsToDetach = new ArrayList<Element>();
 
 		for (Element app : appsElement.getChildren()) {
@@ -1713,9 +1711,9 @@ public class App {
 				appsToDetach.add(app);
 			}
 		}
-		
+
 		// Detach them
-		for (Element app:appsToDetach){
+		for (Element app : appsToDetach) {
 			app.detach();
 		}
 

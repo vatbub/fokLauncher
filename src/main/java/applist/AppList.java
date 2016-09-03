@@ -56,7 +56,7 @@ public class AppList extends ArrayList<App> {
 	 *            The maven groupId of the app to find
 	 * @param mavenArtifactId
 	 *            The maven artifactId of the app to find
-	 * @return The first matching {@link app} or {@code null} if no app matches.
+	 * @return The first matching {@link App} or {@code null} if no app matches.
 	 */
 	public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId) {
 		return getAppByMavenCoordinates(mavenGroupId, mavenArtifactId, null);
@@ -71,7 +71,7 @@ public class AppList extends ArrayList<App> {
 	 *            The maven artifactId of the app to find
 	 * @param mavenClassifier
 	 *            The maven artifactId of the app to find
-	 * @return The first matching {@link app} or {@code null} if no app matches.
+	 * @return The first matching {@link App} or {@code null} if no app matches.
 	 */
 	public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId, String mavenClassifier) {
 		for (App app : this) {
