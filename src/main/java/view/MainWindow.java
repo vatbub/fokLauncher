@@ -445,7 +445,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
 			try {
 				currentlySelectedApp.exportInfo(tempFile);
-				Dragboard db = appList.startDragAndDrop(TransferMode.COPY);
+				Dragboard db = appList.startDragAndDrop(TransferMode.MOVE);
 				ClipboardContent content = new ClipboardContent();
 				content.putFiles(Arrays.asList(tempFile));
 				db.setContent(content);

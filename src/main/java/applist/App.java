@@ -1568,6 +1568,7 @@ public class App {
 
 		FileOutputStream out = new FileOutputStream(fileToWrite);
 		props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
+		out.close();
 	}
 
 	/**
@@ -1582,6 +1583,7 @@ public class App {
 	private void importInfo(File fileToImport) throws IOException {
 		this.imported = true;
 		this.importFile = fileToImport;
+		FileReader fileReader = null;
 		if (!fileToImport.isFile()) {
 			// Not a file
 			throw new IOException("The specified file is not a file");
@@ -1593,7 +1595,8 @@ public class App {
 		Properties props = new Properties();
 		if (fileToImport.exists()) {
 			// Load the properties
-			props.load(new FileReader(fileToImport));
+			fileReader = new FileReader(fileToImport);
+			props.load(fileReader);
 		}
 
 		this.setName(props.getProperty("name"));
@@ -1602,6 +1605,8 @@ public class App {
 		this.setMavenGroupID(props.getProperty("groupId"));
 		this.setMavenArtifactID(props.getProperty("artifactId"));
 		this.setMavenClassifier(props.getProperty("classifier"));
+		
+		fileReader.close();
 	}
 
 	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
