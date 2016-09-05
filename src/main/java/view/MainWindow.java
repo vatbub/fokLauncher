@@ -441,7 +441,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void appListOnDragDetected(MouseEvent event) {
 		if (currentlySelectedApp != null) {
-			File tempFile = new File(Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
+			File tempFile = new File(
+					Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
 			try {
 				currentlySelectedApp.exportInfo(tempFile);
 				Dragboard db = appList.startDragAndDrop(TransferMode.COPY);
@@ -677,7 +678,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Selection change listener
 		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
+				try {
+					currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
+				} catch (ArrayIndexOutOfBoundsException e) {
+					currentlySelectedApp = null;
+				}
 				updateLaunchButton();
 			}
 		});
@@ -803,6 +808,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		if (!downloadAndLaunchThread.isAlive() && currentlySelectedApp != null) {
 			getAppStatus.setName("getAppStatus");
 			getAppStatus.start();
+		} else if (currentlySelectedApp == null) {
+			// disable the button
+			launchButton.setDisable(true);
 		}
 	}
 
