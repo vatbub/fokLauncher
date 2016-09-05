@@ -39,7 +39,7 @@ Please make sure to escape all `:` in the urls (they should look like this then:
 
 - Save the file as a textfile and give it a good name, e. g. `myAwsomeApp.foklauncher`
 - Make sure that the file extension is `.foklauncher`
-- Prompt the user to download the launcher (You may send them over to (this url)[https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads]
+- Prompt the user to download the launcher (You may send them over to [this url](https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads)
 - Let the user download your `.foklauncher`-file
 - Tell the user to drag'n'drop the `.foklauncher`-file into the launcher window.
 - Your app will be imported to the launcher and can be launched as expected.
