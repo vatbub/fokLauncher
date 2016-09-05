@@ -1300,7 +1300,6 @@ public class App {
 	 */
 	public void cancelDownloadAndLaunch(HidableUpdateProgressDialog gui) {
 		cancelDownloadAndLaunch = true;
-		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
 
 		if (gui != null) {
 			gui.cancelRequested();

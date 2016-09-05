@@ -920,6 +920,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void operationCanceled() {
+		log.getLogger().info("OPeration cancelled.");
 		appList.setDisable(false);
 		progressBar.setVisible(false);
 		progressLabel.setVisible(false);
@@ -936,6 +937,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		progressBar.setProgress(-1);
 		progressLabel.setText(bundle.getString("cancelRequested"));
 		launchButton.setDisable(true);
+		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
 	}
 
 	@Override
