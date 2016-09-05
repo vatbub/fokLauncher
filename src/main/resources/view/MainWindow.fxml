@@ -12,7 +12,7 @@
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
-    <ListView fx:id="appList" onMouseClicked="#appListOnMouseClicked" prefHeight="281.0" prefWidth="572.0" AnchorPane.bottomAnchor="262.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
+    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" onMouseClicked="#appListOnMouseClicked" prefHeight="281.0" prefWidth="572.0" AnchorPane.bottomAnchor="262.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
     <Button fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="226.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
     <Label style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="130.0" AnchorPane.leftAnchor="14.0" />
     <GridPane prefHeight="89.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">

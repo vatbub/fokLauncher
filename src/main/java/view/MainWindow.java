@@ -3,6 +3,7 @@ package view;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -45,6 +46,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.image.Image;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -435,6 +437,23 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Currently not used
 	}
 
+	// Handler for AnchorPane[id="AnchorPane"] onDragDetected
+	@FXML
+	void appListOnDragDetected(MouseEvent event) {
+		if (currentlySelectedApp != null) {
+			File tempFile = new File(Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
+			try {
+				currentlySelectedApp.exportInfo(tempFile);
+				Dragboard db = appList.startDragAndDrop(TransferMode.COPY);
+				ClipboardContent content = new ClipboardContent();
+				content.putFiles(Arrays.asList(tempFile));
+				db.setContent(content);
+			} catch (IOException e) {
+				log.getLogger().log(Level.SEVERE, "An error occurred", e);
+			}
+		}
+	}
+
 	// Handler for ListView[fx:id="appList"] onDragOver
 	@FXML
 	void mainFrameOnDragOver(DragEvent event) {
@@ -442,14 +461,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// Only allow drag'n'drop for files and if no app list is currently
 		// loading
 		if (db.hasFiles() && !getAppListThread.isAlive()) {
-			// Don't accept the drag if any file contained in the drag does not have the *.foklauncher extension
-			for (File f:db.getFiles()){
-				if (!FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")){
+			// Don't accept the drag if any file contained in the drag does not
+			// have the *.foklauncher extension
+			for (File f : db.getFiles()) {
+				if (!FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")) {
 					event.consume();
 					return;
 				}
 			}
-			
+
 			event.acceptTransferModes(TransferMode.LINK);
 		} else {
 			event.consume();
