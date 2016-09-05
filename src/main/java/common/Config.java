@@ -78,5 +78,8 @@ public class Config {
 	 */
 	public static final String appListCacheFileName = "appListCache.xml";
 	
+	/**
+	 * The name of the xml file where the list of imported apps is saved.
+	 */
 	public static final String importedAppListFileName = "importedApps.xml";
 }
