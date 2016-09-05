@@ -912,7 +912,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						Platform.exit();
 					}
 				};
-
+				
+				t.setName("showErrorThread");
 				t.start();
 			}
 		});
@@ -920,7 +921,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void operationCanceled() {
-		log.getLogger().info("OPeration cancelled.");
+		log.getLogger().info("Operation cancelled.");
+		Platform.setImplicitExit(true);
 		appList.setDisable(false);
 		progressBar.setVisible(false);
 		progressLabel.setVisible(false);
