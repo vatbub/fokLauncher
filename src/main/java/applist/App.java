@@ -1,16 +1,21 @@
 package applist;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.logging.Level;
 
-import org.apache.commons.io.FileUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -19,8 +24,105 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
 import common.*;
+import javafx.application.Platform;
+import logging.FOKLogger;
 
 public class App {
+
+	private static FOKLogger log = new FOKLogger(App.class.getName());
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId) {
+		this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, "");
+	}
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 * @param mavenClassifier
+	 *            The artifacts classifier or {@code ""} if the default artifact
+	 *            shall be used.
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId, String mavenClassifier) {
+		this.setName(name);
+		this.setMavenRepoBaseURL(mavenRepoBaseURL);
+		this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
+		this.setMavenGroupID(mavenGroupId);
+		this.setMavenArtifactID(mavenArtifactId);
+		this.setMavenClassifier(mavenClassifier);
+	}
+
+	/**
+	 * Creates a new app and imports its info from the specified file. If the
+	 * specified file cannot be imported for some reason, this app will
+	 * automatically be deleted from the imported apps list.
+	 * 
+	 * @param fileToImportFrom
+	 *            The file to import the info from. Must be a *.foklauncher file
+	 * @throws FileNotFoundException
+	 *             This app cannot be imported for some reason and cannot be
+	 *             deleted from the imported apps list because the xml file of
+	 *             the imported apps list does not exist.
+	 * @throws IOException
+	 *             If the specified file is not a file (but a directory) or if
+	 *             the launcher has no permission to read the file and this app
+	 *             cannot be deleted from the imported app list for some erason.
+	 * @see App#removeFromImportedAppList()
+	 */
+	public App(File fileToImportFrom) throws FileNotFoundException, IOException {
+		try {
+			this.importInfo(fileToImportFrom);
+		} catch (IOException e) {
+			log.getLogger().log(Level.SEVERE,
+					"The app that should be imported from " + fileToImportFrom.getAbsolutePath()
+							+ " is automatically deleted from the imported apps list because something went wrong during the import. We probably didn't find the file to import.",
+					e);
+			this.removeFromImportedAppList();
+			// Propagate the Exception
+			throw e;
+		}
+	}
+
+	/**
+	 * Specifies if the info of this app was imported from a file or gatheerd
+	 * from the remote server.
+	 */
+	private boolean imported;
+
+	/**
+	 * Specifies the file from which this app was imported from (if it was
+	 * imported)
+	 */
+	private File importFile;
 
 	/**
 	 * The name of the app
@@ -30,12 +132,17 @@ public class App {
 	/**
 	 * The latest version of the app that is available online
 	 */
-	private Version latestOnlineVersion;
+	Version latestOnlineVersion;
+
+	/**
+	 * A {@link List} of all available online Versions
+	 */
+	VersionList onlineVersionList;
 
 	/**
 	 * The latest snapshot version of the app that is available online
 	 */
-	private Version latestOnlineSnapshotVersion;
+	Version latestOnlineSnapshotVersion;
 
 	/**
 	 * {@code true} if the user requested to cancel the current action.
@@ -69,6 +176,16 @@ public class App {
 	 */
 	private String mavenClassifier;
 
+	private boolean specificVersionListLoaded = false;
+
+	private boolean deletableVersionListLoaded = false;
+
+	/**
+	 * A list of event handlers that handle the event that this app was launched
+	 * and exited then
+	 */
+	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<Runnable>();
+
 	/**
 	 * @return the name
 	 */
@@ -85,6 +202,43 @@ public class App {
 	}
 
 	/**
+	 * Returns a list that contains all versions of the artifact available
+	 * online
+	 * 
+	 * @return A list that contains all versions of the artifact available
+	 *         online
+	 * @throws IOException
+	 *             If the maven metadata file can't be read or downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 */
+	public VersionList getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
+		if (onlineVersionList != null) {
+			return onlineVersionList.clone();
+		} else {
+			Document mavenMetadata = getMavenMetadata(false);
+
+			VersionList res = new VersionList();
+			List<Element> versions = mavenMetadata.getRootElement().getChild("versioning").getChild("versions")
+					.getChildren("version");
+
+			for (Element versionElement : versions) {
+				Version version = new Version(versionElement.getValue());
+
+				if (!version.isSnapshot()) {
+					// Version is not a snapshot so add it to the list
+					res.add(version);
+				}
+			}
+
+			onlineVersionList = res.clone();
+			return res;
+		}
+	}
+
+	/**
 	 * @return the latestOnlineVersion
 	 * @throws IOException
 	 *             If the maven metadata file can't be read or downloaded
@@ -95,7 +249,7 @@ public class App {
 	 */
 	public Version getLatestOnlineVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineVersion != null) {
-			return latestOnlineVersion;
+			return latestOnlineVersion.clone();
 		} else {
 			Document mavenMetadata = getMavenMetadata(false);
 
@@ -107,7 +261,7 @@ public class App {
 						"Latest version in this repository is a snapshot and not a release. This might happen if you host snapshots and releases in the same repository (which is not recommended). If you still need this case to be covered, please submit an issue at https://github.com/vatbub/fokLauncher/issues");
 			}
 
-			latestOnlineVersion = res;
+			latestOnlineVersion = res.clone();
 			return res;
 		}
 	}
@@ -123,15 +277,16 @@ public class App {
 	 */
 	public Version getLatestOnlineSnapshotVersion() throws MalformedURLException, JDOMException, IOException {
 		if (latestOnlineSnapshotVersion != null) {
-			return latestOnlineSnapshotVersion;
+			return latestOnlineSnapshotVersion.clone();
 		} else {
 			Document mavenMetadata = getMavenMetadata(true);
 
 			Version res = new Version(
 					mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
 
-			Document snapshotMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString()
-					+ "/" + mavenGroupID + "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
+			Document snapshotMetadata = new SAXBuilder()
+					.build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/" + mavenGroupID.replace('.', '/')
+							+ "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
 
 			if (!res.isSnapshot()) {
 				throw new IllegalStateException(
@@ -146,23 +301,53 @@ public class App {
 			res.setTimestamp(snapshotMetadata.getRootElement().getChild("versioning").getChild("snapshot")
 					.getChild("timestamp").getValue());
 
-			latestOnlineSnapshotVersion = res;
+			latestOnlineSnapshotVersion = res.clone();
 			return res;
 		}
 	}
 
 	/**
 	 * Returns the currently installed version of the app or {@code null} if the
-	 * app is not yet installed locally.
+	 * app is not yet installed locally. Takes snapshots into account.
 	 * 
 	 * @return the currentlyInstalledVersion
 	 * @see #isPresentOnHarddrive()
 	 */
 	public Version getCurrentlyInstalledVersion() {
-		Version res = null;
+		return getCurrentlyInstalledVersion(true);
+	}
+
+	/**
+	 * Returns the currently installed version of the app or {@code null} if the
+	 * app is not yet installed locally.
+	 * 
+	 * @param snapshotsEnabled
+	 *            If {@code false}, snapshots will be removed from this list.
+	 * @return the currentlyInstalledVersion
+	 * @see #isPresentOnHarddrive()
+	 */
+	public Version getCurrentlyInstalledVersion(boolean snapshotsEnabled) {
+		try {
+			VersionList vers = getCurrentlyInstalledVersions();
+			if (!snapshotsEnabled) {
+				vers.removeSnapshots();
+			}
+			return Collections.max(vers);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns a list of currently installed versions
+	 * 
+	 * @return A list of currently installed versions
+	 */
+	public VersionList getCurrentlyInstalledVersions() {
+		VersionList res = new VersionList();
 
 		// Load the metadata.xml file
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 		Document versionDoc;
@@ -172,13 +357,15 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			e.printStackTrace();
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
 			return null;
 		}
 
-		res = new Version(versionDoc.getRootElement().getChild("version").getValue());
-		res.setBuildNumber(versionDoc.getRootElement().getChild("buildNumber").getValue());
-		res.setTimestamp(versionDoc.getRootElement().getChild("timestamp").getValue());
+		for (Element versionEl : versionDoc.getRootElement().getChild("versions").getChildren()) {
+			Version tempVer = new Version(versionEl.getChild("version").getValue(),
+					versionEl.getChild("buildNumber").getValue(), versionEl.getChild("timestamp").getValue());
+			res.add(tempVer);
+		}
 
 		return res;
 	}
@@ -259,25 +446,120 @@ public class App {
 	}
 
 	/**
-	 * Checks if this app is already downloaded
+	 * @return the imported
+	 */
+	public boolean isImported() {
+		return imported;
+	}
+
+	/**
+	 * @return the importFile
+	 */
+	public File getImportFile() {
+		return importFile;
+	}
+
+	/**
+	 * @return the specificVersionListLoaded
+	 */
+	public boolean isSpecificVersionListLoaded() {
+		return specificVersionListLoaded;
+	}
+
+	/**
+	 * @param specificVersionListLoaded
+	 *            the specificVersionListLoaded to set
+	 */
+	public void setSpecificVersionListLoaded(boolean specificVersionListLoaded) {
+		this.specificVersionListLoaded = specificVersionListLoaded;
+	}
+
+	/**
+	 * @return the deletableVersionListLoaded
+	 */
+	public boolean isDeletableVersionListLoaded() {
+		return deletableVersionListLoaded;
+	}
+
+	/**
+	 * @param deletableVersionListLoaded
+	 *            the deletableVersionListLoaded to set
+	 */
+	public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
+		this.deletableVersionListLoaded = deletableVersionListLoaded;
+	}
+
+	/**
+	 * Checks if any version of this app is already downloaded
 	 * 
-	 * @return {@code true} if the app is already downloaded, {@code false}
-	 *         otherwise.
+	 * @return {@code true} if any version of this app is already downloaded,
+	 *         {@code false} otherwise.
 	 */
 	public boolean isPresentOnHarddrive() {
 		// Check if metadata file is present
-		String destFolder = Common.getAppDataPath()
+		return this.getCurrentlyInstalledVersion() != null;
+	}
+
+	/**
+	 * Checks if the specified version of this app is already downloaded
+	 * 
+	 * @param ver
+	 *            The version to check
+	 * @return {@code true} if the specified version of this app is already
+	 *         downloaded, {@code false} otherwise.
+	 */
+	public boolean isPresentOnHarddrive(Version ver) {
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + Config.appMetadataFileName;
-		File metadata = new File(fileName);
-		return metadata.exists();
+
+		Element root;
+		Document versionDoc;
+		Element artifactId;
+		Element groupId;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+
+			root = versionDoc.getRootElement();
+
+			artifactId = root.getChild("artifactId");
+			groupId = root.getChild("groupId");
+			versions = root.getChild("versions");
+
+			// Check if one of those elements is not defined
+			if (artifactId == null) {
+				throw new NullPointerException("artifactId is null");
+			} else if (groupId == null) {
+				throw new NullPointerException("groupId is null");
+			} else if (versions == null) {
+				throw new NullPointerException("versions is null");
+			}
+
+			// Go through all versions
+			for (Element version : versions.getChildren()) {
+				if (ver.equals(new Version(version.getChild("version").getValue(),
+						version.getChild("buildNumber").getValue(), version.getChild("timestamp").getValue()))) {
+					// Match found
+					return true;
+				}
+			}
+
+			// No match found, return false
+			return false;
+
+		} catch (JDOMException | IOException e) {
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
+			return false;
+		}
 	}
 
 	/**
 	 * Downloads the version info and saves it as a xml file in the app folder.
 	 * 
-	 * @param snapshotsEnabled
-	 *            {@code true} if snapshots shall be taken into account.
+	 * @param versionToGet
+	 *            The version to get the info for
 	 * @param destFolder
 	 *            The folder where apps should be saved into
 	 * @throws MalformedURLException
@@ -287,42 +569,85 @@ public class App {
 	 * @throws IOException
 	 *             If the maven metadata file cannot be downloaded
 	 */
-	private void downloadVersionInfo(boolean snapshotsEnabled, String destFolder)
+	private void downloadVersionInfo(Version versionToGet, String destFolder)
 			throws MalformedURLException, JDOMException, IOException {
-		Version onlineVersion;
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
 
-		if (snapshotsEnabled) {
-			onlineVersion = this.getLatestOnlineSnapshotVersion();
-		} else {
-			onlineVersion = this.getLatestOnlineVersion();
+		Element root;
+		Document versionDoc;
+		Element artifactId;
+		Element groupId;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+			root = versionDoc.getRootElement();
+
+			artifactId = root.getChild("artifactId");
+			groupId = root.getChild("groupId");
+			versions = root.getChild("versions");
+
+			// Check if one of those elements is not defined
+			if (artifactId == null) {
+				throw new NullPointerException("artifactId is null");
+			} else if (groupId == null) {
+				throw new NullPointerException("groupId is null");
+			} else if (versions == null) {
+				throw new NullPointerException("versions is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("artifactInfo");
+			versionDoc = new Document(root);
+
+			artifactId = new Element("artifactId");
+			groupId = new Element("groupId");
+			versions = new Element("versions");
+
+			root.addContent(artifactId);
+			root.addContent(groupId);
+			root.addContent(versions);
 		}
-
-		Element root = new Element("artifactInfo");
-		Document versionDoc = new Document(root);
-
-		Element artifactId = new Element("artifactId");
-		Element groupId = new Element("groupId");
-		Element version = new Element("version");
-		Element buildNumber = new Element("buildNumber");
-		Element timestamp = new Element("timestamp");
 
 		artifactId.setText(this.getMavenArtifactID());
 		groupId.setText(this.getMavenGroupID());
-		version.setText(onlineVersion.getVersion());
 
-		if (snapshotsEnabled) {
-			buildNumber.setText(onlineVersion.getBuildNumber());
-			timestamp.setText(onlineVersion.getTimestamp());
+		boolean versionFound = false;
+
+		for (Element el : versions.getChildren()) {
+			Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
+					el.getChild("timestamp").getValue());
+			if (ver.equals(versionToGet)) {
+				versionFound = true;
+			}
 		}
 
-		root.addContent(artifactId);
-		root.addContent(groupId);
-		root.addContent(version);
-		root.addContent(buildNumber);
-		root.addContent(timestamp);
+		// Check if the specified version is already present
+		if (!versionFound) {
+			Element version = new Element("version");
+			Element versionNumber = new Element("version");
+			Element buildNumber = new Element("buildNumber");
+			Element timestamp = new Element("timestamp");
+			versionNumber.setText(versionToGet.getVersion());
+
+			if (versionToGet.isSnapshot()) {
+				buildNumber.setText(versionToGet.getBuildNumber());
+				timestamp.setText(versionToGet.getTimestamp());
+			}
+
+			version.addContent(versionNumber);
+			version.addContent(buildNumber);
+			version.addContent(timestamp);
+
+			versions.addContent(version);
+		}
 
 		// Write xml-File
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
 	}
@@ -348,12 +673,13 @@ public class App {
 
 		if (snapshotsEnabled) {
 			// Snapshots enabled
-			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/"
-					+ this.getMavenGroupID() + "/" + this.getMavenArtifactID() + "/maven-metadata.xml"));
+			mavenMetadata = new SAXBuilder().build(new URL(
+					this.getMavenSnapshotRepoBaseURL().toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
+							+ this.getMavenArtifactID() + "/maven-metadata.xml"));
 		} else {
 			// Snapshots disabled
-			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/" + mavenGroupID
-					+ "/" + mavenArtifactID + "/maven-metadata.xml"));
+			mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/"
+					+ this.getMavenGroupID().replace('.', '/') + "/" + mavenArtifactID + "/maven-metadata.xml"));
 		}
 
 		return mavenMetadata;
@@ -375,7 +701,8 @@ public class App {
 	 *             If the maven metadata file cannot be downloaded
 	 */
 	public boolean downloadRequired(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
-		if (this.isPresentOnHarddrive() && (!snapshotsEnabled) && this.getCurrentlyInstalledVersion().isSnapshot()) {
+		if (this.isPresentOnHarddrive() && (!snapshotsEnabled)
+				&& !this.getCurrentlyInstalledVersions().containsRelease()) {
 			// App is downloaded, most current version on harddrive is a
 			// snapshot but snapshots are disabled, so download is required
 			return true;
@@ -416,7 +743,24 @@ public class App {
 			onlineVersion = this.getLatestOnlineVersion();
 		}
 
-		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion()) == 1;
+		return onlineVersion.compareTo(this.getCurrentlyInstalledVersion(snapshotsEnabled)) == 1;
+	}
+
+	/**
+	 * Checks if an update is available for the specified artifact version.
+	 * 
+	 * @param versionToCheck
+	 *            The version to be checked.
+	 * @return {@code true} if an update is available, {@code false} otherwise
+	 * @throws MalformedURLException
+	 *             If the repo base url is malformed
+	 * @throws JDOMException
+	 *             If the maven metadata file is malformed
+	 * @throws IOException
+	 *             If the maven metadata file cannot be downloaded
+	 */
+	public boolean updateAvailable(Version versionToCheck) throws MalformedURLException, JDOMException, IOException {
+		return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) == 1;
 	}
 
 	/**
@@ -582,32 +926,63 @@ public class App {
 	 */
 	public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
+		Version versionToLaunch;
+
+		if (!disableDownload) {
+			if (snapshotsEnabled) {
+				versionToLaunch = this.getLatestOnlineSnapshotVersion();
+			} else {
+				versionToLaunch = this.getLatestOnlineVersion();
+			}
+		} else {
+			versionToLaunch = this.getCurrentlyInstalledVersion();
+		}
+
+		downloadIfNecessaryAndLaunch(gui, versionToLaunch, disableDownload);
+	}
+
+	/**
+	 * Downloads the artifact if necessary and launches it afterwards
+	 * 
+	 * @param gui
+	 *            A reference to a gui that shows the update and launch
+	 *            progress.
+	 * 
+	 * @param versionToLaunch
+	 *            The version of the app to be downloaded and launched.
+	 * @param disableDownload
+	 *            If {@code true}, the method will be forced to work offline.
+	 * @throws IOException
+	 *             If the maven metadata cannot be downloaded
+	 * @throws JDOMException
+	 *             If the maven metadata fale is malformed
+	 * @throws IllegalStateException
+	 *             If {@code disableDownload==true} but
+	 *             {@code this.downloadRequired()==true} too
+	 */
+	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
+			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
-		Version destVersion;
 
 		if (!disableDownload) {
 			// Continue by default, only cancel, when user cancelled
 			boolean downloadPerformed = true;
 
 			// download if necessary
-			if (this.downloadRequired(snapshotsEnabled)) {
+			if (!this.isPresentOnHarddrive(versionToLaunch)) {
 				// app not downloaded at all
-				System.out.println("Downloading package because it was never downloaded before...");
-				downloadPerformed = this.download(snapshotsEnabled, gui);
-			} else if (this.updateAvailable(snapshotsEnabled)) {
-				// newer version available
-				System.out.println("Downloading package because a newer version is available...");
-				downloadPerformed = this.download(snapshotsEnabled, gui);
+				log.getLogger().info("Downloading package because it was never downloaded before...");
+				downloadPerformed = this.download(versionToLaunch, gui);
 			}
 
 			if (!downloadPerformed) {
 				// Download was cancelled by the user so return
 				return;
 			}
-		} else if (this.downloadRequired(snapshotsEnabled)) {
+		} else if (!this.isPresentOnHarddrive(versionToLaunch)) {
 			// Download is disabled and app needs to be downloaded
 			throw new IllegalStateException(
 					"The artifact needs to be downloaded prior to launch but download is disabled.");
@@ -621,37 +996,61 @@ public class App {
 			return;
 		}
 
-		destVersion = this.getCurrentlyInstalledVersion();
-
 		if (this.getMavenClassifier().equals("")) {
 			// No classifier
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + "-" + this.getMavenClassifier()
-					+ ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + "-"
+					+ this.getMavenClassifier() + ".jar";
 		}
 
 		if (gui != null) {
 			gui.launchStarted();
 		}
 
-		System.out.println("Launching app using the command: java -jar " + destFolder + File.separator + destFilename
-				+ " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", destFolder + File.separator + destFilename,
-				"disableUpdateChecks").inheritIO();
+		String jarFileName = destFolder + File.separator + destFilename;
+
+		// throw exception if the jar can't be found for some unlikely reason
+		if (!(new File(jarFileName)).exists()) {
+			throw new FileNotFoundException(jarFileName);
+		}
+
+		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks").inheritIO();
+		Process process;
 
 		if (gui != null) {
 			gui.hide();
+
+			log.getLogger().info("Launching application " + destFilename);
 
 			System.out.println("------------------------------------------------------------------");
 			System.out.println("The following output is coming from " + destFilename);
 			System.out.println("------------------------------------------------------------------");
 
-			pb.start();
+			process = pb.start();
 		} else {
-			System.exit(0);
-			pb.start();
+			process = pb.start();
 		}
+
+		try {
+			process.waitFor();
+		} catch (InterruptedException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+
+		// Check the status code of the process
+		if (process.exitValue() != 0) {
+			// Something went wrong
+			log.getLogger().log(Level.SEVERE, "The java process returned with exit code " + process.exitValue());
+			if (gui != null) {
+				gui.showErrorMessage(
+						"Something happened while launching the selected app. Try to launch it again and if this error occurs again, try to delete the app and download it again.");
+			}
+		}
+
+		fireLaunchedAppExits();
+
 	}
 
 	/**
@@ -668,7 +1067,8 @@ public class App {
 	 * 
 	 */
 	public boolean download() throws IOException, JDOMException {
-		return download(null);
+		HidableUpdateProgressDialog gui = null;
+		return download(gui);
 	}
 
 	/**
@@ -688,7 +1088,7 @@ public class App {
 	 * 
 	 */
 	public boolean download(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		return download(false, gui);
+		return download(this.getLatestOnlineVersion(), gui);
 	}
 
 	/**
@@ -705,7 +1105,8 @@ public class App {
 	 * 
 	 */
 	public boolean downloadSnapshot() throws IOException, JDOMException {
-		return downloadSnapshot(null);
+		HidableUpdateProgressDialog gui = null;
+		return downloadSnapshot(gui);
 	}
 
 	/**
@@ -725,15 +1126,14 @@ public class App {
 	 * 
 	 */
 	public boolean downloadSnapshot(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-		return download(true, gui);
+		return download(this.getLatestOnlineSnapshotVersion(), gui);
 	}
 
 	/**
 	 * Downloads this artifact to the location specified in the {@link Config}.
 	 * 
-	 * @param isSnapshot
-	 *            If {@code true}, the latest snapshot will be downloaded,
-	 *            otherwise, the latest release will be downloaded.
+	 * @param versionToDownload
+	 *            The {@link Version} to be downloaded.
 	 * @param gui
 	 *            The {@link HidableUpdateProgressDialog} that represents the
 	 *            gui to inform the user about the progress.
@@ -748,16 +1148,15 @@ public class App {
 	 *             If the version xml is malformed
 	 * 
 	 */
-	public boolean download(boolean isSnapshot, HidableUpdateProgressDialog gui)
+	public boolean download(Version versionToDownload, HidableUpdateProgressDialog gui)
 			throws MalformedURLException, IOException, JDOMException {
 		if (gui != null) {
 			gui.preparePhaseStarted();
 		}
 
-		String destFolder = Common.getAppDataPath()
+		String destFolder = Common.getAndCreateAppDataPath()
 				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
-		Version destVersion;
 		URL repoBaseURL;
 		URL artifactURL;
 
@@ -769,34 +1168,32 @@ public class App {
 			return false;
 		}
 
-		if (isSnapshot) {
+		if (versionToDownload.isSnapshot()) {
 			// Snapshot
-			destVersion = this.getLatestOnlineSnapshotVersion();
 			repoBaseURL = this.getMavenSnapshotRepoBaseURL();
 		} else {
 			// Not a snapshot
-			destVersion = this.getLatestOnlineVersion();
 			repoBaseURL = this.getMavenRepoBaseURL();
 		}
 
 		// Construct the download url
 		if (this.getMavenClassifier().equals("")) {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID + "/" + this.getMavenArtifactID()
-					+ "/" + destVersion.getVersion() + "/" + this.getMavenArtifactID() + "-" + destVersion.toString()
-					+ ".jar");
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID.replace('.', '/') + "/"
+					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
+					+ "-" + versionToDownload.toString() + ".jar");
 		} else {
-			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID() + "/"
-					+ this.getMavenArtifactID() + "/" + destVersion.getVersion() + "/" + this.getMavenArtifactID() + "-"
-					+ destVersion.toString() + "-" + this.getMavenClassifier() + ".jar");
+			artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
+					+ this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
+					+ "-" + versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
 		}
 
 		// Construct file name of output file
 		if (this.getMavenClassifier().equals("")) {
 			// No classifier
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + ".jar";
 		} else {
-			destFilename = this.getMavenArtifactID() + "-" + destVersion.toString() + "-" + this.getMavenClassifier()
-					+ ".jar";
+			destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + "-"
+					+ this.getMavenClassifier() + ".jar";
 		}
 
 		// Perform Cancel if requested
@@ -823,12 +1220,52 @@ public class App {
 			gui.downloadStarted();
 		}
 
-		System.out.println("Downloading artifact from " + artifactURL.toString() + "...");
-		System.out.println("Downloading to: " + outputFile.getAbsolutePath());
-		FileUtils.copyURLToFile(artifactURL, outputFile);
+		log.getLogger().info("Downloading artifact from " + artifactURL.toString() + "...");
+		log.getLogger().info("Downloading to: " + outputFile.getAbsolutePath());
+		// FileUtils.copyURLToFile(artifactURL, outputFile);
+
+		HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
+		long completeFileSize = httpConnection.getContentLength();
+
+		java.io.BufferedInputStream in = new java.io.BufferedInputStream(httpConnection.getInputStream());
+		outputFile.getParentFile().mkdirs();
+		java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
+		java.io.BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
+		byte[] data = new byte[1024];
+		long downloadedFileSize = 0;
+		int x = 0;
+		while ((x = in.read(data, 0, 1024)) >= 0) {
+			downloadedFileSize += x;
+
+			// calculate progress
+			// final int currentProgress = (int)
+			// ((((double)downloadedFileSize) / ((double)completeFileSize))
+			// * 100000d);
+
+			// update progress bar
+			if (gui != null) {
+				gui.downloadProgressChanged((double) (downloadedFileSize / 1024.0),
+						(double) (completeFileSize / 1024.0));
+			}
+
+			bout.write(data, 0, x);
+
+			// Perform Cancel if requested
+			if (cancelDownloadAndLaunch) {
+				bout.close();
+				in.close();
+				outputFile.delete();
+				if (gui != null) {
+					gui.operationCanceled();
+				}
+				return false;
+			}
+		}
+		bout.close();
+		in.close();
 
 		// download version info
-		downloadVersionInfo(isSnapshot, destFolder);
+		downloadVersionInfo(versionToDownload, destFolder);
 
 		// Perform Cancel if requested
 		if (cancelDownloadAndLaunch) {
@@ -863,11 +1300,37 @@ public class App {
 	 */
 	public void cancelDownloadAndLaunch(HidableUpdateProgressDialog gui) {
 		cancelDownloadAndLaunch = true;
-		System.out.println("Requested to cancel the current operation, Cancel in progress...");
 
 		if (gui != null) {
 			gui.cancelRequested();
 		}
+	}
+
+	/**
+	 * Returns a combined list of imported apps and apps from the server.
+	 * 
+	 * @return A combined list of imported apps and apps from the server.
+	 * @throws MalformedURLException
+	 *             If the maven repo base url of an app is malformed. The base
+	 *             urls are downloaded from the server.
+	 * @throws JDOMException
+	 *             If the xml-app list on the server or the xml file containing
+	 *             info about the imported apps is malformed
+	 * @throws IOException
+	 *             If the app list or metadata of some apps cannot be downloaded
+	 *             or if the xml file containing the info about the imported
+	 *             apps cannot be read.
+	 * @see App#getOnlineAppList()
+	 * @see App#getImportedAppList()
+	 */
+	public static AppList getAppList() throws MalformedURLException, JDOMException, IOException {
+		AppList res = getOnlineAppList();
+		try {
+			res.addAll(getImportedAppList());
+		} catch (JDOMException | IOException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+		return res;
 	}
 
 	/**
@@ -880,11 +1343,12 @@ public class App {
 	 * @throws JDOMException
 	 *             If the xml-app list on the server is malformed
 	 * @throws IOException
-	 *             If the app list or metadata of some apps cannot bedownloaded.
+	 *             If the app list or metadata of some apps cannot be
+	 *             downloaded.
 	 */
-	public static List<App> getAppList() throws MalformedURLException, JDOMException, IOException {
+	public static AppList getOnlineAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
-		String fileName = Common.getAppDataPath() + File.separator + Config.appListCacheFileName;
+		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
 		try {
 			doc = new SAXBuilder().build(Config.getAppListXMLURL());
 
@@ -907,16 +1371,12 @@ public class App {
 							+ modelVersion + ")");
 		}
 
-		List<App> res = new ArrayList<App>();
+		AppList res = new AppList();
 
 		for (Element app : fokLauncherEl.getChild("apps").getChildren("app")) {
-			App newApp = new App();
-
-			newApp.setName(app.getChild("name").getValue());
-			newApp.setMavenRepoBaseURL(new URL(app.getChild("repoBaseURL").getValue()));
-			newApp.setMavenSnapshotRepoBaseURL(new URL(app.getChild("snapshotRepoBaseURL").getValue()));
-			newApp.setMavenGroupID(app.getChild("groupId").getValue());
-			newApp.setMavenArtifactID(app.getChild("artifactId").getValue());
+			App newApp = new App(app.getChild("name").getValue(), new URL(app.getChild("repoBaseURL").getValue()),
+					new URL(app.getChild("snapshotRepoBaseURL").getValue()), app.getChild("groupId").getValue(),
+					app.getChild("artifactId").getValue());
 
 			// Add classifier only if one is defined
 			if (app.getChild("classifier") != null) {
@@ -927,5 +1387,346 @@ public class App {
 		}
 
 		return res;
+	}
+
+	/**
+	 * Returns the list of apps that were imported by the user. If any app
+	 * cannot be imported, it will be removed from the list permanently
+	 * 
+	 * @return The list of apps that were imported by the user.
+	 * @throws IOException
+	 *             If the xml list cannot be read
+	 * @throws JDOMException
+	 *             If the xml list is malformed
+	 */
+	public static AppList getImportedAppList() throws JDOMException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		try {
+			AppList res = new AppList();
+
+			Document appsDoc = new SAXBuilder().build(fileName);
+			Element root = appsDoc.getRootElement();
+
+			@SuppressWarnings("unused")
+			Element modelVersion = root.getChild("modelVersion");
+			Element appsElement = root.getChild("importedApps");
+
+			for (Element app : appsElement.getChildren()) {
+				// import the info of every app
+				try {
+					App a = new App(new File(app.getChild("fileName").getValue()));
+					res.add(a);
+				} catch (IOException e) {
+					// Exception is already logged by the constructor
+				}
+			}
+
+			return res;
+		} catch (FileNotFoundException e) {
+			return new AppList();
+		}
+	}
+
+	/**
+	 * Deletes the specified artifact version.
+	 * 
+	 * @param versionToDelete
+	 *            The version to be deleted.
+	 * @return {@code true} if the artifact was successfully deleted,
+	 *         {@code false} otherwise
+	 */
+	public boolean delete(Version versionToDelete) {
+
+		// Delete from metadata
+		String destFolder = Common.getAndCreateAppDataPath()
+				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		Document versionDoc;
+		Element versions;
+
+		try {
+			versionDoc = new SAXBuilder().build(fileName);
+			versions = versionDoc.getRootElement().getChild("versions");
+		} catch (JDOMException | IOException e) {
+			System.err.println("Cannot retreive currently installed version of app " + this.getName()
+					+ ", probably because it is not installed.");
+			log.getLogger().log(Level.SEVERE, "An error occured!", e);
+			return false;
+		}
+
+		Element elementToDelete = null;
+
+		// Find the version node to be deleted
+		for (Element el : versions.getChildren()) {
+			Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
+					el.getChild("timestamp").getValue());
+			if (ver.equals(versionToDelete)) {
+				elementToDelete = el;
+			}
+		}
+
+		// Delete the node
+		if (elementToDelete != null) {
+			elementToDelete.detach();
+			try {
+				(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
+			} catch (IOException e) {
+				log.getLogger().log(Level.SEVERE, "An error occured!", e);
+			}
+		}
+
+		// Delete the file
+		String appFileName;
+		if (this.getMavenClassifier().equals("")) {
+			// No classifier
+			appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + ".jar";
+		} else {
+			appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + "-" + this.getMavenClassifier()
+					+ ".jar";
+		}
+
+		File appFile = new File(destFolder + File.separator + appFileName);
+
+		return appFile.delete();
+	}
+
+	/**
+	 * Adds a handler for the event that the launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to add.
+	 */
+	public void addEventHandlerWhenLaunchedAppExits(Runnable handler) {
+		// Only add handler if it was not already added
+		if (!this.isEventHandlerWhenLaunchedAppExitsAttached(handler)) {
+			eventHandlersWhenLaunchedAppExits.add(handler);
+		}
+	}
+
+	/**
+	 * Removes a handler for the event that the launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to remove.
+	 */
+	public void removeEventHandlerWhenLaunchedAppExits(Runnable handler) {
+		// Only remove handler if it was already added
+		if (this.isEventHandlerWhenLaunchedAppExitsAttached(handler)) {
+			eventHandlersWhenLaunchedAppExits.remove(handler);
+		}
+	}
+
+	/**
+	 * checks if the specified handler is already attached to the event that the
+	 * launched app exits again.
+	 * 
+	 * @param handler
+	 *            The handler to be checked.
+	 * @return {@code true} if the handler is already attached, {@code false}
+	 *         otherwise
+	 */
+	public boolean isEventHandlerWhenLaunchedAppExitsAttached(Runnable handler) {
+		return eventHandlersWhenLaunchedAppExits.contains(handler);
+	}
+
+	/**
+	 * Fires all handlers registered for the launchedAppExits event.
+	 */
+	private void fireLaunchedAppExits() {
+		log.getLogger().info("The launched app exited and the LaunchedAppExits event is now fired.");
+		for (Runnable handler : eventHandlersWhenLaunchedAppExits) {
+			Platform.runLater(handler);
+		}
+	}
+
+	/**
+	 * Exports the info of this app to a *.foklauncher file
+	 * 
+	 * @param fileToWrite
+	 *            The {@link File} to be written to. If the file already exists
+	 *            on the disk, it will be overwritten.
+	 * @throws IOException
+	 *             If something happens while saving the file
+	 */
+	public void exportInfo(File fileToWrite) throws IOException {
+		if (!fileToWrite.exists()) {
+			// Create a new file
+			fileToWrite.createNewFile();
+		}
+
+		// We either have an empty file or a file that needs to be overwritten
+		Properties props = new Properties();
+
+		props.setProperty("name", this.getName());
+		props.setProperty("repoBaseURL", this.getMavenRepoBaseURL().toString());
+		props.setProperty("snapshotRepoBaseURL", this.getMavenSnapshotRepoBaseURL().toString());
+		props.setProperty("groupId", this.getMavenGroupID());
+		props.setProperty("artifactId", this.getMavenArtifactID());
+		props.setProperty("classifier", this.getMavenClassifier());
+
+		FileOutputStream out = new FileOutputStream(fileToWrite);
+		props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
+		out.close();
+	}
+
+	/**
+	 * Imports the info of this app from a *.foklauncher file.
+	 * 
+	 * @param fileToImport
+	 *            The {@link File} to be read from.
+	 * @throws IOException
+	 *             If the specified file is not a file (but a directory) or if
+	 *             the launcher has no permission to read the file.
+	 */
+	private void importInfo(File fileToImport) throws IOException {
+		this.imported = true;
+		this.importFile = fileToImport;
+		FileReader fileReader = null;
+		if (!fileToImport.isFile()) {
+			// Not a file
+			throw new IOException("The specified file is not a file");
+		} else if (!fileToImport.canRead()) {
+			// Cannot write to file
+			throw new IOException("The specified file is read-only");
+		}
+
+		Properties props = new Properties();
+		if (fileToImport.exists()) {
+			// Load the properties
+			fileReader = new FileReader(fileToImport);
+			props.load(fileReader);
+		}
+
+		this.setName(props.getProperty("name"));
+		this.setMavenRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
+		this.setMavenSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
+		this.setMavenGroupID(props.getProperty("groupId"));
+		this.setMavenArtifactID(props.getProperty("artifactId"));
+		this.setMavenClassifier(props.getProperty("classifier"));
+		
+		fileReader.close();
+	}
+
+	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		Element root;
+		Document appsDoc;
+		Element modelVersion;
+		Element appsElement;
+
+		try {
+			appsDoc = new SAXBuilder().build(fileName);
+			root = appsDoc.getRootElement();
+
+			modelVersion = root.getChild("modelVersion");
+			appsElement = root.getChild("importedApps");
+
+			// Check if one of those elements is not defined
+			if (modelVersion == null) {
+				throw new NullPointerException("modelVersion is null");
+			} else if (appsElement == null) {
+				throw new NullPointerException("appsElement is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("fokLauncher");
+			appsDoc = new Document(root);
+
+			modelVersion = new Element("modelVersion");
+			appsElement = new Element("importedApps");
+
+			root.addContent(modelVersion);
+			root.addContent(appsElement);
+		}
+
+		modelVersion.setText("0.0.1");
+
+		boolean fileFound = false;
+
+		for (Element app : appsElement.getChildren()) {
+			if (app.getChild("fileName").getValue().equals(infoFile.getAbsolutePath())) {
+				fileFound = true;
+			}
+		}
+
+		// Check if the specified version is already present
+		if (!fileFound) {
+			Element app = new Element("app");
+			Element fileNameElement = new Element("fileName");
+
+			fileNameElement.setText(infoFile.getAbsolutePath());
+
+			app.addContent(fileNameElement);
+
+			appsElement.addContent(app);
+		}
+
+		// Write xml-File
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
+		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+	}
+
+	public void removeFromImportedAppList() throws FileNotFoundException, IOException {
+		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+
+		Element root;
+		Document appsDoc;
+		Element modelVersion;
+		Element appsElement;
+
+		try {
+			appsDoc = new SAXBuilder().build(fileName);
+			root = appsDoc.getRootElement();
+
+			modelVersion = root.getChild("modelVersion");
+			appsElement = root.getChild("importedApps");
+
+			// Check if one of those elements is not defined
+			if (modelVersion == null) {
+				throw new NullPointerException("modelVersion is null");
+			} else if (appsElement == null) {
+				throw new NullPointerException("appsElement is null");
+			}
+		} catch (JDOMException | IOException | NullPointerException e) {
+			// Could not read document for some reason so generate a new one
+			root = new Element("fokLauncher");
+			appsDoc = new Document(root);
+
+			modelVersion = new Element("modelVersion");
+			appsElement = new Element("importedApps");
+
+			root.addContent(modelVersion);
+			root.addContent(appsElement);
+		}
+
+		modelVersion.setText("0.0.1");
+
+		List<Element> appsToDetach = new ArrayList<Element>();
+
+		for (Element app : appsElement.getChildren()) {
+			if (app.getChild("fileName").getValue().equals(this.getImportFile().getAbsolutePath())) {
+				// Collect elements to be detached
+				appsToDetach.add(app);
+			}
+		}
+
+		// Detach them
+		for (Element app : appsToDetach) {
+			app.detach();
+		}
+
+		// Write xml-File
+		// Create directories if necessary
+		File f = new File(fileName);
+		f.getParentFile().mkdirs();
+		// Create empty file on disk if necessary
+		// f.createNewFile();
+		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 }
