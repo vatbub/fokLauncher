@@ -16,7 +16,7 @@ Great! To add your app to the launcher, you need to meet the prerequisites (see 
 ### Contact us so that we add it to the list of apps on our server
 In that case, please tell us the following:
 - The name of your app
-- The maven groupId and artifactId (No need to tell us the version as launcher will figure that out automatically)
+- The maven groupId and artifactId (No need to tell us the version as the launcher will figure that out automatically)
 - The maven classifier of the file to download (if you use one, in most cases "jar-with-dependencies"
 - The url of the maven repository you use to publish releases
 - The url of the maven repository you use to publish snapshots
