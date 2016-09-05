@@ -3,6 +3,9 @@ This is a launcher for any java application that is released to a maven reposito
 
 Though the list of projects that currently use the launcher is small, it can be used by any app that is released to a maven repository which means that you can use it for your app too!
 
+## Get the launcher
+We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads)
+
 ## What it does
 The launcher has a App-Store like gui. It presents the user a list of available applications. The user can then choose an app from the list and the launcher will download and launch that app. 
 Once the app is downloaded, it is cached on the users hard drive (that means that the launcher will download it only on the first launch) but if you publish an update, the launcher will automatically detect that and download the update.
@@ -36,7 +39,7 @@ Please make sure to escape all `:` in the urls (they should look like this then:
 
 - Save the file as a textfile and give it a good name, e. g. `myAwsomeApp.foklauncher`
 - Make sure that the file extension is `.foklauncher`
-- Prompt the user to download the launcher
+- Prompt the user to download the launcher (You may send them over to (this url)[https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads]
 - Let the user download your `.foklauncher`-file
 - Tell the user to drag'n'drop the `.foklauncher`-file into the launcher window.
 - Your app will be imported to the launcher and can be launched as expected.
