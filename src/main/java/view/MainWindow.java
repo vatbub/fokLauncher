@@ -68,6 +68,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		log = new FOKLogger(MainWindow.class.getName());
 		prefs = new Prefs(MainWindow.class.getName());
 
+		// Complete the update
+		UpdateChecker.completeUpdate(args);
+
 		for (String arg : args) {
 			if (arg.toLowerCase().matches("mockappversion=.*")) {
 				// Set the mock version
@@ -633,6 +636,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@Override
 	public void stop() {
 		try {
+			UpdateChecker.cancelUpdateCompletion();
 			currentlySelectedApp.cancelDownloadAndLaunch(this);
 		} catch (Exception e) {
 			log.getLogger().log(Level.SEVERE,
@@ -912,7 +916,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						Platform.exit();
 					}
 				};
-				
+
 				t.setName("showErrorThread");
 				t.start();
 			}

@@ -4,20 +4,22 @@ jdk:
 addons:
   apt:
     packages:
-      - oracle-java8-installer
-      - libc6-i386
+    - oracle-java8-installer
+    - libc6-i386
 cache:
   directories:
   - "$HOME/.m2"
-before_install: 
-  - git clone -b travis `git config --get remote.origin.url` target/travis
-install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U --settings target/travis/settings.xml
-script: mvn test -B --settings target/travis/settings.xml
-after_success: mvn clean deploy --settings target/travis/settings.xml -DskipTests=true
+before_install:
+- git clone -b travis `git config --get remote.origin.url` target/travis
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U --settings
+  target/travis/settings.xml
+script: 
+  - mvn test jacoco:report coveralls:report --settings target/travis/settings.xml
+after_success: 
+  - mvn clean deploy --settings target/travis/settings.xml -DskipTests=true
 branches:
   only:
   - master
-  - release
 notifications:
   email:
     recipients:
@@ -28,3 +30,5 @@ env:
   global:
   - secure: TcAPj8QjCqouo+vD9EDbp2WWR9RalfBHra+VIMI1tzYZM+Kkr9wmOLvOL/hS1REiCLKEon1gxlJLRXj2xqwwPJyjVdzOzMX5Kfu5XoiJxfsdcQqJsAzbH4Z9xJGKq9GlcuPGM4/ZM8VPQDI5aEz44JnxP4jnh81XQk+2z+dKtfDfr82YnRdxgCwgmARHgB9fDjbUW1rSWWrgjcUdqmitID0Y6qiW0U8KVE+MPEWjOAQ+PK0HthNwkTqLdcan9IMrA/UFRjmYOA95pCC1/cnxpd4GztNMeeVggYwsM8kzaaS5cSm8KjKeoYPzkp17+9KnDFheX0g8I65MYWKTY7xx4ZxSthjDxAuU4gGgSYsPANaJrGwOODniaCBpkZ1dFEt5gmoC16SzvNFsWZkII1t6G0CyPYljzq/iqd7HHEX+Mi/ybV9CW2F3ysjA4GKsN2g65bl+Cjeyhsl35f1pT7kPab9jm7T3HPInpdLmH4vRJ80WUgn1bi12V6fFuBnWpLv56ndM+Gq5fE6mDre8219vIQQDxWYTcxGH9LTERz3HjILid4SoPj1wQtFMbzxwf+pt3qGnw/+glYvD9joMNWrjhcJwbVF0ePjY3oOld16bhuM3zzksVPSvfhrFb5shKDidM61hlHSx/rSrds6IhKcCjAL/TGXjqtYbZ1y3Kx5jhuo=
   - secure: ZBSlrBlow4An6DpXxysKd0A+HDL/2HKxukDBqkfpm7Jr0jOTcK2VHYG5GjMdU/yx4DN8RpuvpGG5a7mPjaySlm5oKqPCdnIFRRa3gDkP/XkfMWeQP6PDh7wiXfkqqaGRlO4yZ2xJyKjqvMK5Xn7J9IDt+D0uGfMJvo+fLjYYCSzC3Oa7E/2inqE/sCvqo3mNKsFYjhRpxiuq0MRiECoMc+zTXeazI5Y/WOrF2PDo8+Z6Pp4iQdys1r+tWdHLgd4LgY3qKWicZhRmKZRZP/4Jjy2wpnfgsmiaUDT2xYVDcqj42j7rfQGoCsjBSCKpDNZSIFKtMbSEl9tNCeEVZ1gqKUVdPXxYg6/x6uOTNBeHKLaMCt9yBLSWWfSe6MsKLY+wCjjVW0v1pQ+dB3h3FgAozlK7H8Wx8mJuezH52JgfP92ArdR5nD5jsitc01c7G9GLnW15WXFd8cvgt8rCScGR6OFsfk/dJE85b5/J6z0RstrPm6GJJkRU+Icv2W8J56TA0B3dRuQCRfIzVbUpWOt02zis/mw8z4S0Bln7AVYZW4NniafSjIPbelXI0f+mMhRrm5rW0CsbEd++S2h3S7ILYaqhl6KohwQKoqeDppoqjhja6FzCZX9lItFyi4eoExLpKp3E8QpFnHJl7EU9wcIGm5OwUMQ5HfJC54BwqYzUWTY=
+  - secure: HC4mti0yl6yx6jD0bPv879panYL7fyJa1rvuDrz9OSPPu3D+B6wSE7saNfDmVagK9p9LkxZ7Kx2BbAGetK6lFSwFbPV8Y2BtM6tRz6c6P5xz2uEu4i/Xe5P4+k5V+dxz+zLd0HYGAC4WuiMdfWAU3Se3eXQLztcvlclJf/fy43v/nC9FqA1o3HI6QmkktHJo/LESA7lvpfY1c0/9L/Nam5S+ajW7s4EJaX5vAFIPiY+YAgIIEWcAO6WBDNTvwHLGPJlckM/ibPdEFp8qzqZXCyrf4unhWIH0NLgRCsCmu76ATqirh3FW7r3ZrJt9dLb6I6HkUa3NL8fFuuK4jOzaC6HUEbIBu1hiNx8SVEZfyEyTGVCa50hlzbD1vQhaciWv78FqQRCMQstjGLGfGoRggQVzoxdj44GJ2U2qKVLkPBUjTjymN60LPwIFnzf801Ulvu39wtcUXv6jKP6sp3/1GXIdaEtY6EZJD0KdS1dXgR3virE1w0KBolFxfEKfKcbNlfX0oAM7fO3PK3N2kH9YfPYaMTNQhgBpa30BvGZlOOHjuuhxyDN4nnKH05Fei7Sxs2u+3DK4KbsFrghkGRAgpu8QWBttLOmQkbJcX82c4a/MSKROmz1tjqFOJWXHPNPCSsiqgjQMEyreixPjmNzwJJEBxiBASR21F/kQbV7lAkk=
+  - secure: fSji1YSn+4x3XSjPNJI3S2XOENqgB5GU4GDYfTeestXweJWYRxi4BhVrs5xQiK42oDOt+nwg2tICidzU/QQBdUmoSwDKcTcRV6p666ezr2JyZbrziaKCD5dQwPh5tme5APChjVOqPNTPAtdGYPsHfZFpKInqtNkcN0tCZ7mMf4X2neibsgjUxYHhwWMDUkJYGMmaiaLukIaqY4/HuCLUCYk9+HceXIDUvoktjKjtwB2n9tpXOSllWANMt3WFo3sMYFXxZh0riHO3WXgCS05/DGD0cbhu8VPmHyh2SW3R8J4K1ssfIwjaMnLdQTnYvSsZ19zp0Z9VyYlcyvqNkT8K0Gi2wWvp7XkbLmSjIklFkDzvqbIuyC1xaboqPou24OlZLZrtvegtr5GaR57cE3kIDFMi9of3HDe+oFA5W+vmueQaHFP83lcWVJC9MADx9/WVes0e+218pSzHFIg4QVRnkcBIaDe91soZ2ZG/GA+27iTgfSLweXstDUlIHq3QlS3BeMv3PVrJWnKBV5HTClJpe1XWir07GpabL0aJhadS+om4K0pinkJxvAx9Xu//dKNNJkPN608ekpjW0028VZY5N6tTe29wmMBIN7hpI4oI8IbD80lmXpdeGdxNP/2W1rtGLu8BE1er990ZtpF0dMkopM5SnePpbZ5fq8Wse+nbMU4=
