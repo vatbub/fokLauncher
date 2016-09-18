@@ -28,11 +28,11 @@
 		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
 		<url>scm:git:git@github.com:vatbub/foklauncher.git</url>
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
-		<tag>foklauncher-0.0.3</tag>
+		<tag>foklauncher-0.0.4</tag>
 	</scm>
 
 	<artifactId>foklauncher</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<packaging>jar</packaging>
 	<inceptionYear>2016</inceptionYear>
 
@@ -137,7 +137,7 @@
 		<dependency>
 			<groupId>fokprojects</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.13</version>
+			<version>0.0.14</version>
 		</dependency>
 	</dependencies>
 </project>
