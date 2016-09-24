@@ -3,9 +3,11 @@ package view;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
@@ -20,6 +22,7 @@ import common.UpdateChecker;
 import common.UpdateInfo;
 import common.Version;
 import common.VersionList;
+import extended.GuiLanguage;
 import extended.VersionMenuItem;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -34,7 +37,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
@@ -91,10 +93,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		launch(args);
 	}
 
-	private ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
+	private static ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
+	private static Locale currentDisplayLanguage = Locale.getDefault();
 	private static Prefs prefs;
 	private static final String enableSnapshotsPrefKey = "enableSnapshots";
 	private static final String showLauncherAgainPrefKey = "showLauncherAgain";
+	private static final String guiLanguagePrefKey = "guiLanguage";
 	private static AppList apps;
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
@@ -413,9 +417,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // fx:id="launchLauncherAfterAppExitCheckbox"
 	private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
 															// FXMLLoader
-	
+
 	@FXML // fx:id="languageSelector"
-    private ComboBox<String> languageSelector; // Value injected by FXMLLoader
+	private ComboBox<GuiLanguage> languageSelector; // Value injected by
+													// FXMLLoader
 
 	@FXML // fx:id="progressBar"
 	private ProgressBar progressBar; // Value injected by FXMLLoader
@@ -539,11 +544,23 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		updateThread.setName("manualUpdateThread");
 		updateThread.start();
 	}
-	
+
 	@FXML
-    void languageSelectorOnAction(ActionEvent event) {
+	void languageSelectorOnAction(ActionEvent event) {
 		System.out.println(languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
-    }
+		prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
+				.get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
+
+		boolean implicitExit = Platform.isImplicitExit();
+		Platform.setImplicitExit(false);
+		stage.hide();
+		try {
+			currentMainWindowInstance.start(stage);
+		} catch (Exception e) {
+			log.getLogger().log(Level.INFO, "An error occurred while setting a new gui language", e);
+		}
+		Platform.setImplicitExit(implicitExit);
+	}
 
 	// Handler for Button[fx:id="launchButton"] onAction
 	@FXML
@@ -596,6 +613,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		// get the right resource bundle
+		String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
+
+		if (guiLanguageCode.equals("")) {
+			// determine language automatically
+			bundle = ResourceBundle.getBundle("view.MainWindow");
+		} else {
+			// Get the specified bundle
+			log.getLogger().info("Setting language: " + guiLanguageCode);
+			currentDisplayLanguage = new Locale(guiLanguageCode);
+			bundle = ResourceBundle.getBundle("view.MainWindow", currentDisplayLanguage);
+		}
+
 		stage = primaryStage;
 		try {
 			Thread updateThread = new Thread() {
@@ -682,7 +712,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		// Disable multiselect
 		appList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
+		
+		loadAvailableGuiLanguages();
+		
 		// Selection change listener
 		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -701,6 +733,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		loadAppList();
+	}
+	
+	private void loadAvailableGuiLanguages(){
+		List<Locale> supportedGuiLocales = Common.getLanguagesSupportedByResourceBundle(bundle);
+		List<GuiLanguage> convertedList = new ArrayList<GuiLanguage>(supportedGuiLocales.size());
+
+		for (Locale lang : supportedGuiLocales) {
+			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically"), currentDisplayLanguage));
+		}
+		ObservableList<GuiLanguage> items = FXCollections.observableArrayList(convertedList);
+		languageSelector.setItems(items);
 	}
 
 	/**
