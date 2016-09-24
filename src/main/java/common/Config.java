@@ -16,7 +16,7 @@ public class Config {
 	public static URL getUpdateRepoBaseURL() {
 		URL res = null;
 		try {
-			res = new URL("http://dl.bintray.com/vatbub/fokprojectsSnapshots");
+			res = new URL("https://dl.bintray.com/vatbub/fokprojectsSnapshots");
 		} catch (MalformedURLException e) {
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 		}
