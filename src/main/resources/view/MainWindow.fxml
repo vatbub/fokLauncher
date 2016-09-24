@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import view.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
 <?import javafx.geometry.*?>
@@ -7,24 +8,32 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.paint.*?>
 <?scenebuilder-preview-i18n-resource MainWindow.properties?>
+<?scenebuilder-stylesheet MainWindow.css?>
 
-<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onDragDropped="#mainFrameOnDragDropped" onDragOver="#mainFrameOnDragOver" prefHeight="608.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="view.MainWindow">
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onDragDropped="#mainFrameOnDragDropped" onDragOver="#mainFrameOnDragOver" prefHeight="608.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.MainWindow">
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
-    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" onMouseClicked="#appListOnMouseClicked" prefHeight="281.0" prefWidth="572.0" AnchorPane.bottomAnchor="262.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
-    <Button fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="226.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
-    <Label style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="130.0" AnchorPane.leftAnchor="14.0" />
-    <GridPane prefHeight="89.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" onMouseClicked="#appListOnMouseClicked" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
+    <ProgressBar fx:id="progressBar" layoutX="14.0" layoutY="382.0" mouseTransparent="true" opacity="1.0" prefHeight="31.0" prefWidth="572.0" progress="0.0" style="" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+    <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" layoutX="14.0" layoutY="382.0" mnemonicParsing="false" onAction="#launchButtonOnAction" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+    <Label layoutX="14.0" layoutY="414.0" prefHeight="31.0" style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="163.0" AnchorPane.leftAnchor="14.0" />
+    <GridPane prefHeight="128.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
       <children>
         <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
         <CheckBox fx:id="launchLauncherAfterAppExitCheckbox" mnemonicParsing="false" onAction="#launchLauncherAfterAppExitCheckboxOnAction" text="%launchLauncherAfterAppExitCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+            <ComboBox fx:id="languageSelector" maxWidth="1.7976931348623157E308" onAction="#languageSelectorOnAction" prefWidth="150.0" promptText="%languageSelector.promptText" GridPane.rowIndex="3">
+               <GridPane.margin>
+                  <Insets />
+               </GridPane.margin>
+            </ComboBox>
       </children>
       <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
       </columnConstraints>
       <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -41,7 +50,5 @@
         <Hyperlink fx:id="updateLink" onAction="#updateLinkOnAction" text="%updateLink" textFill="#0066ff" HBox.hgrow="ALWAYS" />
       </children>
     </HBox>
-    <ProgressBar fx:id="progressBar" prefWidth="572.0" progress="0.0" AnchorPane.bottomAnchor="190.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
-    <Label fx:id="progressLabel" alignment="CENTER" contentDisplay="CENTER" prefWidth="572.0" text="Progress text will be shown here..." AnchorPane.bottomAnchor="160.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
   </children>
 </AnchorPane>

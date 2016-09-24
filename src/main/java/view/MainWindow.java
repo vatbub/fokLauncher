@@ -36,6 +36,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -407,17 +408,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
 
 	@FXML // fx:id="launchButton"
-	private Button launchButton; // Value injected by FXMLLoader
+	private ProgressButton launchButton; // Value injected by FXMLLoader
 
 	@FXML // fx:id="launchLauncherAfterAppExitCheckbox"
 	private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
 															// FXMLLoader
+	
+	@FXML // fx:id="languageSelector"
+    private ComboBox<String> languageSelector; // Value injected by FXMLLoader
 
 	@FXML // fx:id="progressBar"
 	private ProgressBar progressBar; // Value injected by FXMLLoader
-
-	@FXML // fx:id="progressLabel"
-	private Label progressLabel; // Value injected by FXMLLoader
 
 	@FXML // fx:id="workOfflineCheckbox"
 	private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
@@ -538,6 +539,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		updateThread.setName("manualUpdateThread");
 		updateThread.start();
 	}
+	
+	@FXML
+    void languageSelectorOnAction(ActionEvent event) {
+		System.out.println(languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
+    }
 
 	// Handler for Button[fx:id="launchButton"] onAction
 	@FXML
@@ -615,7 +621,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			Parent root = FXMLLoader.load(getClass().getResource("MainWindow.fxml"), bundle);
 
 			Scene scene = new Scene(root);
-			// scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(getClass().getResource("MainWindow.css").toExternalForm());
 
 			primaryStage.setTitle(bundle.getString("windowTitle"));
 
@@ -653,7 +659,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert progressLabel != null : "fx:id=\"progressLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
@@ -674,7 +679,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		progressBar.setVisible(false);
-		progressLabel.setVisible(false);
 
 		// Disable multiselect
 		appList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -722,15 +726,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
-				boolean progressVisibleBefore = progressLabel.isVisible();
+				boolean progressVisibleBefore = progressBar.isVisible();
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
 						launchButton.setDisable(true);
-						progressLabel.setVisible(true);
+						launchButton.setDefaultButton(false);
+						launchButton.setStyle("-fx-background-color: transparent;");
+						progressBar.setPrefHeight(launchButton.getHeight());
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
-						progressLabel.setText(bundle.getString("progress.checkingVersionInfo"));
+						launchButton.setProgressText(bundle.getString("progress.checkingVersionInfo"));
 					}
 				});
 
@@ -744,7 +750,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
 								}
 							});
 						} else if (currentlySelectedApp.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
@@ -754,7 +762,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.updateAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.updateAndLaunch"));
 								}
 							});
 						} else {
@@ -764,7 +774,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.launch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.launch"));
 								}
 							});
 						}
@@ -777,7 +789,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(true);
-									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
 								}
 							});
 						} else {
@@ -787,7 +801,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.launch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.launch"));
 								}
 							});
 						}
@@ -799,7 +815,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
-						progressLabel.setVisible(progressVisibleBefore);
+						launchButton.setProgressText("");
 						progressBar.setVisible(progressVisibleBefore);
 					}
 				});
@@ -844,11 +860,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			public void run() {
 				appList.setDisable(true);
 				launchButton.setDisable(false);
-				launchButton.setText(bundle.getString("okButton.cancelLaunch"));
+				launchButton.setDefaultButton(false);
+				progressBar.setPrefHeight(launchButton.getHeight());
+				launchButton.setStyle("-fx-background-color: transparent;");
+				launchButton.setControlText(bundle.getString("okButton.cancelLaunch"));
 				progressBar.setVisible(true);
 				progressBar.setProgress(0 / 4.0);
-				progressLabel.setVisible(true);
-				progressLabel.setText(bundle.getString("progress.preparing"));
+				launchButton.setProgressText(bundle.getString("progress.preparing"));
 			}
 
 		});
@@ -861,7 +879,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(-1);
-				progressLabel.setText(bundle.getString("progress.downloading"));
+				launchButton.setProgressText(bundle.getString("progress.downloading"));
 			}
 
 		});
@@ -874,7 +892,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(1.0 / 2.0);
-				progressLabel.setText(bundle.getString("progress.installing"));
+				launchButton.setProgressText(bundle.getString("progress.installing"));
 			}
 
 		});
@@ -887,7 +905,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(2.0 / 2.0);
-				progressLabel.setText(bundle.getString("progress.launching"));
+				launchButton.setProgressText(bundle.getString("progress.launching"));
 			}
 
 		});
@@ -929,7 +947,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Platform.setImplicitExit(true);
 		appList.setDisable(false);
 		progressBar.setVisible(false);
-		progressLabel.setVisible(false);
+		launchButton.setProgressText("");
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -941,7 +959,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@Override
 	public void cancelRequested() {
 		progressBar.setProgress(-1);
-		progressLabel.setText(bundle.getString("cancelRequested"));
+		launchButton.setProgressText(bundle.getString("cancelRequested"));
 		launchButton.setDisable(true);
 		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
 	}
