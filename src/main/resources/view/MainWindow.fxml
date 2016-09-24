@@ -18,7 +18,7 @@
     <ProgressBar fx:id="progressBar" layoutX="14.0" layoutY="382.0" mouseTransparent="true" opacity="1.0" prefHeight="31.0" prefWidth="572.0" progress="0.0" style="" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
     <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" layoutX="14.0" layoutY="382.0" mnemonicParsing="false" onAction="#launchButtonOnAction" prefWidth="572.0" text="%okButton.launch" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" />
     <Label layoutX="14.0" layoutY="414.0" prefHeight="31.0" style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="163.0" AnchorPane.leftAnchor="14.0" />
-    <GridPane prefHeight="128.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+    <GridPane fx:id="settingsGridView" prefHeight="128.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
       <children>
         <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />

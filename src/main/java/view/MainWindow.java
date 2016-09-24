@@ -54,6 +54,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import logging.FOKLogger;
@@ -439,6 +440,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	 * fx:id="versionLabel"
 	 */
 	private Label versionLabel; // Value injected by FXMLLoader
+	
+	@FXML // fx:id="settingsGridView"
+    private GridPane settingsGridView; // Value injected by FXMLLoader
 
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
@@ -776,6 +780,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						launchButton.setDisable(true);
 						launchButton.setDefaultButton(false);
 						launchButton.setStyle("-fx-background-color: transparent;");
+						launchButton.setControlText("");
 						progressBar.setPrefHeight(launchButton.getHeight());
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
@@ -910,6 +915,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				progressBar.setVisible(true);
 				progressBar.setProgress(0 / 4.0);
 				launchButton.setProgressText(bundle.getString("progress.preparing"));
+				
+				settingsGridView.setDisable(true);
 			}
 
 		});
@@ -994,6 +1001,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
+				settingsGridView.setDisable(false);
 				updateLaunchButton();
 			}
 		});
