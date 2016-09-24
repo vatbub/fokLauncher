@@ -80,7 +80,7 @@
 							<jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
 							<outfile>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</outfile>
 							<dontWrapJar>false</dontWrapJar>
-							<downloadUrl>http://java.com/download</downloadUrl>
+							<downloadUrl>https://www.java.com/download/</downloadUrl>
 							<classPath>
 								<mainClass>view.MainWindow</mainClass>
 								<preCp>anything</preCp>
