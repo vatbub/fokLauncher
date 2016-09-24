@@ -440,9 +440,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	 * fx:id="versionLabel"
 	 */
 	private Label versionLabel; // Value injected by FXMLLoader
-	
+
 	@FXML // fx:id="settingsGridView"
-    private GridPane settingsGridView; // Value injected by FXMLLoader
+	private GridPane settingsGridView; // Value injected by FXMLLoader
 
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
@@ -716,9 +716,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		// Disable multiselect
 		appList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		
+
 		loadAvailableGuiLanguages();
-		
+
 		// Selection change listener
 		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -738,13 +738,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		loadAppList();
 	}
-	
-	private void loadAvailableGuiLanguages(){
+
+	private void loadAvailableGuiLanguages() {
 		List<Locale> supportedGuiLocales = Common.getLanguagesSupportedByResourceBundle(bundle);
 		List<GuiLanguage> convertedList = new ArrayList<GuiLanguage>(supportedGuiLocales.size());
 
 		for (Locale lang : supportedGuiLocales) {
-			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically"), currentDisplayLanguage));
+			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically"),
+					currentDisplayLanguage));
 		}
 		ObservableList<GuiLanguage> items = FXCollections.observableArrayList(convertedList);
 		languageSelector.setItems(items);
@@ -915,7 +916,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				progressBar.setVisible(true);
 				progressBar.setProgress(0 / 4.0);
 				launchButton.setProgressText(bundle.getString("progress.preparing"));
-				
+
 				settingsGridView.setDisable(true);
 			}
 
@@ -997,10 +998,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Platform.setImplicitExit(true);
 		appList.setDisable(false);
 		progressBar.setVisible(false);
-		launchButton.setProgressText("");
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
+				launchButton.setProgressText("");
 				settingsGridView.setDisable(false);
 				updateLaunchButton();
 			}
@@ -1022,6 +1023,36 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(kilobytesDownloaded / totalFileSizeInKB);
+
+				String downloadedString;
+
+				if (kilobytesDownloaded < 1024) {
+					downloadedString = Double.toString(Math.round(kilobytesDownloaded*100.0)/100.0) + " " + bundle.getString("kilobyte");
+				} else if ((kilobytesDownloaded / 1024) < 1024) {
+					downloadedString = Double.toString(Math.round((kilobytesDownloaded *100.0)/ 1024)/100.0) + " " + bundle.getString("megabyte");
+				} else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
+					downloadedString = Double.toString(Math.round(((kilobytesDownloaded *100.0)/ 1024) / 1024)/100.0) + " "
+							+ bundle.getString("gigabyte");
+				} else {
+					downloadedString = Double.toString(Math.round((((kilobytesDownloaded *100.0)/ 1024) / 1024) / 1024)/100.0) + " "
+							+ bundle.getString("terabyte");
+				}
+
+				String totalString;
+				if (totalFileSizeInKB < 1024) {
+					totalString = Double.toString(Math.round(totalFileSizeInKB*100.0)/100.0) + " " + bundle.getString("kilobyte");
+				} else if ((totalFileSizeInKB / 1024) < 1024) {
+					totalString = Double.toString(Math.round((totalFileSizeInKB *100.0)/ 1024)/100.0) + " " + bundle.getString("megabyte");
+				} else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
+					totalString = Double.toString(Math.round(((totalFileSizeInKB *100.0)/ 1024) / 1024)/100.0) + " "
+							+ bundle.getString("gigabyte");
+				} else {
+					totalString = Double.toString(Math.round((((totalFileSizeInKB *100.0)/ 1024) / 1024) / 1024)/100.0) + " "
+							+ bundle.getString("terabyte");
+				}
+
+				launchButton.setProgressText(
+						bundle.getString("progress.downloading") + "(" + downloadedString + "/" + totalString + ")");
 			}
 
 		});
