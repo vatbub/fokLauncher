@@ -1,7 +1,10 @@
 package view;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +40,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
@@ -444,6 +448,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // fx:id="settingsGridView"
 	private GridPane settingsGridView; // Value injected by FXMLLoader
 
+	@FXML // fx:id="appInfoButton"
+	private Button appInfoButton; // Value injected by FXMLLoader
+
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
 	void appListOnMouseClicked(MouseEvent event) {
@@ -615,6 +622,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
 	}
 
+	@FXML
+	void appInfoButtonOnAction(ActionEvent event) {
+		try {
+			Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
+		} catch (IOException | URISyntaxException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+	}
+
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// get the right resource bundle
@@ -688,14 +704,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // This method is called by the FXMLLoader when initialization is
 			// complete
 	void initialize() {
-		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
@@ -792,6 +811,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				try {
 					if (!workOfflineCheckbox.isSelected()) {
 						// downloads are enabled
+
+						// enable the additional info button if applicable
+						appInfoButton.setDisable(currentlySelectedApp.getAdditionalInfoURL() == null);
+
 						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required
 							Platform.runLater(new Runnable() {
@@ -1027,27 +1050,34 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				String downloadedString;
 
 				if (kilobytesDownloaded < 1024) {
-					downloadedString = Double.toString(Math.round(kilobytesDownloaded*100.0)/100.0) + " " + bundle.getString("kilobyte");
+					downloadedString = Double.toString(Math.round(kilobytesDownloaded * 100.0) / 100.0) + " "
+							+ bundle.getString("kilobyte");
 				} else if ((kilobytesDownloaded / 1024) < 1024) {
-					downloadedString = Double.toString(Math.round((kilobytesDownloaded *100.0)/ 1024)/100.0) + " " + bundle.getString("megabyte");
+					downloadedString = Double.toString(Math.round((kilobytesDownloaded * 100.0) / 1024) / 100.0) + " "
+							+ bundle.getString("megabyte");
 				} else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
-					downloadedString = Double.toString(Math.round(((kilobytesDownloaded *100.0)/ 1024) / 1024)/100.0) + " "
+					downloadedString = Double
+							.toString(Math.round(((kilobytesDownloaded * 100.0) / 1024) / 1024) / 100.0) + " "
 							+ bundle.getString("gigabyte");
 				} else {
-					downloadedString = Double.toString(Math.round((((kilobytesDownloaded *100.0)/ 1024) / 1024) / 1024)/100.0) + " "
+					downloadedString = Double
+							.toString(Math.round((((kilobytesDownloaded * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
 							+ bundle.getString("terabyte");
 				}
 
 				String totalString;
 				if (totalFileSizeInKB < 1024) {
-					totalString = Double.toString(Math.round(totalFileSizeInKB*100.0)/100.0) + " " + bundle.getString("kilobyte");
+					totalString = Double.toString(Math.round(totalFileSizeInKB * 100.0) / 100.0) + " "
+							+ bundle.getString("kilobyte");
 				} else if ((totalFileSizeInKB / 1024) < 1024) {
-					totalString = Double.toString(Math.round((totalFileSizeInKB *100.0)/ 1024)/100.0) + " " + bundle.getString("megabyte");
+					totalString = Double.toString(Math.round((totalFileSizeInKB * 100.0) / 1024) / 100.0) + " "
+							+ bundle.getString("megabyte");
 				} else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
-					totalString = Double.toString(Math.round(((totalFileSizeInKB *100.0)/ 1024) / 1024)/100.0) + " "
+					totalString = Double.toString(Math.round(((totalFileSizeInKB * 100.0) / 1024) / 1024) / 100.0) + " "
 							+ bundle.getString("gigabyte");
 				} else {
-					totalString = Double.toString(Math.round((((totalFileSizeInKB *100.0)/ 1024) / 1024) / 1024)/100.0) + " "
+					totalString = Double
+							.toString(Math.round((((totalFileSizeInKB * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
 							+ bundle.getString("terabyte");
 				}
 

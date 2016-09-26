@@ -70,15 +70,44 @@ public class App {
 	 * @param mavenClassifier
 	 *            The artifacts classifier or {@code ""} if the default artifact
 	 *            shall be used.
+	 * 
 	 */
 	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
 			String mavenArtifactId, String mavenClassifier) {
+		this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, mavenClassifier, null);
+	}
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 * @param mavenClassifier
+	 *            The artifacts classifier or {@code ""} if the default artifact
+	 *            shall be used.
+	 * @param additionalInfoURL
+	 *            The url to a webpage where the user finds additional info
+	 *            about this app.
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId, String mavenClassifier, URL additionalInfoURL) {
 		this.setName(name);
 		this.setMavenRepoBaseURL(mavenRepoBaseURL);
 		this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
 		this.setMavenGroupID(mavenGroupId);
 		this.setMavenArtifactID(mavenArtifactId);
 		this.setMavenClassifier(mavenClassifier);
+		this.setAdditionalInfoURL(additionalInfoURL);
 	}
 
 	/**
@@ -175,6 +204,11 @@ public class App {
 	 * used.
 	 */
 	private String mavenClassifier;
+
+	/**
+	 * A webpage where the user finds additional info for this app.
+	 */
+	private URL additionalInfoURL;
 
 	private boolean specificVersionListLoaded = false;
 
@@ -487,6 +521,21 @@ public class App {
 	 */
 	public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
 		this.deletableVersionListLoaded = deletableVersionListLoaded;
+	}
+
+	/**
+	 * @return the additionalInfoURL
+	 */
+	public URL getAdditionalInfoURL() {
+		return additionalInfoURL;
+	}
+
+	/**
+	 * @param additionalInfoURL
+	 *            the additionalInfoURL to set
+	 */
+	public void setAdditionalInfoURL(URL additionalInfoURL) {
+		this.additionalInfoURL = additionalInfoURL;
 	}
 
 	/**
@@ -1338,8 +1387,9 @@ public class App {
 	 * 
 	 * @return A {@link List} of available apps from the server.
 	 * @throws MalformedURLException
-	 *             If the maven repo base url of an app is malformed. The base
+	 *             If the maven repo base url of an app is malformed or if an app specifies a malformed additionalInfoURL. The base
 	 *             urls are downloaded from the server.
+	 *         
 	 * @throws JDOMException
 	 *             If the xml-app list on the server is malformed
 	 * @throws IOException
@@ -1381,6 +1431,10 @@ public class App {
 			// Add classifier only if one is defined
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
+			}
+			
+			if (app.getChild("additionalInfoURL")!=null){
+				newApp.setAdditionalInfoURL(new URL(app.getChild("additionalInfoURL").getValue()));
 			}
 
 			res.add(newApp);
@@ -1564,6 +1618,9 @@ public class App {
 		props.setProperty("groupId", this.getMavenGroupID());
 		props.setProperty("artifactId", this.getMavenArtifactID());
 		props.setProperty("classifier", this.getMavenClassifier());
+		if (this.getAdditionalInfoURL()!=null){
+			props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
+		}
 
 		FileOutputStream out = new FileOutputStream(fileToWrite);
 		props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
@@ -1605,6 +1662,10 @@ public class App {
 		this.setMavenArtifactID(props.getProperty("artifactId"));
 		this.setMavenClassifier(props.getProperty("classifier"));
 		
+		if (!props.getProperty("additionalInfoURL", "").equals("")){
+			this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
+		}
+
 		fileReader.close();
 	}
 
