@@ -56,5 +56,5 @@ To be able to add your app to the launcher, it needs to meet the following condi
 If you have any problems, don't hesitate to write an email and we will be happy to help!
 
 ## Customize the launcher in your way
-If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../blob/master/LICENSE.txt).
+If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../master/LICENSE.txt).
 There are plans to make complete customization easier than forking, you can see the progress in [#12](/../../issues/12)
