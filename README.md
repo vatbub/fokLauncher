@@ -46,7 +46,7 @@ Please make sure to escape all `:` in the urls (they should look like this then:
 
 ## Prerequisites
 To be able to add your app to the launcher, it needs to meet the following conditions:
-- It must be released to a maven repository. Ideally, you use [maven](/blob/master/LICENSE.txt) for that, but you can use any build tool that can release software to a maven repo.
+- It must be released to a maven repository. Ideally, you use [maven](http://maven.apache.org/) for that, but you can use any build tool that can release software to a maven repo.
 - Your app must have a public release repository and snapshot repository. There are plans to make the snapshot repository optional, see [#14](/../../issues/14) for the current progrress
 - The release repo and snapshot repo cannot have the same url.
 - Your app must be packaged to a runnable jar file. That means, that all of your dependencies must be packaged in that jar file too and a main class must be defined in the jars manifest (See [this](http://stackoverflow.com/questions/1729054/including-dependencies-in-a-jar-with-maven) and [this](http://www.avajava.com/tutorials/lessons/how-do-i-specify-a-main-class-in-the-manifest-of-my-generated-jar-file.html) for help)
