@@ -323,7 +323,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							App app = apps.get(cell.getIndex());
 
 							try {
-								System.out.println(file.getAbsolutePath());
+								log.getLogger().info("Exporting app info of app " + app.getName() + " to file: "
+										+ file.getAbsolutePath());
 								app.exportInfo(file);
 							} catch (IOException e) {
 								log.getLogger().log(Level.SEVERE, "An error occurred", e);
@@ -558,7 +559,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML
 	void languageSelectorOnAction(ActionEvent event) {
-		System.out.println(languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
+		log.getLogger().info("Switching gui language to: "
+				+ languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
 		prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
 				.get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
 
