@@ -564,6 +564,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
 				.get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
 
+		// Restart gui
 		boolean implicitExit = Platform.isImplicitExit();
 		Platform.setImplicitExit(false);
 		stage.hide();
@@ -807,6 +808,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
 						launchButton.setProgressText(bundle.getString("progress.checkingVersionInfo"));
+						appInfoButton.setDisable(true);
 					}
 				});
 
@@ -815,7 +817,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						// downloads are enabled
 
 						// enable the additional info button if applicable
-						appInfoButton.setDisable(currentlySelectedApp.getAdditionalInfoURL() == null);
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								appInfoButton.setDisable(currentlySelectedApp.getAdditionalInfoURL() == null);
+							}
+						});
 
 						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required
