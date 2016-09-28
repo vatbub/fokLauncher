@@ -140,10 +140,5 @@
 			<artifactId>common</artifactId>
 			<version>0.0.15-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.rometools</groupId>
-			<artifactId>rome</artifactId>
-			<version>1.7.0</version>
-		</dependency>
 	</dependencies>
 </project>
