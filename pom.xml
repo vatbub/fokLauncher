@@ -27,10 +27,20 @@
 
 	<scm>
 		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
-		<url>scm:git:git@github.com:vatbub/foklauncher.git</url>
+		<url>https://github.com/vatbub/foklauncher/blob/master/</url>
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+	
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/vatbub/foklauncher/issues</url>
+	</issueManagement>
+
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/vatbub/foklauncher</url>
+	</ciManagement>
 
 	<artifactId>foklauncher</artifactId>
 	<version>0.0.5-SNAPSHOT</version>
