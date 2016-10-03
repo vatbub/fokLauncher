@@ -6,6 +6,14 @@ Though the list of projects that currently use the launcher is small, it can be 
 ## Get the launcher
 We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads)
 
+## Build your own version
+### Build the current snapshot
+1. Clone this repository
+2. Run `mvn package`
+
+### Build the latest release
+Repeat the steps mentioned above but switch to the `release` branch by running `git checkout release` prior to runing `mvn package`.
+
 ## What it does
 The launcher has a App-Store like gui. It presents the user a list of available applications. The user can then choose an app from the list and the launcher will download and launch that app. 
 Once the app is downloaded, it is cached on the users hard drive (that means that the launcher will download it only on the first launch) but if you publish an update, the launcher will automatically detect that and download the update.
