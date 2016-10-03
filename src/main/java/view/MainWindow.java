@@ -62,10 +62,14 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import logging.FOKLogger;
+import view.motd.MOTD;
+import view.motd.MOTDDialog;
 import view.updateAvailableDialog.UpdateAvailableDialog;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jdom2.JDOMException;
+
+import com.rometools.rome.io.FeedException;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
@@ -721,6 +725,16 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+		
+		// Show messages of the day
+		try {
+			MOTD motd = MOTD.getLatestMOTD(new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/"));
+			if (!motd.isMarkedAsRead()){
+				new MOTDDialog(motd);
+			}
+		} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
 
 		currentMainWindowInstance = this;
 
