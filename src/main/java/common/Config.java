@@ -18,7 +18,7 @@ public class Config {
 		try {
 			res = new URL("https://dl.bintray.com/vatbub/fokprojectsSnapshots");
 		} catch (MalformedURLException e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+			log.getLogger().log(Level.SEVERE, "Malicious config", e);
 		}
 
 		return res;
@@ -48,7 +48,7 @@ public class Config {
 		try {
 			res = new URL("https://www.dropbox.com/s/muikjvx0x2tpetb/fokprojectsOnLauncher.xml?dl=1");
 		} catch (MalformedURLException e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+			log.getLogger().log(Level.SEVERE, "Malicious config", e);
 		}
 
 		return res;
@@ -82,4 +82,14 @@ public class Config {
 	 * The name of the xml file where the list of imported apps is saved.
 	 */
 	public static final String importedAppListFileName = "importedApps.xml";
+	
+	//MOTD
+	public static final URL getMotdFeedUrl(){
+		try {
+			return  new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
+		} catch (MalformedURLException e) {
+			log.getLogger().log(Level.SEVERE, "Malicious config", e);
+			return null;
+		}
+	}
 }

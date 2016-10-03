@@ -728,7 +728,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		
 		// Show messages of the day
 		try {
-			MOTD motd = MOTD.getLatestMOTD(new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/"));
+			MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
 			if (!motd.isMarkedAsRead()){
 				new MOTDDialog(motd);
 			}
