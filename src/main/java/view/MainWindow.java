@@ -727,14 +727,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// injected
 		
 		// Show messages of the day
-		try {
-			MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
-			if (!motd.isMarkedAsRead()){
-				new MOTDDialog(motd);
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				try {
+					MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
+					if (!motd.isMarkedAsRead()){
+						new MOTDDialog(motd);
+					}
+				} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				}
 			}
-		} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
-			log.getLogger().log(Level.SEVERE, "An error occurred", e);
-		}
+		});
 
 		currentMainWindowInstance = this;
 
