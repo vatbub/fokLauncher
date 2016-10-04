@@ -733,7 +733,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				try {
 					MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
 					if (!motd.isMarkedAsRead()){
-						new MOTDDialog(motd);
+						new MOTDDialog(motd, motd.getEntry().getTitle());
 					}
 				} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
