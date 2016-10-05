@@ -178,7 +178,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							@Override
 							public void run() {
 								log.getLogger().info("Getting available online versions...");
-								// App app = apps.get(cell.getIndex());
 								App app = cell.getItem();
 
 								// Get available versions
@@ -361,7 +360,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					MenuItem removeImportedApp = new MenuItem();
 					contextMenu.setOnShowing(event5 -> {
-						// App app = apps.get(cell.getIndex());
 						App app = cell.getItem();
 						if (app.isImported()) {
 							removeImportedApp.setText("Remove this app from this list");
@@ -385,8 +383,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							contextMenu.getItems().remove(removeImportedApp);
 						}
 					});
-					
-					// cell.textProperty().bind(cell.itemProperty().asString());
 
 					cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
 						if (isNowEmpty) {
@@ -528,7 +524,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML
 	void mainFrameOnDragDropped(DragEvent event) {
-		// event.acceptTransferModes(TransferMode.ANY);
 		List<File> files = event.getDragboard().getFiles();
 
 		for (File f : files) {
@@ -789,7 +784,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<App>() {
 			public void changed(ObservableValue<? extends App> observable, App oldValue, App newValue) {
 				try {
-					// currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
 					currentlySelectedApp = appList.getSelectionModel().getSelectedItem();
 				} catch (ArrayIndexOutOfBoundsException e) {
 					currentlySelectedApp = null;

@@ -706,7 +706,6 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
 	}
@@ -1296,11 +1295,6 @@ public class App {
 		while ((x = in.read(data, 0, 1024)) >= 0) {
 			downloadedFileSize += x;
 
-			// calculate progress
-			// final int currentProgress = (int)
-			// ((((double)downloadedFileSize) / ((double)completeFileSize))
-			// * 100000d);
-
 			// update progress bar
 			if (gui != null) {
 				gui.downloadProgressChanged((double) (downloadedFileSize / 1024.0),
@@ -1740,7 +1734,6 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
@@ -1798,7 +1791,6 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
