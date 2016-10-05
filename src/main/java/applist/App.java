@@ -32,6 +32,16 @@ public class App {
 	private static FOKLogger log = new FOKLogger(App.class.getName());
 
 	/**
+	 * Creates a new App with the specified name.
+	 * 
+	 * @param name
+	 *            The name of the app.
+	 */
+	public App(String name) {
+		this(name, null, null, "", "");
+	}
+
+	/**
 	 * Creates a new App with the specified coordinates.
 	 * 
 	 * @param name
@@ -1387,9 +1397,10 @@ public class App {
 	 * 
 	 * @return A {@link List} of available apps from the server.
 	 * @throws MalformedURLException
-	 *             If the maven repo base url of an app is malformed or if an app specifies a malformed additionalInfoURL. The base
-	 *             urls are downloaded from the server.
-	 *         
+	 *             If the maven repo base url of an app is malformed or if an
+	 *             app specifies a malformed additionalInfoURL. The base urls
+	 *             are downloaded from the server.
+	 * 
 	 * @throws JDOMException
 	 *             If the xml-app list on the server is malformed
 	 * @throws IOException
@@ -1432,8 +1443,8 @@ public class App {
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
 			}
-			
-			if (app.getChild("additionalInfoURL")!=null){
+
+			if (app.getChild("additionalInfoURL") != null) {
 				newApp.setAdditionalInfoURL(new URL(app.getChild("additionalInfoURL").getValue()));
 			}
 
@@ -1618,7 +1629,7 @@ public class App {
 		props.setProperty("groupId", this.getMavenGroupID());
 		props.setProperty("artifactId", this.getMavenArtifactID());
 		props.setProperty("classifier", this.getMavenClassifier());
-		if (this.getAdditionalInfoURL()!=null){
+		if (this.getAdditionalInfoURL() != null) {
 			props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
 		}
 
@@ -1661,8 +1672,8 @@ public class App {
 		this.setMavenGroupID(props.getProperty("groupId"));
 		this.setMavenArtifactID(props.getProperty("artifactId"));
 		this.setMavenClassifier(props.getProperty("classifier"));
-		
-		if (!props.getProperty("additionalInfoURL", "").equals("")){
+
+		if (!props.getProperty("additionalInfoURL", "").equals("")) {
 			this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
 		}
 
@@ -1789,5 +1800,14 @@ public class App {
 		// Create empty file on disk if necessary
 		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+	}
+
+	@Override
+	public String toString() {
+		if (this.getName() != null) {
+			return this.getName();
+		} else {
+			return "";
+		}
 	}
 }

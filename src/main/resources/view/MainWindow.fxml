@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.*?>
 <?import view.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
@@ -59,5 +60,6 @@
         <Hyperlink fx:id="updateLink" onAction="#updateLinkOnAction" text="%updateLink" textFill="#0066ff" HBox.hgrow="ALWAYS" />
       </children>
     </HBox>
+      <TextField fx:id="searchField" layoutX="286.0" layoutY="19.0" prefHeight="31.0" prefWidth="300.0" promptText="%searchField.promptText" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="19.0" />
   </children>
 </AnchorPane>

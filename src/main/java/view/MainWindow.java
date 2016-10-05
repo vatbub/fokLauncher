@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.stream.IntStream;
 
 import applist.App;
 import applist.AppList;
@@ -25,6 +26,7 @@ import common.UpdateChecker;
 import common.UpdateInfo;
 import common.Version;
 import common.VersionList;
+import extended.CustomListCell;
 import extended.GuiLanguage;
 import extended.VersionMenuItem;
 import javafx.application.Application;
@@ -34,6 +36,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -52,6 +55,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
@@ -61,6 +65,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import logging.FOKLogger;
 import view.motd.MOTD;
 import view.motd.MOTDDialog;
@@ -122,8 +127,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
-						ObservableList<String> items = FXCollections
-								.observableArrayList(bundle.getString("WaitForAppList"));
+						ObservableList<App> items = FXCollections
+								.observableArrayList(new App(bundle.getString("WaitForAppList")));
 						appList.setItems(items);
 						appList.setDisable(true);
 					}
@@ -132,16 +137,28 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 				apps = App.getAppList();
 
-				ObservableList<String> items = FXCollections.observableArrayList();
+				ObservableList<App> items = FXCollections.observableArrayList();
+				FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
 
 				for (App app : apps) {
-					items.add(app.getName());
+					items.add(app);
 				}
+				
+				// Add filter functionality
+				searchField.textProperty().addListener(obs->{
+			        String filter = searchField.getText(); 
+			        if(filter == null || filter.length() == 0) {
+			            filteredData.setPredicate(s -> true);
+			        }
+			        else {
+			            filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
+			        }
+			    });
 
 				// Build the context menu
 				appList.setCellFactory(lv -> {
 
-					ListCell<String> cell = new ListCell<>();
+					CustomListCell<App> cell = new CustomListCell<App>();
 
 					ContextMenu contextMenu = new ContextMenu();
 
@@ -161,7 +178,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							@Override
 							public void run() {
 								log.getLogger().info("Getting available online versions...");
-								App app = apps.get(cell.getIndex());
+								// App app = apps.get(cell.getIndex());
+								App app = cell.getItem();
 
 								// Get available versions
 								VersionList verList = new VersionList();
@@ -267,7 +285,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					deleteItem.getItems().add(dummyVersion2);
 
 					deleteItem.setOnShown(event -> {
-						App app = apps.get(cell.getIndex());
+						// App app = apps.get(cell.getIndex());
+						App app = cell.getItem();
 
 						if (!app.isDeletableVersionListLoaded()) {
 							// Get deletable versions
@@ -324,7 +343,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						File file = fileChooser.showSaveDialog(stage);
 						if (file != null) {
 							log.getLogger().info("Exporting info...");
-							App app = apps.get(cell.getIndex());
+							// App app = apps.get(cell.getIndex());
+							App app = cell.getItem();
 
 							try {
 								log.getLogger().info("Exporting app info of app " + app.getName() + " to file: "
@@ -341,7 +361,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					MenuItem removeImportedApp = new MenuItem();
 					contextMenu.setOnShowing(event5 -> {
-						App app = apps.get(cell.getIndex());
+						// App app = apps.get(cell.getIndex());
+						App app = cell.getItem();
 						if (app.isImported()) {
 							removeImportedApp.setText("Remove this app from this list");
 							removeImportedApp.setOnAction(event3 -> {
@@ -364,8 +385,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							contextMenu.getItems().remove(removeImportedApp);
 						}
 					});
-
-					cell.textProperty().bind(cell.itemProperty());
+					
+					// cell.textProperty().bind(cell.itemProperty().asString());
 
 					cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
 						if (isNowEmpty) {
@@ -381,7 +402,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
-						appList.setItems(items);
+						appList.setItems(filteredData);
 						appList.setDisable(false);
 					}
 
@@ -416,7 +437,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private URL location;
 
 	@FXML // fx:id="appList"
-	private ListView<String> appList; // Value injected by FXMLLoader
+	private ListView<App> appList; // Value injected by FXMLLoader
+	
+	@FXML // fx:id="searchField"
+	private TextField searchField; // Value injected by FXMLLoader
 
 	@FXML // fx:id="enableSnapshotsCheckbox"
 	private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
@@ -712,16 +736,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			// complete
 	void initialize() {
 		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert searchField != null : "fx:id=\"searchField\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
@@ -761,10 +786,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		loadAvailableGuiLanguages();
 
 		// Selection change listener
-		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<App>() {
+			public void changed(ObservableValue<? extends App> observable, App oldValue, App newValue) {
 				try {
-					currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
+					// currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
+					currentlySelectedApp = appList.getSelectionModel().getSelectedItem();
 				} catch (ArrayIndexOutOfBoundsException e) {
 					currentlySelectedApp = null;
 				}
