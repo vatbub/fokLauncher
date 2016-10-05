@@ -1,0 +1,44 @@
+<izpack:installation version="5.0"
+	xmlns:izpack="http://izpack.org/schema/installation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://izpack.org/schema/installation http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
+
+	<info>
+		<appname>${myproduct.name}</appname>
+		<appversion>@{myproduct.version}</appversion>
+		<appsubpath>${myproduct.artifactId}</appsubpath>
+		<javaversion>1.8</javaversion>
+	</info>
+
+	<locale>
+		<langpack iso3="eng" />
+		<langpack iso3="deu" />
+		<langpack iso3="fra" />
+	</locale>
+
+	<resources>
+		<!-- <res src="@{izpack.staging}/common_resources/img/install-sidebar.png" 
+			id="Installer.image"/> <res src="hello.html" id="HTMLHelloPanel.info"/> <res 
+			src="license.html" id="HTMLLicencePanel.licence"/> -->
+		<res src="foklauncher-@{myproduct.version}-jar-with-dependencies.jar"
+			id="mainJar" />
+	</resources>
+
+	<guiprefs width="800" height="600" resizable="no">
+		<modifier key="useHeadingPanel" value="yes" />
+	</guiprefs>
+
+	<panels>
+		<panel classname="TargetPanel" />
+		<panel classname="InstallPanel" />
+		<panel classname="FinishPanel" />
+	</panels>
+
+	<packs>
+		<pack name="FOKLauncher" required="yes" preselected="yes">
+			<description>The FOKLauncher</description>
+			<file src="foklauncher-@{myproduct.version}-jar-with-dependencies.jar"
+				targetdir="${INSTALL_PATH}" override="true" />
+			<!-- <parsable targetfile="${INSTALL_PATH}/test.properties"/> -->
+		</pack>
+	</packs>
+</izpack:installation>

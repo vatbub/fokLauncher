@@ -31,7 +31,7 @@
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/vatbub/foklauncher/issues</url>
@@ -50,6 +50,12 @@
 	<name>FOK Launcher</name>
 	<description>A Launcher for FOK Projects.</description>
 	<url>http://fokprojects.mo-mar.de/</url>
+
+	<properties>
+		<myproduct.name>${project.name}</myproduct.name>
+		<myproduct.version>${project.version}</myproduct.version>
+		<myproduct.artifactId>${project.artifactId}</myproduct.artifactId>
+	</properties>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -137,6 +143,27 @@
 									<classifier>WindowsExecutable</classifier>
 								</artifact>
 							</artifacts>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.izpack</groupId>
+				<artifactId>izpack-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>izpack</goal>
+						</goals>
+						<configuration>
+							<baseDir>${project.build.directory}</baseDir>
+							<finalName>${project.artifactId}-${project.version}-Installer.jar</finalName>
+							<classifier>Installer</classifier>
+							<enableOverrideArtifact>true</enableOverrideArtifact>
+							<mkdirs>true</mkdirs>
+							<autoIncludeUrl>true</autoIncludeUrl>
+							<autoIncludeDevelopers>false</autoIncludeDevelopers>
 						</configuration>
 					</execution>
 				</executions>
