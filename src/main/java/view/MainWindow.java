@@ -329,7 +329,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					});
 
 					MenuItem exportInfoItem = new MenuItem();
-					exportInfoItem.setText("Export Info about this app...");
+					exportInfoItem.setText(bundle.getString("exportInfo"));
 					exportInfoItem.setOnAction(event2 -> {
 						FileChooser fileChooser = new FileChooser();
 						fileChooser.getExtensionFilters()
