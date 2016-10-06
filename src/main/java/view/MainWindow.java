@@ -429,7 +429,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML // fx:id="appList"
 	private ListView<App> appList; // Value injected by FXMLLoader
-	
+
 	@FXML // fx:id="searchField"
 	private TextField searchField; // Value injected by FXMLLoader
 
@@ -714,7 +714,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	public void stop() {
 		try {
 			UpdateChecker.cancelUpdateCompletion();
-			currentlySelectedApp.cancelDownloadAndLaunch(this);
+			if (currentlySelectedApp != null) {
+				currentlySelectedApp.cancelDownloadAndLaunch(this);
+			}
 		} catch (Exception e) {
 			log.getLogger().log(Level.SEVERE,
 					"An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.",
