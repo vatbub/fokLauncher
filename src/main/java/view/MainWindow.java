@@ -123,10 +123,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
-						ObservableList<App> items = FXCollections
-								.observableArrayList(new App(bundle.getString("WaitForAppList")));
-						appList.setItems(items);
-						appList.setDisable(true);
+						appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
 					}
 
 				});
@@ -394,7 +391,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					@Override
 					public void run() {
 						appList.setItems(filteredData);
-						appList.setDisable(false);
+						appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 					}
 
 				});
