@@ -1075,10 +1075,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void cancelRequested() {
-		progressBar.setProgress(-1);
-		launchButton.setProgressText(bundle.getString("cancelRequested"));
-		launchButton.setDisable(true);
-		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
+		if (progressBar != null) {
+			progressBar.setProgress(-1);
+			launchButton.setProgressText(bundle.getString("cancelRequested"));
+			launchButton.setDisable(true);
+			log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
+		}
 	}
 
 	@Override
