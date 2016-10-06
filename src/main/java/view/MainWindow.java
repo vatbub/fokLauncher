@@ -139,17 +139,16 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				for (App app : apps) {
 					items.add(app);
 				}
-				
+
 				// Add filter functionality
-				searchField.textProperty().addListener(obs->{
-			        String filter = searchField.getText(); 
-			        if(filter == null || filter.length() == 0) {
-			            filteredData.setPredicate(s -> true);
-			        }
-			        else {
-			            filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
-			        }
-			    });
+				searchField.textProperty().addListener(obs -> {
+					String filter = searchField.getText();
+					if (filter == null || filter.length() == 0) {
+						filteredData.setPredicate(s -> true);
+					} else {
+						filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
+					}
+				});
 
 				// Build the context menu
 				appList.setCellFactory(lv -> {
@@ -265,10 +264,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							}
 						};
 
-						if (!apps.get(cell.getIndex()).isSpecificVersionListLoaded()) {
+						if (!cell.getItem().isSpecificVersionListLoaded()) {
 							buildContextMenuThread.setName("buildContextMenuThread");
 							buildContextMenuThread.start();
-							apps.get(cell.getIndex()).setSpecificVersionListLoaded(true);
+							cell.getItem().setSpecificVersionListLoaded(true);
 						}
 					});
 
@@ -727,28 +726,28 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			// complete
 	void initialize() {
 		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert searchField != null : "fx:id=\"searchField\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert searchField != null : "fx:id=\"searchField\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
-		
+
 		// Show messages of the day
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
-					if (!motd.isMarkedAsRead()){
+					if (!motd.isMarkedAsRead()) {
 						new MOTDDialog(motd, motd.getEntry().getTitle());
 					}
 				} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
