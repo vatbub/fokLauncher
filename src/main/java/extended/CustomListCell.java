@@ -7,7 +7,7 @@ public class CustomListCell<T> extends ListCell<T> {
     @Override public void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
  
-        if (empty) {
+        if (empty || item==null) {
             setText(null);
             setGraphic(null);
         } else if (item instanceof Node) {
@@ -18,7 +18,7 @@ public class CustomListCell<T> extends ListCell<T> {
                 setGraphic(newNode);
             }
         } else {
-            setText(item == null ? "null" : item.toString());
+            setText(item.toString());
             setGraphic(null);
         }
     }
