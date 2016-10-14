@@ -103,7 +103,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		launch(args);
 	}
 
-	private static ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
+	private static ResourceBundle bundle;
 	private static Locale currentDisplayLanguage = Locale.getDefault();
 	private static Prefs prefs;
 	private static final String enableSnapshotsPrefKey = "enableSnapshots";
@@ -654,15 +654,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// get the right resource bundle
 		String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
 
-		if (guiLanguageCode.equals("")) {
-			// determine language automatically
-			bundle = ResourceBundle.getBundle("view.MainWindow");
-		} else {
+		if (!guiLanguageCode.equals("")) {
 			// Get the specified bundle
 			log.getLogger().info("Setting language: " + guiLanguageCode);
 			currentDisplayLanguage = new Locale(guiLanguageCode);
-			bundle = ResourceBundle.getBundle("view.MainWindow", currentDisplayLanguage);
+			Locale.setDefault(currentDisplayLanguage);
 		}
+		
+		bundle = ResourceBundle.getBundle("view.MainWindow");
 
 		stage = primaryStage;
 		try {
