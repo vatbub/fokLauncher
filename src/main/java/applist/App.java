@@ -401,7 +401,8 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			log.getLogger().log(Level.SEVERE, "An error occured!", e);
+			// only info level as exceptions can happen if the app was never installed on this machine before
+			log.getLogger().log(Level.INFO, "An error occured!", e);
 			return null;
 		}
 
