@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -1075,7 +1076,7 @@ public class App {
 		}
 
 		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks").inheritIO();
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks", "locale=" + Locale.getDefault().getLanguage()).inheritIO();
 		Process process;
 
 		if (gui != null) {
