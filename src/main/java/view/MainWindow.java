@@ -657,8 +657,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		if (!guiLanguageCode.equals("")) {
 			// Get the specified bundle
 			log.getLogger().info("Setting language: " + guiLanguageCode);
-			currentDisplayLanguage = new Locale(guiLanguageCode);
-			Locale.setDefault(currentDisplayLanguage);
+			Locale.setDefault(new Locale(guiLanguageCode));
 		}
 		
 		bundle = ResourceBundle.getBundle("view.MainWindow");
