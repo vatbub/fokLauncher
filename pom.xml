@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>fokprojects</groupId>
 		<artifactId>parentPom</artifactId>
-		<version>0.0.13-SNAPSHOT</version>
+		<version>0.0.13</version>
 	</parent>
 
 	<scm>
@@ -148,7 +148,7 @@
 		<dependency>
 			<groupId>fokprojects</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.15-SNAPSHOT</version>
+			<version>0.0.15</version>
 		</dependency>
 	</dependencies>
 </project>
