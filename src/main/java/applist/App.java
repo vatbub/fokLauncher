@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -30,6 +31,16 @@ import logging.FOKLogger;
 public class App {
 
 	private static FOKLogger log = new FOKLogger(App.class.getName());
+
+	/**
+	 * Creates a new App with the specified name.
+	 * 
+	 * @param name
+	 *            The name of the app.
+	 */
+	public App(String name) {
+		this(name, null, null, "", "");
+	}
 
 	/**
 	 * Creates a new App with the specified coordinates.
@@ -70,15 +81,44 @@ public class App {
 	 * @param mavenClassifier
 	 *            The artifacts classifier or {@code ""} if the default artifact
 	 *            shall be used.
+	 * 
 	 */
 	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
 			String mavenArtifactId, String mavenClassifier) {
+		this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, mavenClassifier, null);
+	}
+
+	/**
+	 * Creates a new App with the specified coordinates.
+	 * 
+	 * @param name
+	 *            The name of the app
+	 * @param mavenRepoBaseURL
+	 *            Base URL of the maven repo where the artifact can be
+	 *            downloaded from.
+	 * @param mavenSnapshotRepoBaseURL
+	 *            The URL of the maven repo where snapshots of the artifact can
+	 *            be downloaded from.
+	 * @param mavenGroupId
+	 *            The artifacts group id.
+	 * @param mavenArtifactId
+	 *            The artifacts artifact id
+	 * @param mavenClassifier
+	 *            The artifacts classifier or {@code ""} if the default artifact
+	 *            shall be used.
+	 * @param additionalInfoURL
+	 *            The url to a webpage where the user finds additional info
+	 *            about this app.
+	 */
+	public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+			String mavenArtifactId, String mavenClassifier, URL additionalInfoURL) {
 		this.setName(name);
 		this.setMavenRepoBaseURL(mavenRepoBaseURL);
 		this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
 		this.setMavenGroupID(mavenGroupId);
 		this.setMavenArtifactID(mavenArtifactId);
 		this.setMavenClassifier(mavenClassifier);
+		this.setAdditionalInfoURL(additionalInfoURL);
 	}
 
 	/**
@@ -175,6 +215,11 @@ public class App {
 	 * used.
 	 */
 	private String mavenClassifier;
+
+	/**
+	 * A webpage where the user finds additional info for this app.
+	 */
+	private URL additionalInfoURL;
 
 	private boolean specificVersionListLoaded = false;
 
@@ -357,7 +402,8 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			log.getLogger().log(Level.SEVERE, "An error occured!", e);
+			// only info level as exceptions can happen if the app was never installed on this machine before
+			log.getLogger().log(Level.INFO, "An error occured!", e);
 			return null;
 		}
 
@@ -487,6 +533,21 @@ public class App {
 	 */
 	public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
 		this.deletableVersionListLoaded = deletableVersionListLoaded;
+	}
+
+	/**
+	 * @return the additionalInfoURL
+	 */
+	public URL getAdditionalInfoURL() {
+		return additionalInfoURL;
+	}
+
+	/**
+	 * @param additionalInfoURL
+	 *            the additionalInfoURL to set
+	 */
+	public void setAdditionalInfoURL(URL additionalInfoURL) {
+		this.additionalInfoURL = additionalInfoURL;
 	}
 
 	/**
@@ -647,7 +708,6 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
 	}
@@ -1016,7 +1076,7 @@ public class App {
 		}
 
 		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks").inheritIO();
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks", "locale=" + Locale.getDefault().getLanguage()).inheritIO();
 		Process process;
 
 		if (gui != null) {
@@ -1237,11 +1297,6 @@ public class App {
 		while ((x = in.read(data, 0, 1024)) >= 0) {
 			downloadedFileSize += x;
 
-			// calculate progress
-			// final int currentProgress = (int)
-			// ((((double)downloadedFileSize) / ((double)completeFileSize))
-			// * 100000d);
-
 			// update progress bar
 			if (gui != null) {
 				gui.downloadProgressChanged((double) (downloadedFileSize / 1024.0),
@@ -1338,8 +1393,10 @@ public class App {
 	 * 
 	 * @return A {@link List} of available apps from the server.
 	 * @throws MalformedURLException
-	 *             If the maven repo base url of an app is malformed. The base
-	 *             urls are downloaded from the server.
+	 *             If the maven repo base url of an app is malformed or if an
+	 *             app specifies a malformed additionalInfoURL. The base urls
+	 *             are downloaded from the server.
+	 * 
 	 * @throws JDOMException
 	 *             If the xml-app list on the server is malformed
 	 * @throws IOException
@@ -1381,6 +1438,10 @@ public class App {
 			// Add classifier only if one is defined
 			if (app.getChild("classifier") != null) {
 				newApp.setMavenClassifier(app.getChild("classifier").getValue());
+			}
+
+			if (app.getChild("additionalInfoURL") != null) {
+				newApp.setAdditionalInfoURL(new URL(app.getChild("additionalInfoURL").getValue()));
 			}
 
 			res.add(newApp);
@@ -1564,6 +1625,9 @@ public class App {
 		props.setProperty("groupId", this.getMavenGroupID());
 		props.setProperty("artifactId", this.getMavenArtifactID());
 		props.setProperty("classifier", this.getMavenClassifier());
+		if (this.getAdditionalInfoURL() != null) {
+			props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
+		}
 
 		FileOutputStream out = new FileOutputStream(fileToWrite);
 		props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
@@ -1604,7 +1668,11 @@ public class App {
 		this.setMavenGroupID(props.getProperty("groupId"));
 		this.setMavenArtifactID(props.getProperty("artifactId"));
 		this.setMavenClassifier(props.getProperty("classifier"));
-		
+
+		if (!props.getProperty("additionalInfoURL", "").equals("")) {
+			this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
+		}
+
 		fileReader.close();
 	}
 
@@ -1668,7 +1736,6 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
@@ -1726,7 +1793,15 @@ public class App {
 		File f = new File(fileName);
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
-		// f.createNewFile();
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+	}
+
+	@Override
+	public String toString() {
+		if (this.getName() != null) {
+			return this.getName();
+		} else {
+			return "";
+		}
 	}
 }

@@ -6,6 +6,14 @@ Though the list of projects that currently use the launcher is small, it can be 
 ## Get the launcher
 We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads)
 
+## Build your own version
+### Build the current snapshot
+1. Clone this repository
+2. Run `mvn package`
+
+### Build the latest release
+Repeat the steps mentioned above but switch to the `release` branch by running `git checkout release` prior to runing `mvn package`.
+
 ## What it does
 The launcher has a App-Store like gui. It presents the user a list of available applications. The user can then choose an app from the list and the launcher will download and launch that app. 
 Once the app is downloaded, it is cached on the users hard drive (that means that the launcher will download it only on the first launch) but if you publish an update, the launcher will automatically detect that and download the update.
@@ -46,7 +54,7 @@ Please make sure to escape all `:` in the urls (they should look like this then:
 
 ## Prerequisites
 To be able to add your app to the launcher, it needs to meet the following conditions:
-- It must be released to a maven repository. Ideally, you use [maven](/blob/master/LICENSE.txt) for that, but you can use any build tool that can release software to a maven repo.
+- It must be released to a maven repository. Ideally, you use [maven](http://maven.apache.org/) for that, but you can use any build tool that can release software to a maven repo.
 - Your app must have a public release repository and snapshot repository. There are plans to make the snapshot repository optional, see [#14](/../../issues/14) for the current progrress
 - The release repo and snapshot repo cannot have the same url.
 - Your app must be packaged to a runnable jar file. That means, that all of your dependencies must be packaged in that jar file too and a main class must be defined in the jars manifest (See [this](http://stackoverflow.com/questions/1729054/including-dependencies-in-a-jar-with-maven) and [this](http://www.avajava.com/tutorials/lessons/how-do-i-specify-a-main-class-in-the-manifest-of-my-generated-jar-file.html) for help)
@@ -56,5 +64,5 @@ To be able to add your app to the launcher, it needs to meet the following condi
 If you have any problems, don't hesitate to write an email and we will be happy to help!
 
 ## Customize the launcher in your way
-If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../blob/master/LICENSE.txt).
+If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../master/LICENSE.txt).
 There are plans to make complete customization easier than forking, you can see the progress in [#12](/../../issues/12)

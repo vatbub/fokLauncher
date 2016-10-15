@@ -1,14 +1,18 @@
 package view;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
-
 import applist.App;
 import applist.AppList;
 import common.Common;
@@ -20,6 +24,8 @@ import common.UpdateChecker;
 import common.UpdateInfo;
 import common.Version;
 import common.VersionList;
+import extended.CustomListCell;
+import extended.GuiLanguage;
 import extended.VersionMenuItem;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -28,6 +34,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -36,28 +43,34 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import logging.FOKLogger;
+import view.motd.MOTD;
+import view.motd.MOTDDialog;
 import view.updateAvailableDialog.UpdateAvailableDialog;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jdom2.JDOMException;
+
+import com.rometools.rome.io.FeedException;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
@@ -90,10 +103,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		launch(args);
 	}
 
-	private ResourceBundle bundle = ResourceBundle.getBundle("view.MainWindow");
+	private static ResourceBundle bundle;
+	private static Locale currentDisplayLanguage = Locale.getDefault();
 	private static Prefs prefs;
 	private static final String enableSnapshotsPrefKey = "enableSnapshots";
 	private static final String showLauncherAgainPrefKey = "showLauncherAgain";
+	private static final String guiLanguagePrefKey = "guiLanguage";
 	private static AppList apps;
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
@@ -108,26 +123,34 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
-						ObservableList<String> items = FXCollections
-								.observableArrayList(bundle.getString("WaitForAppList"));
-						appList.setItems(items);
-						appList.setDisable(true);
+						appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
 					}
 
 				});
 
 				apps = App.getAppList();
 
-				ObservableList<String> items = FXCollections.observableArrayList();
+				ObservableList<App> items = FXCollections.observableArrayList();
+				FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
 
 				for (App app : apps) {
-					items.add(app.getName());
+					items.add(app);
 				}
+
+				// Add filter functionality
+				searchField.textProperty().addListener(obs -> {
+					String filter = searchField.getText();
+					if (filter == null || filter.length() == 0) {
+						filteredData.setPredicate(s -> true);
+					} else {
+						filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
+					}
+				});
 
 				// Build the context menu
 				appList.setCellFactory(lv -> {
 
-					ListCell<String> cell = new ListCell<>();
+					CustomListCell<App> cell = new CustomListCell<App>();
 
 					ContextMenu contextMenu = new ContextMenu();
 
@@ -147,7 +170,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							@Override
 							public void run() {
 								log.getLogger().info("Getting available online versions...");
-								App app = apps.get(cell.getIndex());
+								App app = cell.getItem();
 
 								// Get available versions
 								VersionList verList = new VersionList();
@@ -238,10 +261,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							}
 						};
 
-						if (!apps.get(cell.getIndex()).isSpecificVersionListLoaded()) {
+						if (!cell.getItem().isSpecificVersionListLoaded()) {
 							buildContextMenuThread.setName("buildContextMenuThread");
 							buildContextMenuThread.start();
-							apps.get(cell.getIndex()).setSpecificVersionListLoaded(true);
+							cell.getItem().setSpecificVersionListLoaded(true);
 						}
 					});
 
@@ -253,7 +276,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					deleteItem.getItems().add(dummyVersion2);
 
 					deleteItem.setOnShown(event -> {
-						App app = apps.get(cell.getIndex());
+						// App app = apps.get(cell.getIndex());
+						App app = cell.getItem();
 
 						if (!app.isDeletableVersionListLoaded()) {
 							// Get deletable versions
@@ -301,7 +325,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					});
 
 					MenuItem exportInfoItem = new MenuItem();
-					exportInfoItem.setText("Export Info about this app...");
+					exportInfoItem.setText(bundle.getString("exportInfo"));
 					exportInfoItem.setOnAction(event2 -> {
 						FileChooser fileChooser = new FileChooser();
 						fileChooser.getExtensionFilters()
@@ -310,10 +334,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						File file = fileChooser.showSaveDialog(stage);
 						if (file != null) {
 							log.getLogger().info("Exporting info...");
-							App app = apps.get(cell.getIndex());
+							// App app = apps.get(cell.getIndex());
+							App app = cell.getItem();
 
 							try {
-								System.out.println(file.getAbsolutePath());
+								log.getLogger().info("Exporting app info of app " + app.getName() + " to file: "
+										+ file.getAbsolutePath());
 								app.exportInfo(file);
 							} catch (IOException e) {
 								log.getLogger().log(Level.SEVERE, "An error occurred", e);
@@ -326,7 +352,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					MenuItem removeImportedApp = new MenuItem();
 					contextMenu.setOnShowing(event5 -> {
-						App app = apps.get(cell.getIndex());
+						App app = cell.getItem();
 						if (app.isImported()) {
 							removeImportedApp.setText("Remove this app from this list");
 							removeImportedApp.setOnAction(event3 -> {
@@ -350,8 +376,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					});
 
-					cell.textProperty().bind(cell.itemProperty());
-
 					cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
 						if (isNowEmpty) {
 							cell.setContextMenu(null);
@@ -366,8 +390,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
-						appList.setItems(items);
-						appList.setDisable(false);
+						appList.setItems(filteredData);
+						appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 					}
 
 				});
@@ -401,23 +425,27 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private URL location;
 
 	@FXML // fx:id="appList"
-	private ListView<String> appList; // Value injected by FXMLLoader
+	private ListView<App> appList; // Value injected by FXMLLoader
+
+	@FXML // fx:id="searchField"
+	private TextField searchField; // Value injected by FXMLLoader
 
 	@FXML // fx:id="enableSnapshotsCheckbox"
 	private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
 
 	@FXML // fx:id="launchButton"
-	private Button launchButton; // Value injected by FXMLLoader
+	private ProgressButton launchButton; // Value injected by FXMLLoader
 
 	@FXML // fx:id="launchLauncherAfterAppExitCheckbox"
 	private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
 															// FXMLLoader
 
+	@FXML // fx:id="languageSelector"
+	private ComboBox<GuiLanguage> languageSelector; // Value injected by
+													// FXMLLoader
+
 	@FXML // fx:id="progressBar"
 	private ProgressBar progressBar; // Value injected by FXMLLoader
-
-	@FXML // fx:id="progressLabel"
-	private Label progressLabel; // Value injected by FXMLLoader
 
 	@FXML // fx:id="workOfflineCheckbox"
 	private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
@@ -433,6 +461,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	 * fx:id="versionLabel"
 	 */
 	private Label versionLabel; // Value injected by FXMLLoader
+
+	@FXML // fx:id="settingsGridView"
+	private GridPane settingsGridView; // Value injected by FXMLLoader
+
+	@FXML // fx:id="appInfoButton"
+	private Button appInfoButton; // Value injected by FXMLLoader
 
 	// Handler for ListView[fx:id="appList"] onMouseClicked
 	@FXML
@@ -482,7 +516,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML
 	void mainFrameOnDragDropped(DragEvent event) {
-		// event.acceptTransferModes(TransferMode.ANY);
 		List<File> files = event.getDragboard().getFiles();
 
 		for (File f : files) {
@@ -539,6 +572,25 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		updateThread.start();
 	}
 
+	@FXML
+	void languageSelectorOnAction(ActionEvent event) {
+		log.getLogger().info("Switching gui language to: "
+				+ languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
+		prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
+				.get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
+
+		// Restart gui
+		boolean implicitExit = Platform.isImplicitExit();
+		Platform.setImplicitExit(false);
+		stage.hide();
+		try {
+			currentMainWindowInstance.start(stage);
+		} catch (Exception e) {
+			log.getLogger().log(Level.INFO, "An error occurred while setting a new gui language", e);
+		}
+		Platform.setImplicitExit(implicitExit);
+	}
+
 	// Handler for Button[fx:id="launchButton"] onAction
 	@FXML
 	void launchButtonOnAction(ActionEvent event) {
@@ -588,8 +640,28 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
 	}
 
+	@FXML
+	void appInfoButtonOnAction(ActionEvent event) {
+		try {
+			Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
+		} catch (IOException | URISyntaxException e) {
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+		}
+	}
+
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		// get the right resource bundle
+		String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
+
+		if (!guiLanguageCode.equals("")) {
+			// Get the specified bundle
+			log.getLogger().info("Setting language: " + guiLanguageCode);
+			Locale.setDefault(new Locale(guiLanguageCode));
+		}
+		
+		bundle = ResourceBundle.getBundle("view.MainWindow");
+
 		stage = primaryStage;
 		try {
 			Thread updateThread = new Thread() {
@@ -615,7 +687,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			Parent root = FXMLLoader.load(getClass().getResource("MainWindow.fxml"), bundle);
 
 			Scene scene = new Scene(root);
-			// scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(getClass().getResource("MainWindow.css").toExternalForm());
 
 			primaryStage.setTitle(bundle.getString("windowTitle"));
 
@@ -637,7 +709,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	public void stop() {
 		try {
 			UpdateChecker.cancelUpdateCompletion();
-			currentlySelectedApp.cancelDownloadAndLaunch(this);
+			if (currentlySelectedApp != null) {
+				currentlySelectedApp.cancelDownloadAndLaunch(this);
+			}
 		} catch (Exception e) {
 			log.getLogger().log(Level.SEVERE,
 					"An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.",
@@ -648,18 +722,36 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // This method is called by the FXMLLoader when initialization is
 			// complete
 	void initialize() {
-		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert progressLabel != null : "fx:id=\"progressLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert searchField != null : "fx:id=\"searchField\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+
+		// Show messages of the day
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
+					if (!motd.isMarkedAsRead()) {
+						new MOTDDialog(motd, motd.getEntry().getTitle());
+					}
+				} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				}
+			}
+		});
 
 		currentMainWindowInstance = this;
 
@@ -674,16 +766,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		progressBar.setVisible(false);
-		progressLabel.setVisible(false);
 
 		// Disable multiselect
 		appList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
+		loadAvailableGuiLanguages();
+
 		// Selection change listener
-		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+		appList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<App>() {
+			public void changed(ObservableValue<? extends App> observable, App oldValue, App newValue) {
 				try {
-					currentlySelectedApp = apps.get(appList.getSelectionModel().getSelectedIndex());
+					currentlySelectedApp = appList.getSelectionModel().getSelectedItem();
 				} catch (ArrayIndexOutOfBoundsException e) {
 					currentlySelectedApp = null;
 				}
@@ -697,6 +790,18 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		loadAppList();
+	}
+
+	private void loadAvailableGuiLanguages() {
+		List<Locale> supportedGuiLocales = Common.getLanguagesSupportedByResourceBundle(bundle);
+		List<GuiLanguage> convertedList = new ArrayList<GuiLanguage>(supportedGuiLocales.size());
+
+		for (Locale lang : supportedGuiLocales) {
+			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically"),
+					currentDisplayLanguage));
+		}
+		ObservableList<GuiLanguage> items = FXCollections.observableArrayList(convertedList);
+		languageSelector.setItems(items);
 	}
 
 	/**
@@ -722,21 +827,34 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
-				boolean progressVisibleBefore = progressLabel.isVisible();
+				boolean progressVisibleBefore = progressBar.isVisible();
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
 						launchButton.setDisable(true);
-						progressLabel.setVisible(true);
+						launchButton.setDefaultButton(false);
+						launchButton.setStyle("-fx-background-color: transparent;");
+						launchButton.setControlText("");
+						progressBar.setPrefHeight(launchButton.getHeight());
 						progressBar.setVisible(true);
 						progressBar.setProgress(-1);
-						progressLabel.setText(bundle.getString("progress.checkingVersionInfo"));
+						launchButton.setProgressText(bundle.getString("progress.checkingVersionInfo"));
+						appInfoButton.setDisable(true);
 					}
 				});
 
 				try {
 					if (!workOfflineCheckbox.isSelected()) {
 						// downloads are enabled
+
+						// enable the additional info button if applicable
+						Platform.runLater(new Runnable() {
+							@Override
+							public void run() {
+								appInfoButton.setDisable(currentlySelectedApp.getAdditionalInfoURL() == null);
+							}
+						});
+
 						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required
 							Platform.runLater(new Runnable() {
@@ -744,7 +862,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
 								}
 							});
 						} else if (currentlySelectedApp.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
@@ -754,7 +874,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.updateAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.updateAndLaunch"));
 								}
 							});
 						} else {
@@ -764,7 +886,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.launch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.launch"));
 								}
 							});
 						}
@@ -777,7 +901,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(true);
-									launchButton.setText(bundle.getString("okButton.downloadAndLaunch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
 								}
 							});
 						} else {
@@ -787,7 +913,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								@Override
 								public void run() {
 									launchButton.setDisable(false);
-									launchButton.setText(bundle.getString("okButton.launch"));
+									launchButton.setDefaultButton(true);
+									launchButton.setStyle("");
+									launchButton.setControlText(bundle.getString("okButton.launch"));
 								}
 							});
 						}
@@ -799,7 +927,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
-						progressLabel.setVisible(progressVisibleBefore);
+						launchButton.setProgressText("");
 						progressBar.setVisible(progressVisibleBefore);
 					}
 				});
@@ -844,11 +972,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			public void run() {
 				appList.setDisable(true);
 				launchButton.setDisable(false);
-				launchButton.setText(bundle.getString("okButton.cancelLaunch"));
+				launchButton.setDefaultButton(false);
+				progressBar.setPrefHeight(launchButton.getHeight());
+				launchButton.setStyle("-fx-background-color: transparent;");
+				launchButton.setControlText(bundle.getString("okButton.cancelLaunch"));
 				progressBar.setVisible(true);
 				progressBar.setProgress(0 / 4.0);
-				progressLabel.setVisible(true);
-				progressLabel.setText(bundle.getString("progress.preparing"));
+				launchButton.setProgressText(bundle.getString("progress.preparing"));
+
+				settingsGridView.setDisable(true);
 			}
 
 		});
@@ -861,7 +993,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(-1);
-				progressLabel.setText(bundle.getString("progress.downloading"));
+				launchButton.setProgressText(bundle.getString("progress.downloading"));
 			}
 
 		});
@@ -874,7 +1006,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(1.0 / 2.0);
-				progressLabel.setText(bundle.getString("progress.installing"));
+				launchButton.setProgressText(bundle.getString("progress.installing"));
 			}
 
 		});
@@ -887,7 +1019,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(2.0 / 2.0);
-				progressLabel.setText(bundle.getString("progress.launching"));
+				launchButton.setProgressText(bundle.getString("progress.launching"));
 			}
 
 		});
@@ -929,10 +1061,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Platform.setImplicitExit(true);
 		appList.setDisable(false);
 		progressBar.setVisible(false);
-		progressLabel.setVisible(false);
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
+				launchButton.setProgressText("");
+				settingsGridView.setDisable(false);
 				updateLaunchButton();
 			}
 		});
@@ -940,10 +1073,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void cancelRequested() {
-		progressBar.setProgress(-1);
-		progressLabel.setText(bundle.getString("cancelRequested"));
-		launchButton.setDisable(true);
-		log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
+		if (progressBar != null) {
+			progressBar.setProgress(-1);
+			launchButton.setProgressText(bundle.getString("cancelRequested"));
+			launchButton.setDisable(true);
+			log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
+		}
 	}
 
 	@Override
@@ -953,6 +1088,43 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				progressBar.setProgress(kilobytesDownloaded / totalFileSizeInKB);
+
+				String downloadedString;
+
+				if (kilobytesDownloaded < 1024) {
+					downloadedString = Double.toString(Math.round(kilobytesDownloaded * 100.0) / 100.0) + " "
+							+ bundle.getString("kilobyte");
+				} else if ((kilobytesDownloaded / 1024) < 1024) {
+					downloadedString = Double.toString(Math.round((kilobytesDownloaded * 100.0) / 1024) / 100.0) + " "
+							+ bundle.getString("megabyte");
+				} else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
+					downloadedString = Double
+							.toString(Math.round(((kilobytesDownloaded * 100.0) / 1024) / 1024) / 100.0) + " "
+							+ bundle.getString("gigabyte");
+				} else {
+					downloadedString = Double
+							.toString(Math.round((((kilobytesDownloaded * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
+							+ bundle.getString("terabyte");
+				}
+
+				String totalString;
+				if (totalFileSizeInKB < 1024) {
+					totalString = Double.toString(Math.round(totalFileSizeInKB * 100.0) / 100.0) + " "
+							+ bundle.getString("kilobyte");
+				} else if ((totalFileSizeInKB / 1024) < 1024) {
+					totalString = Double.toString(Math.round((totalFileSizeInKB * 100.0) / 1024) / 100.0) + " "
+							+ bundle.getString("megabyte");
+				} else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
+					totalString = Double.toString(Math.round(((totalFileSizeInKB * 100.0) / 1024) / 1024) / 100.0) + " "
+							+ bundle.getString("gigabyte");
+				} else {
+					totalString = Double
+							.toString(Math.round((((totalFileSizeInKB * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
+							+ bundle.getString("terabyte");
+				}
+
+				launchButton.setProgressText(
+						bundle.getString("progress.downloading") + "(" + downloadedString + "/" + totalString + ")");
 			}
 
 		});
