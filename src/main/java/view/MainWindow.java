@@ -113,6 +113,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
+	private static Locale systemDefaultLocale;
 
 	private Runnable getAppListRunnable = new Runnable() {
 		@Override
@@ -654,8 +655,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// get the right resource bundle
 		String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
 
-		if (!guiLanguageCode.equals("")) {
+		if (guiLanguageCode.equals("")) {
+			if (systemDefaultLocale!=null){
+				Locale.setDefault(systemDefaultLocale);
+			}
+		}else{
 			// Get the specified bundle
+			if (systemDefaultLocale==null){
+				systemDefaultLocale = Locale.getDefault();
+			}
 			log.getLogger().info("Setting language: " + guiLanguageCode);
 			Locale.setDefault(new Locale(guiLanguageCode));
 		}
