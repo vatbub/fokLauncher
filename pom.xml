@@ -28,7 +28,7 @@
 		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
 		<url>https://github.com/vatbub/foklauncher/blob/master/</url>
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
-		<tag>foklauncher-0.0.5</tag>
+		<tag>HEAD</tag>
 	</scm>
 	
 	<issueManagement>
@@ -42,7 +42,7 @@
 	</ciManagement>
 
 	<artifactId>foklauncher</artifactId>
-	<version>0.0.5</version>
+	<version>0.0.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<inceptionYear>2016</inceptionYear>
 
