@@ -25,7 +25,7 @@ public class Config {
 	}
 
 	public static final String artifactID = "foklauncher";
-	public static final String groupID = "fokprojects";
+	public static final String groupID = "com.github.vatbub";
 
 	public static String getUpdateFileClassifier() {
 		String packaging = Common.getPackaging();
