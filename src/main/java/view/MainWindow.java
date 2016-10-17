@@ -104,7 +104,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	}
 
 	private static ResourceBundle bundle;
-	private static Locale currentDisplayLanguage = Locale.getDefault();
 	private static Prefs prefs;
 	private static final String enableSnapshotsPrefKey = "enableSnapshots";
 	private static final String showLauncherAgainPrefKey = "showLauncherAgain";
@@ -113,6 +112,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Stage stage;
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
+	private static Locale systemDefaultLocale;
 
 	private Runnable getAppListRunnable = new Runnable() {
 		@Override
@@ -654,12 +654,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// get the right resource bundle
 		String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
 
-		if (!guiLanguageCode.equals("")) {
+		if (guiLanguageCode.equals("")) {
+			if (systemDefaultLocale != null) {
+				Locale.setDefault(systemDefaultLocale);
+			}
+		} else {
 			// Get the specified bundle
+			if (systemDefaultLocale == null) {
+				systemDefaultLocale = Locale.getDefault();
+			}
 			log.getLogger().info("Setting language: " + guiLanguageCode);
 			Locale.setDefault(new Locale(guiLanguageCode));
 		}
-		
+
 		bundle = ResourceBundle.getBundle("view.MainWindow");
 
 		stage = primaryStage;
@@ -797,11 +804,24 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		List<GuiLanguage> convertedList = new ArrayList<GuiLanguage>(supportedGuiLocales.size());
 
 		for (Locale lang : supportedGuiLocales) {
-			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically"),
-					currentDisplayLanguage));
+			convertedList.add(new GuiLanguage(lang, bundle.getString("langaugeSelector.chooseAutomatically")));
 		}
 		ObservableList<GuiLanguage> items = FXCollections.observableArrayList(convertedList);
 		languageSelector.setItems(items);
+
+		if (Locale.getDefault() != systemDefaultLocale) {
+			GuiLanguage langToSelect = null;
+
+			for (GuiLanguage lang : convertedList) {
+				if (Locale.getDefault().equals(lang.getLocale())) {
+					langToSelect = lang;
+				}
+			}
+
+			if (langToSelect != null) {
+				languageSelector.getSelectionModel().select(langToSelect);
+			}
+		}
 	}
 
 	/**

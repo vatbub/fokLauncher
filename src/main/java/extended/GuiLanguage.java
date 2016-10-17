@@ -6,12 +6,10 @@ public class GuiLanguage {
 
 	private Locale locale;
 	private String defaultLocaleText;
-	private Locale currentDisplayLanguage;
 
-	public GuiLanguage(Locale locale, String defaultLocale, Locale currentDisplayLanguage) {
+	public GuiLanguage(Locale locale, String defaultLocale) {
 		setLocale(locale);
 		setDefaultLocale(defaultLocale);
-		setCurrentDisplayLanguage(currentDisplayLanguage);
 	}
 
 	/**
@@ -43,26 +41,12 @@ public class GuiLanguage {
 		this.defaultLocaleText = defaultLocaleText;
 	}
 
-	/**
-	 * @return the currentDisplayLanguage
-	 */
-	public Locale getCurrentDisplayLanguage() {
-		return currentDisplayLanguage;
-	}
-
-	/**
-	 * @param currentDisplayLanguage the currentDisplayLanguage to set
-	 */
-	public void setCurrentDisplayLanguage(Locale currentDisplayLanguage) {
-		this.currentDisplayLanguage = currentDisplayLanguage;
-	}
-
 	@Override
 	public String toString() {
 		if (locale.toLanguageTag().equals("und")) {
 			return defaultLocaleText;
 		} else {
-			return this.getLocale().getDisplayLanguage(this.getCurrentDisplayLanguage()) + " (" + this.getLocale().getDisplayLanguage(Locale.ENGLISH)
+			return this.getLocale().getDisplayLanguage(Locale.getDefault()) + " (" + this.getLocale().getDisplayLanguage(Locale.ENGLISH)
 					+ ")";
 		}
 	}
