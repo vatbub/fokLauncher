@@ -19,9 +19,9 @@
 	</repositories>
 
 	<parent>
-		<groupId>fokprojects</groupId>
+		<groupId>com.github.vatbub</groupId>
 		<artifactId>parentPom</artifactId>
-		<version>0.0.14-SNAPSHOT</version>
+		<version>0.0.14</version>
 	</parent>
 
 	<scm>
@@ -145,9 +145,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fokprojects</groupId>
+			<groupId>com.github.vatbub</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.16-SNAPSHOT</version>
+			<version>0.0.16</version>
 		</dependency>
 	</dependencies>
 </project>
