@@ -1,7 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>bintray-vatbub-fokprojectsReleases</id>
+			<name>bintray</name>
+			<url>http://dl.bintray.com/vatbub/fokprojectsReleases</url>
+		</repository>
 		<repository>
 			<snapshots>
 				<enabled>false</enabled>
@@ -30,7 +39,7 @@
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/vatbub/foklauncher/issues</url>
