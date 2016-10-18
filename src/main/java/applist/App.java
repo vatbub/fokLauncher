@@ -402,7 +402,8 @@ public class App {
 		} catch (JDOMException | IOException e) {
 			System.err.println("Cannot retreive currently installed version of app " + this.getName()
 					+ ", probably because it is not installed.");
-			// only info level as exceptions can happen if the app was never installed on this machine before
+			// only info level as exceptions can happen if the app was never
+			// installed on this machine before
 			log.getLogger().log(Level.INFO, "An error occured!", e);
 			return null;
 		}
@@ -1076,7 +1077,8 @@ public class App {
 		}
 
 		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks", "locale=" + Locale.getDefault().getLanguage()).inheritIO();
+		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks",
+				"locale=" + Locale.getDefault().getLanguage()).inheritIO();
 		Process process;
 
 		if (gui != null) {
@@ -1114,8 +1116,8 @@ public class App {
 	}
 
 	/**
-	 * Downloads this artifact to the location specified in the {@link Config}.
-	 * Does not take snapshots into account.
+	 * Downloads this artifact to the location specified in the
+	 * {@link AdditionalConfig}. Does not take snapshots into account.
 	 * 
 	 * @return {@code true} if the download finished successfully, {@code false}
 	 *         if the download was cancelled using
@@ -1132,8 +1134,8 @@ public class App {
 	}
 
 	/**
-	 * Downloads this artifact to the location specified in the {@link Config}.
-	 * Does not take snapshots into account.
+	 * Downloads this artifact to the location specified in the
+	 * {@link AdditionalConfig}. Does not take snapshots into account.
 	 * 
 	 * @param gui
 	 *            The {@link HidableUpdateProgressDialog} that represents the
@@ -1152,8 +1154,8 @@ public class App {
 	}
 
 	/**
-	 * Downloads this artifact to the location specified in the {@link Config}.
-	 * Only takes snapshots into account.
+	 * Downloads this artifact to the location specified in the
+	 * {@link AdditionalConfig}. Only takes snapshots into account.
 	 * 
 	 * @return {@code true} if the download finished successfully, {@code false}
 	 *         if the download was cancelled using
@@ -1170,8 +1172,8 @@ public class App {
 	}
 
 	/**
-	 * Downloads this artifact to the location specified in the {@link Config}.
-	 * Only takes snapshots into account.
+	 * Downloads this artifact to the location specified in the
+	 * {@link AdditionalConfig}. Only takes snapshots into account.
 	 * 
 	 * @param gui
 	 *            The {@link HidableUpdateProgressDialog} that represents the
@@ -1190,7 +1192,8 @@ public class App {
 	}
 
 	/**
-	 * Downloads this artifact to the location specified in the {@link Config}.
+	 * Downloads this artifact to the location specified in the
+	 * {@link AdditionalConfig}.
 	 * 
 	 * @param versionToDownload
 	 *            The {@link Version} to be downloaded.
