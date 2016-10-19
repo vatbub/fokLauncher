@@ -75,6 +75,7 @@ import com.rometools.rome.io.FeedException;
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
 	private static FOKLogger log;
+	public static Config appConfig;
 
 	public static void main(String[] args) {
 		common.Common.setAppName("foklauncher");
@@ -668,6 +669,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		bundle = ResourceBundle.getBundle("view.MainWindow");
+		
+		appConfig = new Config();
 
 		stage = primaryStage;
 		try {
