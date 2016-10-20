@@ -4,7 +4,7 @@ This is a launcher for any java application that is released to a maven reposito
 Though the list of projects that currently use the launcher is small, it can be used by any app that is released to a maven repository which means that you can use it for your app too!
 
 ## Get the launcher
-We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsSnapshots/foklauncher#downloads)
+We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsReleases/foklauncher#downloads)
 
 ## Build your own version
 ### Build the current snapshot
