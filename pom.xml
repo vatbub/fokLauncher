@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<repositories>
@@ -56,7 +57,21 @@
 
 	<name>FOK Launcher</name>
 	<description>A Launcher for FOK Projects.</description>
-	<url>http://fokprojects.mo-mar.de/</url>
+	<url>https://github.com/vatbub/foklauncher</url>
+
+	<developers>
+		<developer>
+			<id>fkammel</id>
+			<name>Frederik Kammel</name>
+			<email>vatbub123@googlemail.com</email>
+			<url>https://fokprojects.mo-mar.de/</url>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>Europe/Berlin</timezone>
+		</developer>
+	</developers>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
