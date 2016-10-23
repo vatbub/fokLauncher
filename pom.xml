@@ -34,7 +34,7 @@
 
 	<scm>
 		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
-		<url>https://github.com/vatbub/foklauncher/blob/master/</url>
+		<url>https://github.com/vatbub/foklauncher</url>
 		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
