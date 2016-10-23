@@ -66,7 +66,7 @@ public class AppConfig {
 	 * The subfolder in foklaunchers appdata folder where the actual apps will
 	 * be downloaded to. {appName} will be replaced by the apps name.
 	 */
-	public static final String subfolderToSaveApps = "apps" + File.separator + "{appName}";
+	public static final String subfolderToSaveApps = "apps" + File.separator  + "{groupId}" + File.separator + "{artifactId}";
 
 	/**
 	 * The filename of the apps metadata file

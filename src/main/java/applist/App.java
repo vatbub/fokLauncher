@@ -392,8 +392,8 @@ public class App {
 		VersionList res = new VersionList();
 
 		// Load the metadata.xml file
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 
@@ -571,8 +571,8 @@ public class App {
 	 *         downloaded, {@code false} otherwise.
 	 */
 	public boolean isPresentOnHarddrive(Version ver) {
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
@@ -1024,8 +1024,8 @@ public class App {
 	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String destFilename;
 
 		if (!disableDownload) {
@@ -1217,8 +1217,8 @@ public class App {
 			gui.preparePhaseStarted();
 		}
 
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String destFilename;
 		URL repoBaseURL;
 		URL artifactURL;
@@ -1503,8 +1503,8 @@ public class App {
 	public boolean delete(Version versionToDelete) {
 
 		// Delete from metadata
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 		Element versions;
