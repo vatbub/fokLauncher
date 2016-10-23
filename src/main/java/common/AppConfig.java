@@ -16,7 +16,7 @@ public class AppConfig {
 	public static URL getUpdateRepoBaseURL() {
 		URL res = null;
 		try {
-			res = new URL("https://dl.bintray.com/vatbub/fokprojectsSnapshots");
+			res = new URL("https://dl.bintray.com/vatbub/fokprojectsReleases");
 		} catch (MalformedURLException e) {
 			log.getLogger().log(Level.SEVERE, "Malicious config", e);
 		}
