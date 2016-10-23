@@ -17,6 +17,7 @@ import applist.App;
 import applist.AppList;
 import common.Common;
 import common.Config;
+import common.AppConfig;
 import common.HidableUpdateProgressDialog;
 import common.Internet;
 import common.Prefs;
@@ -75,7 +76,7 @@ import com.rometools.rome.io.FeedException;
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
 	private static FOKLogger log;
-	public static Config appConfig;
+	public static AppConfig appConfig;
 
 	public static void main(String[] args) {
 		common.Common.setAppName("foklauncher");
@@ -559,8 +560,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Thread updateThread = new Thread() {
 			@Override
 			public void run() {
-				UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(Config.getUpdateRepoBaseURL(),
-						Config.groupID, Config.artifactID, Config.getUpdateFileClassifier(), Common.getPackaging());
+				UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(AppConfig.getUpdateRepoBaseURL(),
+						AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(), Common.getPackaging());
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
@@ -677,8 +678,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			Thread updateThread = new Thread() {
 				@Override
 				public void run() {
-					UpdateInfo update = UpdateChecker.isUpdateAvailable(Config.getUpdateRepoBaseURL(), Config.groupID,
-							Config.artifactID, Config.getUpdateFileClassifier(), Common.getPackaging());
+					UpdateInfo update = UpdateChecker.isUpdateAvailable(AppConfig.getUpdateRepoBaseURL(), AppConfig.groupID,
+							AppConfig.artifactID, AppConfig.getUpdateFileClassifier(), Common.getPackaging());
 					if (update.showAlert) {
 						Platform.runLater(new Runnable() {
 
@@ -753,7 +754,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				try {
-					MOTD motd = MOTD.getLatestMOTD(Config.getMotdFeedUrl());
+					MOTD motd = MOTD.getLatestMOTD(AppConfig.getMotdFeedUrl());
 					if (!motd.isMarkedAsRead()) {
 						new MOTDDialog(motd, motd.getEntry().getTitle());
 					}

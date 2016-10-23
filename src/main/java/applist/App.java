@@ -393,8 +393,8 @@ public class App {
 
 		// Load the metadata.xml file
 		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 
 		try {
@@ -572,8 +572,8 @@ public class App {
 	 */
 	public boolean isPresentOnHarddrive(Version ver) {
 		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
 		Document versionDoc;
@@ -633,7 +633,7 @@ public class App {
 	 */
 	private void downloadVersionInfo(Version versionToGet, String destFolder)
 			throws MalformedURLException, JDOMException, IOException {
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
 		Document versionDoc;
@@ -1025,7 +1025,7 @@ public class App {
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
 		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
 
 		if (!disableDownload) {
@@ -1218,7 +1218,7 @@ public class App {
 		}
 
 		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
 		String destFilename;
 		URL repoBaseURL;
 		URL artifactURL;
@@ -1408,16 +1408,16 @@ public class App {
 	 */
 	public static AppList getOnlineAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
-		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
+		String fileName = Common.getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
 		try {
-			doc = new SAXBuilder().build(Config.getAppListXMLURL());
+			doc = new SAXBuilder().build(AppConfig.getAppListXMLURL());
 
 			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
 		} catch (UnknownHostException e) {
 			try {
 				doc = new SAXBuilder().build(new File(fileName));
 			} catch (FileNotFoundException e1) {
-				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString()
+				throw new UnknownHostException("Could not connect to " + AppConfig.getAppListXMLURL().toString()
 						+ " and app list cache not found. \nPlease ensure a stable internet connection.");
 			}
 		}
@@ -1425,7 +1425,7 @@ public class App {
 		String modelVersion = fokLauncherEl.getChild("modelVersion").getValue();
 
 		// Check for unsupported modelVersion
-		if (!Config.getSupportedFOKConfigModelVersion().contains(modelVersion)) {
+		if (!AppConfig.getSupportedFOKConfigModelVersion().contains(modelVersion)) {
 			throw new IllegalStateException(
 					"The modelVersion of the fokprojectsOnLauncher.xml file is not supported! (modelVersion is "
 							+ modelVersion + ")");
@@ -1464,7 +1464,7 @@ public class App {
 	 *             If the xml list is malformed
 	 */
 	public static AppList getImportedAppList() throws JDOMException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		try {
 			AppList res = new AppList();
@@ -1504,8 +1504,8 @@ public class App {
 
 		// Delete from metadata
 		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+				+ AppConfig.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 		Element versions;
 
@@ -1680,7 +1680,7 @@ public class App {
 	}
 
 	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
 		Document appsDoc;
@@ -1743,7 +1743,7 @@ public class App {
 	}
 
 	public void removeFromImportedAppList() throws FileNotFoundException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
 		Document appsDoc;

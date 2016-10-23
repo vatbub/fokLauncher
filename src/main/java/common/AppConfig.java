@@ -9,8 +9,8 @@ import java.util.logging.Level;
 
 import logging.FOKLogger;
 
-public class Config {
-	private static FOKLogger log = new FOKLogger(Config.class.getName());
+public class AppConfig {
+	private static FOKLogger log = new FOKLogger(AppConfig.class.getName());
 
 	// Project setup
 	public static URL getUpdateRepoBaseURL() {
