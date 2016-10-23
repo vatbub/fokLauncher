@@ -670,7 +670,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		bundle = ResourceBundle.getBundle("view.MainWindow");
 		
-		appConfig = new Config();
+		// appConfig = new Config();
 
 		stage = primaryStage;
 		try {
