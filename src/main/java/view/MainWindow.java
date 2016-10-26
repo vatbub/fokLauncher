@@ -561,7 +561,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			@Override
 			public void run() {
 				UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(AppConfig.getUpdateRepoBaseURL(),
-						AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(), Common.getPackaging());
+						AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
+						Common.getPackaging());
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
@@ -670,7 +671,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		bundle = ResourceBundle.getBundle("view.MainWindow");
-		
+
 		// appConfig = new Config();
 
 		stage = primaryStage;
@@ -678,8 +679,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			Thread updateThread = new Thread() {
 				@Override
 				public void run() {
-					UpdateInfo update = UpdateChecker.isUpdateAvailable(AppConfig.getUpdateRepoBaseURL(), AppConfig.groupID,
-							AppConfig.artifactID, AppConfig.getUpdateFileClassifier(), Common.getPackaging());
+					UpdateInfo update = UpdateChecker.isUpdateAvailable(AppConfig.getUpdateRepoBaseURL(),
+							AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
+							Common.getPackaging());
 					if (update.showAlert) {
 						Platform.runLater(new Runnable() {
 
@@ -750,19 +752,31 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// injected
 
 		// Show messages of the day
-		Platform.runLater(new Runnable() {
+		Thread motdThread = new Thread() {
 			@Override
 			public void run() {
+				MOTD motd;
 				try {
-					MOTD motd = MOTD.getLatestMOTD(AppConfig.getMotdFeedUrl());
-					if (!motd.isMarkedAsRead()) {
-						new MOTDDialog(motd, motd.getEntry().getTitle());
-					}
-				} catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
+					motd = MOTD.getLatestMOTD(AppConfig.getMotdFeedUrl());
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								if (!motd.isMarkedAsRead()) {
+									new MOTDDialog(motd, motd.getEntry().getTitle());
+								}
+							} catch (ClassNotFoundException | IOException e) {
+								log.getLogger().log(Level.SEVERE, "An error occurred", e);
+							}
+						}
+					});
+				} catch (IllegalArgumentException | FeedException | IOException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
 				}
 			}
-		});
+		};
+		motdThread.setName("motdThread");
+		motdThread.start();
 
 		currentMainWindowInstance = this;
 
