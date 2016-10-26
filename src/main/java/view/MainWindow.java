@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import applist.App;
 import applist.AppList;
 import common.Common;
-import common.Config;
 import common.AppConfig;
 import common.HidableUpdateProgressDialog;
 import common.Internet;
