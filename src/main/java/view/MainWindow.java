@@ -860,6 +860,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Thread getAppStatus = new Thread() {
 			@Override
 			public void run() {
+				App checkedApp = currentlySelectedApp;
 				boolean progressVisibleBefore = progressBar.isVisible();
 				Platform.runLater(new Runnable() {
 					@Override
@@ -884,86 +885,46 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						Platform.runLater(new Runnable() {
 							@Override
 							public void run() {
-								appInfoButton.setDisable(currentlySelectedApp.getAdditionalInfoURL() == null);
+								appInfoButton.setDisable(checkedApp.getAdditionalInfoURL() == null);
 							}
 						});
 
-						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+						if (checkedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required
-							Platform.runLater(new Runnable() {
-
-								@Override
-								public void run() {
-									launchButton.setDisable(false);
-									launchButton.setDefaultButton(true);
-									launchButton.setStyle("");
-									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
-								}
-							});
-						} else if (currentlySelectedApp.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
+							setLaunchButtonText(checkedApp, false, bundle.getString("okButton.downloadAndLaunch"));
+						} else if (checkedApp.updateAvailable(enableSnapshotsCheckbox.isSelected())) {
 							// Update available
-							Platform.runLater(new Runnable() {
-
-								@Override
-								public void run() {
-									launchButton.setDisable(false);
-									launchButton.setDefaultButton(true);
-									launchButton.setStyle("");
-									launchButton.setControlText(bundle.getString("okButton.updateAndLaunch"));
-								}
-							});
+							setLaunchButtonText(checkedApp, false, bundle.getString("okButton.updateAndLaunch"));
 						} else {
 							// Can launch immediately
-							Platform.runLater(new Runnable() {
-
-								@Override
-								public void run() {
-									launchButton.setDisable(false);
-									launchButton.setDefaultButton(true);
-									launchButton.setStyle("");
-									launchButton.setControlText(bundle.getString("okButton.launch"));
-								}
-							});
+							setLaunchButtonText(checkedApp, false, bundle.getString("okButton.launch"));
 						}
 					} else {
 						// downloads disabled
-						if (currentlySelectedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
+						if (checkedApp.downloadRequired(enableSnapshotsCheckbox.isSelected())) {
 							// download required but disabled
-							Platform.runLater(new Runnable() {
-
-								@Override
-								public void run() {
-									launchButton.setDisable(true);
-									launchButton.setDefaultButton(true);
-									launchButton.setStyle("");
-									launchButton.setControlText(bundle.getString("okButton.downloadAndLaunch"));
-								}
-							});
+							setLaunchButtonText(checkedApp, true, bundle.getString("okButton.downloadAndLaunch"));
 						} else {
 							// Can launch immediately
-							Platform.runLater(new Runnable() {
-
-								@Override
-								public void run() {
-									launchButton.setDisable(false);
-									launchButton.setDefaultButton(true);
-									launchButton.setStyle("");
-									launchButton.setControlText(bundle.getString("okButton.launch"));
-								}
-							});
+							setLaunchButtonText(checkedApp, false, bundle.getString("okButton.launch"));
 						}
 					}
 				} catch (JDOMException | IOException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
 				}
 
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						launchButton.setProgressText("");
-						progressBar.setVisible(progressVisibleBefore);
-					}
-				});
+				// Do finishing touches to gui only if checkedApp still equals
+				// currentlySelectedApp (make sure the user did not change the
+				// selection in the meanwhile)
+				if (checkedApp == currentlySelectedApp) {
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							launchButton.setProgressText("");
+							progressBar.setVisible(progressVisibleBefore);
+						}
+					});
+				}
 			}
 
 		};
@@ -976,6 +937,22 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		} else if (currentlySelectedApp == null) {
 			// disable the button
 			launchButton.setDisable(true);
+		}
+	}
+
+	private void setLaunchButtonText(App checkedApp, boolean isDisabled, String text) {
+		// Only update the button if the user did not change his selection
+		if (checkedApp == currentlySelectedApp) {
+			Platform.runLater(new Runnable() {
+
+				@Override
+				public void run() {
+					launchButton.setDisable(isDisabled);
+					launchButton.setDefaultButton(!isDisabled);
+					launchButton.setStyle("");
+					launchButton.setControlText(text);
+				}
+			});
 		}
 	}
 
