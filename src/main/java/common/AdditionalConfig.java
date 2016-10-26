@@ -1,15 +1,11 @@
 package common;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-
 import logging.FOKLogger;
 
 public class AdditionalConfig {
+	@SuppressWarnings("unused")
 	private static FOKLogger log = new FOKLogger(AdditionalConfig.class.getName());
 
 	// Project setup
