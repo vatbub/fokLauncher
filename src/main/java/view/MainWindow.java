@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -50,7 +52,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -115,6 +116,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static Thread downloadAndLaunchThread = new Thread();
 	private static boolean launchSpecificVersionMenuCanceled = false;
 	private static Locale systemDefaultLocale;
+	private Date latestProgressBarUpdate = Date.from(Instant.now());
 
 	private Runnable getAppListRunnable = new Runnable() {
 		@Override
@@ -447,7 +449,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 													// FXMLLoader
 
 	@FXML // fx:id="progressBar"
-	private ProgressBar progressBar; // Value injected by FXMLLoader
+	private CustomProgressBar progressBar; // Value injected by FXMLLoader
 
 	@FXML // fx:id="workOfflineCheckbox"
 	private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
@@ -1000,7 +1002,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				launchButton.setStyle("-fx-background-color: transparent;");
 				launchButton.setControlText(bundle.getString("okButton.cancelLaunch"));
 				progressBar.setVisible(true);
-				progressBar.setProgress(0 / 4.0);
+				progressBar.setProgressAnimated(0 / 4.0);
 				launchButton.setProgressText(bundle.getString("progress.preparing"));
 
 				settingsGridView.setDisable(true);
@@ -1028,7 +1030,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(1.0 / 2.0);
+				progressBar.setProgressAnimated(1.0 / 2.0);
 				launchButton.setProgressText(bundle.getString("progress.installing"));
 			}
 
@@ -1041,7 +1043,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				progressBar.setProgress(2.0 / 2.0);
+				progressBar.setProgressAnimated(2.0 / 2.0);
 				launchButton.setProgressText(bundle.getString("progress.launching"));
 			}
 
@@ -1115,51 +1117,56 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void downloadProgressChanged(double kilobytesDownloaded, double totalFileSizeInKB) {
-		Platform.runLater(new Runnable() {
+		double timeThreshold=500 + Math.random()*3000;
+		if (Math.abs(Date.from(Instant.now()).getTime() - latestProgressBarUpdate.getTime()) >= (timeThreshold)
+				|| kilobytesDownloaded == totalFileSizeInKB) {
+			latestProgressBarUpdate = Date.from(Instant.now());
+			Platform.runLater(new Runnable() {
 
-			@Override
-			public void run() {
-				progressBar.setProgress(kilobytesDownloaded / totalFileSizeInKB);
+				@Override
+				public void run() {
+					progressBar.setProgressAnimated(kilobytesDownloaded / totalFileSizeInKB);
 
-				String downloadedString;
+					String downloadedString;
 
-				if (kilobytesDownloaded < 1024) {
-					downloadedString = Double.toString(Math.round(kilobytesDownloaded * 100.0) / 100.0) + " "
-							+ bundle.getString("kilobyte");
-				} else if ((kilobytesDownloaded / 1024) < 1024) {
-					downloadedString = Double.toString(Math.round((kilobytesDownloaded * 100.0) / 1024) / 100.0) + " "
-							+ bundle.getString("megabyte");
-				} else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
-					downloadedString = Double
-							.toString(Math.round(((kilobytesDownloaded * 100.0) / 1024) / 1024) / 100.0) + " "
-							+ bundle.getString("gigabyte");
-				} else {
-					downloadedString = Double
-							.toString(Math.round((((kilobytesDownloaded * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
-							+ bundle.getString("terabyte");
+					if (kilobytesDownloaded < 1024) {
+						downloadedString = Double.toString(Math.round(kilobytesDownloaded * 100.0) / 100.0) + " "
+								+ bundle.getString("kilobyte");
+					} else if ((kilobytesDownloaded / 1024) < 1024) {
+						downloadedString = Double.toString(Math.round((kilobytesDownloaded * 100.0) / 1024) / 100.0)
+								+ " " + bundle.getString("megabyte");
+					} else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
+						downloadedString = Double
+								.toString(Math.round(((kilobytesDownloaded * 100.0) / 1024) / 1024) / 100.0) + " "
+								+ bundle.getString("gigabyte");
+					} else {
+						downloadedString = Double
+								.toString(Math.round((((kilobytesDownloaded * 100.0) / 1024) / 1024) / 1024) / 100.0)
+								+ " " + bundle.getString("terabyte");
+					}
+
+					String totalString;
+					if (totalFileSizeInKB < 1024) {
+						totalString = Double.toString(Math.round(totalFileSizeInKB * 100.0) / 100.0) + " "
+								+ bundle.getString("kilobyte");
+					} else if ((totalFileSizeInKB / 1024) < 1024) {
+						totalString = Double.toString(Math.round((totalFileSizeInKB * 100.0) / 1024) / 100.0) + " "
+								+ bundle.getString("megabyte");
+					} else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
+						totalString = Double.toString(Math.round(((totalFileSizeInKB * 100.0) / 1024) / 1024) / 100.0)
+								+ " " + bundle.getString("gigabyte");
+					} else {
+						totalString = Double
+								.toString(Math.round((((totalFileSizeInKB * 100.0) / 1024) / 1024) / 1024) / 100.0)
+								+ " " + bundle.getString("terabyte");
+					}
+
+					launchButton.setProgressText(bundle.getString("progress.downloading") + "(" + downloadedString + "/"
+							+ totalString + ")");
 				}
 
-				String totalString;
-				if (totalFileSizeInKB < 1024) {
-					totalString = Double.toString(Math.round(totalFileSizeInKB * 100.0) / 100.0) + " "
-							+ bundle.getString("kilobyte");
-				} else if ((totalFileSizeInKB / 1024) < 1024) {
-					totalString = Double.toString(Math.round((totalFileSizeInKB * 100.0) / 1024) / 100.0) + " "
-							+ bundle.getString("megabyte");
-				} else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
-					totalString = Double.toString(Math.round(((totalFileSizeInKB * 100.0) / 1024) / 1024) / 100.0) + " "
-							+ bundle.getString("gigabyte");
-				} else {
-					totalString = Double
-							.toString(Math.round((((totalFileSizeInKB * 100.0) / 1024) / 1024) / 1024) / 100.0) + " "
-							+ bundle.getString("terabyte");
-				}
-
-				launchButton.setProgressText(
-						bundle.getString("progress.downloading") + "(" + downloadedString + "/" + totalString + ")");
-			}
-
-		});
+			});
+		}
 	}
 
 }
