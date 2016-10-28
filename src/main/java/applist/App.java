@@ -1034,8 +1034,15 @@ public class App {
 
 			// download if necessary
 			if (!this.isPresentOnHarddrive(versionToLaunch)) {
-				// app not downloaded at all
-				log.getLogger().info("Downloading package because it was never downloaded before...");
+				// app not downloaded at all or needs to be updated
+				if (!this.isPresentOnHarddrive()) {
+					// App was never downloaded
+					log.getLogger().info("Downloading package because it was never downloaded before...");
+				} else {
+					// App needs an update
+					log.getLogger().info("Downloading package because an update is available...");
+				}
+
 				downloadPerformed = this.download(versionToLaunch, gui);
 			}
 
