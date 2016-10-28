@@ -232,8 +232,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 															currentMainWindowInstance, menuItem.getVersion(),
 															workOfflineCheckbox.isSelected());
 												} catch (IOException | JDOMException e) {
-													currentMainWindowInstance.showErrorMessage("An error occurred: \n"
-															+ ExceptionUtils.getStackTrace(e));
+													currentMainWindowInstance.showErrorMessage(
+															"An error occurred: \n" + ExceptionUtils.getStackTrace(e));
 													log.getLogger().log(Level.SEVERE, "An error occurred", e);
 												}
 											}
@@ -913,16 +913,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				} catch (JDOMException | IOException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
 
-// Switch to offline mode
+					// Switch to offline mode
 					workOfflineCheckbox.setSelected(true);
 					workOfflineCheckbox.setDisable(true);
-					
+
 					// update launch button accordingly
 					updateLaunchButton();
-					
+
 					// Show error message
-					currentMainWindowInstance.showErrorMessage(bundle.getString("updateLaunchButtonException") + "\n\n"
-							+ ExceptionUtils.getStackTrace(e), false);
+					currentMainWindowInstance.showErrorMessage(
+							bundle.getString("updateLaunchButtonException") + "\n\n" + ExceptionUtils.getStackTrace(e),
+							false);
 				}
 
 				// Do finishing touches to gui only if checkedApp still equals
@@ -1056,7 +1057,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			@Override
 			public void run() {
-				Alert alert = new Alert(Alert.AlertType.ERROR, message + "\n\n" + "The app needs to close now.");
+				String finalMessage;
+				if (closeWhenDialogIsClosed) {
+					finalMessage = message + "\n\n" + "The app needs to close now.";
+				} else {
+					finalMessage = message;
+				}
+
+				Alert alert = new Alert(Alert.AlertType.ERROR, finalMessage);
 				alert.show();
 
 				Thread t = new Thread() {
@@ -1066,8 +1074,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 							// wait for dialog to be closed
 						}
 
-						System.err.println("Closing app after exception, good bye...");
-						Platform.exit();
+						if (closeWhenDialogIsClosed) {
+							System.err.println("Closing app after exception, good bye...");
+							Platform.exit();
+						}
 					}
 				};
 
