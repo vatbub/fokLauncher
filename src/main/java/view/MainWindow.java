@@ -68,6 +68,7 @@ import view.motd.MOTDDialog;
 import view.updateAvailableDialog.UpdateAvailableDialog;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
 
 import com.rometools.rome.io.FeedException;
@@ -232,7 +233,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 															workOfflineCheckbox.isSelected());
 												} catch (IOException | JDOMException e) {
 													currentMainWindowInstance.showErrorMessage("An error occurred: \n"
-															+ e.getClass().getName() + "\n" + e.getMessage());
+															+ ExceptionUtils.getStackTrace(e));
 													log.getLogger().log(Level.SEVERE, "An error occurred", e);
 												}
 											}
@@ -911,6 +912,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					}
 				} catch (JDOMException | IOException e) {
 					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+
+// Switch to offline mode
+					workOfflineCheckbox.setSelected(true);
+					workOfflineCheckbox.setDisable(true);
+					
+					// update launch button accordingly
+					updateLaunchButton();
+					
+					// Show error message
+					currentMainWindowInstance.showErrorMessage(bundle.getString("updateLaunchButtonException") + "\n\n"
+							+ ExceptionUtils.getStackTrace(e), false);
 				}
 
 				// Do finishing touches to gui only if checkedApp still equals
