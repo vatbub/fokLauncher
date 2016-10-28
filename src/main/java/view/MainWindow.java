@@ -38,6 +38,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -63,6 +64,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import logging.FOKLogger;
 import view.motd.MOTD;
 import view.motd.MOTDDialog;
@@ -222,11 +224,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 													// exit handler if
 													// required
 													if (launchLauncherAfterAppExitCheckbox.isSelected()) {
-														Platform.setImplicitExit(false);
 														currentlySelectedApp
 																.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
 													} else {
-														Platform.setImplicitExit(true);
 														currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(
 																showLauncherAgain);
 													}
@@ -609,10 +609,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					try {
 						// Attach the on app exit handler if required
 						if (launchLauncherAfterAppExitCheckbox.isSelected()) {
-							Platform.setImplicitExit(false);
 							currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
 						} else {
-							Platform.setImplicitExit(true);
 							currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
 						}
 
@@ -713,7 +711,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			// Set Icon
 			primaryStage.getIcons().add(new Image(MainWindow.class.getResourceAsStream("icon.png")));
-
+			
 			primaryStage.show();
 		} catch (Exception e) {
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);

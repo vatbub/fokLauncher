@@ -1082,6 +1082,9 @@ public class App {
 		if (!(new File(jarFileName)).exists()) {
 			throw new FileNotFoundException(jarFileName);
 		}
+		
+		// Set implicit exit = false if handlers are defined when the app exits
+		Platform.setImplicitExit(!this.eventHandlersWhenLaunchedAppExitsAttached());
 
 		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
 		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks",
@@ -1599,6 +1602,17 @@ public class App {
 	 */
 	public boolean isEventHandlerWhenLaunchedAppExitsAttached(Runnable handler) {
 		return eventHandlersWhenLaunchedAppExits.contains(handler);
+	}
+
+	/**
+	 * Checks if any handler is attached to the event that the launched app
+	 * exits again.
+	 * 
+	 * @return {@code true} if any event handler is attached, {@code false}, if
+	 *         no event handler is attached.
+	 */
+	public boolean eventHandlersWhenLaunchedAppExitsAttached() {
+		return eventHandlersWhenLaunchedAppExits.size() > 0;
 	}
 
 	/**
