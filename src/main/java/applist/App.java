@@ -10,6 +10,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1082,7 +1085,7 @@ public class App {
 		if (!(new File(jarFileName)).exists()) {
 			throw new FileNotFoundException(jarFileName);
 		}
-		
+
 		// Set implicit exit = false if handlers are defined when the app exits
 		Platform.setImplicitExit(!this.eventHandlersWhenLaunchedAppExitsAttached());
 
@@ -1818,6 +1821,11 @@ public class App {
 		f.getParentFile().mkdirs();
 		// Create empty file on disk if necessary
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+	}
+
+	public void createShortCut(File shortcutFile) throws IOException {
+		System.out.println(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+		Files.createLink(shortcutFile.toPath(), new File(Common.getPathAndNameOfCurrentJar()).toPath());
 	}
 
 	@Override

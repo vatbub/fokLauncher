@@ -402,6 +402,32 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					});
 
+					MenuItem createShortcutMenuItem = new MenuItem();
+					createShortcutMenuItem.setText("Create shortcut");
+					// TODO Translation
+					createShortcutMenuItem.setOnAction(event3 -> {
+						FileChooser fileChooser = new FileChooser();
+						fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Shortcut", "*.lnk"));
+						// TODO Translation
+						fileChooser.setTitle("Save Shortcut");
+						// TODO Translation
+						File file = fileChooser.showSaveDialog(stage);
+						if (file != null) {
+							log.getLogger().info("Creating shortcut...");
+							// App app = apps.get(cell.getIndex());
+							App app = cell.getItem();
+
+							try {
+								log.getLogger().info("Creating shortcut for app " + app.getName()
+										+ " at the following location: " + file.getAbsolutePath());
+								app.createShortCut(file);
+							} catch (IOException e) {
+								log.getLogger().log(Level.SEVERE, "An error occurred", e);
+								currentMainWindowInstance.showErrorMessage(e.toString());
+							}
+						}
+					});
+
 					MenuItem exportInfoItem = new MenuItem();
 					exportInfoItem.setText(bundle.getString("exportInfo"));
 					exportInfoItem.setOnAction(event2 -> {
@@ -409,6 +435,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						fileChooser.getExtensionFilters()
 								.addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
 						fileChooser.setTitle("Save Image");
+						// TODO Translation
 						File file = fileChooser.showSaveDialog(stage);
 						if (file != null) {
 							log.getLogger().info("Exporting info...");
@@ -426,7 +453,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					});
 
-					contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, exportInfoItem);
+					contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, createShortcutMenuItem,
+							exportInfoItem);
 
 					MenuItem removeImportedApp = new MenuItem();
 					contextMenu.setOnShowing(event5 -> {
