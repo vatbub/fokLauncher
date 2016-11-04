@@ -129,6 +129,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 					@Override
 					public void run() {
+						appList.setItems(FXCollections.observableArrayList());
+						appList.setDisable(true);
 						appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
 					}
 
@@ -395,6 +397,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					@Override
 					public void run() {
 						appList.setItems(filteredData);
+						appList.setDisable(false);
 						appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 					}
 
@@ -711,7 +714,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 			// Set Icon
 			primaryStage.getIcons().add(new Image(MainWindow.class.getResourceAsStream("icon.png")));
-			
+
 			primaryStage.show();
 		} catch (Exception e) {
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);
@@ -1115,7 +1118,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@Override
 	public void downloadProgressChanged(double kilobytesDownloaded, double totalFileSizeInKB) {
-		double timeThreshold=500 + Math.random()*3000;
+		double timeThreshold = 500 + Math.random() * 3000;
 		if (Math.abs(Date.from(Instant.now()).getTime() - latestProgressBarUpdate.getTime()) >= (timeThreshold)
 				|| kilobytesDownloaded == totalFileSizeInKB) {
 			latestProgressBarUpdate = Date.from(Instant.now());
