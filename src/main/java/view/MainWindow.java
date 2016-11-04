@@ -358,7 +358,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					contextMenu.setOnShowing(event5 -> {
 						App app = cell.getItem();
 						if (app.isImported()) {
-							removeImportedApp.setText("Remove this app from this list");
+							removeImportedApp.setText(bundle.getString("deleteImportedApp"));
 							removeImportedApp.setOnAction(event3 -> {
 								try {
 									app.removeFromImportedAppList();
