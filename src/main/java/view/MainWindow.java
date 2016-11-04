@@ -3,6 +3,7 @@ package view;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -84,6 +85,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		log = new FOKLogger(MainWindow.class.getName());
 		prefs = new Prefs(MainWindow.class.getName());
 
+		boolean autoLaunchApp = false;
+		URL autoLaunchRepoURL = null;
+		URL autoLaunchSnapshotRepoURL = null;
+		String autoLaunchGroupId = null;
+		String autoLaunchArtifactId = null;
+		String autoLaunchClassifier = null;
+
 		// Complete the update
 		UpdateChecker.completeUpdate(args);
 
@@ -100,6 +108,71 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				// Set the mock packaging
 				String packaging = arg.substring(arg.toLowerCase().indexOf('=') + 1);
 				Common.setMockPackaging(packaging);
+			} else if (arg.toLowerCase().matches(".*launch")) {
+				autoLaunchApp = true;
+			} else if (arg.toLowerCase().matches("autolaunchrepourl=.*")) {
+				if (autoLaunchApp) {
+					try {
+						autoLaunchRepoURL = new URL(arg.substring(arg.toLowerCase().indexOf('=') + 1));
+					} catch (MalformedURLException e) {
+						log.getLogger().log(Level.SEVERE,
+								"Ignoring argument autoLaunchRepoURL due to MalformedURLException", e);
+					}
+				} else {
+					log.getLogger().severe(
+							"autoLaunchRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+				}
+			} else if (arg.toLowerCase().matches("autolaunchsnapshotrepourl=.*")) {
+				if (autoLaunchApp) {
+					try {
+						autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.toLowerCase().indexOf('=') + 1));
+					} catch (MalformedURLException e) {
+						log.getLogger().log(Level.SEVERE,
+								"Ignoring argument autoLaunchSnapshotRepoURL due to MalformedURLException", e);
+					}
+				} else {
+					log.getLogger().severe(
+							"autoLaunchSnapshotRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+				}
+			} else if (arg.toLowerCase().matches("autolaunchgroupid=.*")) {
+				if (autoLaunchApp) {
+					autoLaunchGroupId = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				} else {
+					log.getLogger().severe(
+							"autoLaunchGroupId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+				}
+			} else if (arg.toLowerCase().matches("autolaunchartifactid=.*")) {
+				if (autoLaunchApp) {
+					autoLaunchArtifactId = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				} else {
+					log.getLogger().severe(
+							"autoLaunchArtifactId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+				}
+			} else if (arg.toLowerCase().matches("autolaunchclassifier=.*")) {
+				if (autoLaunchApp) {
+					autoLaunchClassifier = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+				} else {
+					log.getLogger().severe(
+							"autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+				}
+			}
+		}
+
+		if (autoLaunchApp) {
+			if (autoLaunchRepoURL == null || autoLaunchSnapshotRepoURL == null || autoLaunchGroupId == null
+					|| autoLaunchArtifactId == null) {
+				// not sufficient info specified
+				log.getLogger().severe("Cannot auto-launch app as unsufficient download info was specified.");
+			} else {
+				if (autoLaunchClassifier == null) {
+					// No classifier specified
+					appForAutoLaunch = new App("autoLaunchApp", autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
+							autoLaunchGroupId, autoLaunchArtifactId);
+				} else {
+					// Classifier specified
+					appForAutoLaunch = new App("autoLaunchApp", autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
+							autoLaunchGroupId, autoLaunchArtifactId, autoLaunchClassifier);
+				}
 			}
 		}
 
@@ -117,6 +190,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	private static boolean launchSpecificVersionMenuCanceled = false;
 	private static Locale systemDefaultLocale;
 	private Date latestProgressBarUpdate = Date.from(Instant.now());
+	private static App appForAutoLaunch = null;
 
 	private Runnable getAppListRunnable = new Runnable() {
 		@Override
@@ -812,6 +886,37 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 
 		loadAppList();
+
+		// auto launch app if one was specified
+		if (appForAutoLaunch != null) {
+			MainWindow gui = this;
+
+			// Launch the download
+			downloadAndLaunchThread = new Thread() {
+				@Override
+				public void run() {
+					try {
+						// Attach the on app exit handler if required
+						if (launchLauncherAfterAppExitCheckbox.isSelected()) {
+							appForAutoLaunch.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+						} else {
+							appForAutoLaunch.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+						}
+
+						appForAutoLaunch.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
+								workOfflineCheckbox.isSelected());
+						// Clean up
+						appForAutoLaunch = null;
+					} catch (IOException | JDOMException e) {
+						gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+						log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					}
+				}
+			};
+
+			downloadAndLaunchThread.setName("downloadAndLaunchThread");
+			downloadAndLaunchThread.start();
+		}
 	}
 
 	private void loadAvailableGuiLanguages() {
