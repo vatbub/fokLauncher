@@ -421,7 +421,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								log.getLogger().info("Creating shortcut for app " + app.getName()
 										+ " at the following location: " + file.getAbsolutePath());
 								app.createShortCut(file);
-							} catch (IOException e) {
+							} catch (Exception e) {
 								log.getLogger().log(Level.SEVERE, "An error occurred", e);
 								currentMainWindowInstance.showErrorMessage(e.toString());
 							}

@@ -20,6 +20,8 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -30,6 +32,8 @@ import org.jdom2.output.XMLOutputter;
 import common.*;
 import javafx.application.Platform;
 import logging.FOKLogger;
+import mslinks.ShellLink;
+import view.MainWindow;
 
 public class App {
 
@@ -1825,7 +1829,39 @@ public class App {
 
 	public void createShortCut(File shortcutFile) throws IOException {
 		System.out.println(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
-		Files.createLink(shortcutFile.toPath(), new File(Common.getPathAndNameOfCurrentJar()).toPath());
+		if (SystemUtils.IS_OS_WINDOWS) {
+			ShellLink sl = ShellLink.createLink(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+
+			if (this.getMavenClassifier().equals("")) {
+				// no classifier set
+				sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
+						+ " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
+						+ " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
+						+ this.getMavenArtifactID());
+			} else {
+				sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
+						+ " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
+						+ " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
+						+ this.getMavenArtifactID() + " autolaunchclassifier=" + this.getMavenClassifier());
+			}
+			
+			sl.setName("Launch " + this.getName());
+
+			if (common.Common.getPackaging().equals("exe")) {
+				sl.setIconLocation(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+			} else {
+				URL inputUrl = MainWindow.class.getResource("icon.ico");
+				File dest = new File(Common.getAndCreateAppDataPath() + "icon.ico");
+				FileUtils.copyURLToFile(inputUrl, dest);
+				sl.setIconLocation(dest.getAbsolutePath());
+			}
+
+			sl.saveTo(shortcutFile.toPath().toString());
+		} else {
+			throw new UnsupportedOperationException("Creating shortcuts is currently only supported on Windows.");
+		}
+		// Files.createLink(shortcutFile.toPath(), new
+		// File(Common.getPathAndNameOfCurrentJar()).toPath());
 	}
 
 	@Override
