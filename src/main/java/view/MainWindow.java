@@ -603,7 +603,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	void appListOnDragDetected(MouseEvent event) {
 		if (currentlySelectedApp != null) {
 			File tempFile = new File(
-					Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
+					Common.getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
 			try {
 				currentlySelectedApp.createShortCut(tempFile, bundle.getString("shortcutQuickInfo"));
 				Dragboard db = appList.startDragAndDrop(TransferMode.MOVE);
@@ -614,6 +614,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				log.getLogger().log(Level.SEVERE, "An error occurred", e);
 			}
 		}
+	}
+	
+	//Handler for ProgressButton[id="launchButton"] onDragDetected
+	@FXML
+	void launchButtonOnDragDetected(MouseEvent event){
+		appListOnDragDetected(event);
 	}
 
 	// Handler for ListView[fx:id="appList"] onDragOver

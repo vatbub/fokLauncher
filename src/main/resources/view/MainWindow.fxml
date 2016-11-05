@@ -21,7 +21,7 @@
             <AnchorPane layoutX="14.0" layoutY="382.0" prefHeight="31.0" HBox.hgrow="ALWAYS">
                <children>
                 <CustomProgressBar fx:id="progressBar" mouseTransparent="true" opacity="1.0" prefHeight="31.0" progress="0.0" style="" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" onDragDetected="#launchButtonOnDragDetected" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
             <Button fx:id="appInfoButton" disable="true" mnemonicParsing="false" onAction="#appInfoButtonOnAction" text="%appInfo" HBox.hgrow="ALWAYS" />
