@@ -411,7 +411,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						log.getLogger().info("Creating shortcut...");
 						App app = cell.getItem();
 						File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
-								+ File.separator + app.getMavenArtifactID() + ".lnk");
+								+ File.separator + app.getName() + ".lnk");
 						try {
 							log.getLogger().info("Creating shortcut for app " + app.getName()
 									+ " at the following location: " + file.getAbsolutePath());
