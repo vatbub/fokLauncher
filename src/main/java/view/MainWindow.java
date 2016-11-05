@@ -951,7 +951,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 								workOfflineCheckbox.isSelected());
 						// Clean up
 						appForAutoLaunch = null;
-					} catch (IOException | JDOMException e) {
+					} catch (Exception e) {
 						gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
 						log.getLogger().log(Level.SEVERE, "An error occurred", e);
 					}
