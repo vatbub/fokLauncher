@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+
+import javax.swing.filechooser.FileSystemView;
+
 import applist.App;
 import applist.AppList;
 import common.Common;
@@ -402,25 +405,39 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					});
 
+					MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
+					createShortcutOnDesktopMenuItem.setText(bundle.getString("createShortcutOnDesktop"));
+					createShortcutOnDesktopMenuItem.setOnAction(event3 -> {
+						log.getLogger().info("Creating shortcut...");
+						App app = cell.getItem();
+						File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
+								+ File.separator + app.getMavenArtifactID() + ".lnk");
+						try {
+							log.getLogger().info("Creating shortcut for app " + app.getName()
+									+ " at the following location: " + file.getAbsolutePath());
+							app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+						} catch (Exception e) {
+							log.getLogger().log(Level.SEVERE, "An error occurred", e);
+							currentMainWindowInstance.showErrorMessage(e.toString());
+						}
+					});
+
 					MenuItem createShortcutMenuItem = new MenuItem();
-					createShortcutMenuItem.setText("Create shortcut");
-					// TODO Translation
+					createShortcutMenuItem.setText(bundle.getString("createShortcut"));
 					createShortcutMenuItem.setOnAction(event3 -> {
 						FileChooser fileChooser = new FileChooser();
-						fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Shortcut", "*.lnk"));
-						// TODO Translation
-						fileChooser.setTitle("Save Shortcut");
-						// TODO Translation
+						fileChooser.getExtensionFilters()
+								.addAll(new FileChooser.ExtensionFilter(bundle.getString("shortcut"), "*.lnk"));
+						fileChooser.setTitle(bundle.getString("saveShortcut"));
 						File file = fileChooser.showSaveDialog(stage);
 						if (file != null) {
 							log.getLogger().info("Creating shortcut...");
-							// App app = apps.get(cell.getIndex());
 							App app = cell.getItem();
 
 							try {
 								log.getLogger().info("Creating shortcut for app " + app.getName()
 										+ " at the following location: " + file.getAbsolutePath());
-								app.createShortCut(file);
+								app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
 							} catch (Exception e) {
 								log.getLogger().log(Level.SEVERE, "An error occurred", e);
 								currentMainWindowInstance.showErrorMessage(e.toString());
@@ -453,8 +470,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 						}
 					});
 
-					contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem, createShortcutMenuItem,
-							exportInfoItem);
+					contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem,
+							createShortcutOnDesktopMenuItem, createShortcutMenuItem, exportInfoItem);
 
 					MenuItem removeImportedApp = new MenuItem();
 					contextMenu.setOnShowing(event5 -> {
@@ -588,7 +605,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			File tempFile = new File(
 					Common.getAndCreateAppDataPath() + currentlySelectedApp.getMavenArtifactID() + ".foklauncher");
 			try {
-				currentlySelectedApp.exportInfo(tempFile);
+				currentlySelectedApp.createShortCut(tempFile, bundle.getString("shortcutQuickInfo"));
 				Dragboard db = appList.startDragAndDrop(TransferMode.MOVE);
 				ClipboardContent content = new ClipboardContent();
 				content.putFiles(Arrays.asList(tempFile));

@@ -1827,7 +1827,7 @@ public class App {
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
-	public void createShortCut(File shortcutFile) throws IOException {
+	public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
 		System.out.println(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
 		if (SystemUtils.IS_OS_WINDOWS) {
 			ShellLink sl = ShellLink.createLink(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
