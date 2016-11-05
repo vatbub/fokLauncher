@@ -1854,8 +1854,10 @@ public class App {
 			}
 
 			sl.saveTo(shortcutFile.toPath().toString());
+			
 		} else {
-			throw new UnsupportedOperationException("Creating shortcuts is currently only supported on Windows.");
+			// Actually does not create a shortcut but a bash script
+			System.out.println(Common.getPathAndNameOfCurrentJar());
 		}
 		// Files.createLink(shortcutFile.toPath(), new
 		// File(Common.getPathAndNameOfCurrentJar()).toPath());
