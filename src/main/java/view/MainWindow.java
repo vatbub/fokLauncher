@@ -514,8 +514,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					@Override
 					public void run() {
 						appList.setItems(filteredData);
-						appList.setDisable(false);
 						appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
+
+						// Only enable if no download is running
+						if (downloadAndLaunchThread == null) {
+							appList.setDisable(false);
+						} else if (!downloadAndLaunchThread.isAlive()) {
+							appList.setDisable(false);
+						}
 					}
 
 				});
