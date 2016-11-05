@@ -949,11 +949,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 					try {
 						appForAutoLaunch.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
 								workOfflineCheckbox.isSelected());
-						// Clean up
-						appForAutoLaunch = null;
 					} catch (Exception e) {
 						gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
 						log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					} finally {
+						// Clean up
+						appForAutoLaunch = null;
 					}
 				}
 			};
