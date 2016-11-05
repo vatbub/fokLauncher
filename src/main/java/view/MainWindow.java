@@ -602,8 +602,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void appListOnDragDetected(MouseEvent event) {
 		if (currentlySelectedApp != null) {
-			File tempFile = new File(
-					Common.getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
+			File tempFile = new File(Common.getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
 			try {
 				currentlySelectedApp.createShortCut(tempFile, bundle.getString("shortcutQuickInfo"));
 				Dragboard db = appList.startDragAndDrop(TransferMode.MOVE);
@@ -615,10 +614,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			}
 		}
 	}
-	
-	//Handler for ProgressButton[id="launchButton"] onDragDetected
+
+	// Handler for ProgressButton[id="launchButton"] onDragDetected
 	@FXML
-	void launchButtonOnDragDetected(MouseEvent event){
+	void launchButtonOnDragDetected(MouseEvent event) {
 		appListOnDragDetected(event);
 	}
 
@@ -941,6 +940,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// auto launch app if one was specified
 		if (appForAutoLaunch != null) {
 			MainWindow gui = this;
+			currentlySelectedApp = appForAutoLaunch;
 
 			// Launch the download
 			downloadAndLaunchThread = new Thread() {
