@@ -116,7 +116,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			} else if (arg.toLowerCase().matches("autolaunchrepourl=.*")) {
 				if (autoLaunchApp) {
 					try {
-						autoLaunchRepoURL = new URL(arg.substring(arg.toLowerCase().indexOf('=') + 1));
+						autoLaunchRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
 					} catch (MalformedURLException e) {
 						log.getLogger().log(Level.SEVERE,
 								"Ignoring argument autoLaunchRepoURL due to MalformedURLException", e);
@@ -128,7 +128,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			} else if (arg.toLowerCase().matches("autolaunchsnapshotrepourl=.*")) {
 				if (autoLaunchApp) {
 					try {
-						autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.toLowerCase().indexOf('=') + 1));
+						autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
 					} catch (MalformedURLException e) {
 						log.getLogger().log(Level.SEVERE,
 								"Ignoring argument autoLaunchSnapshotRepoURL due to MalformedURLException", e);
@@ -139,21 +139,21 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				}
 			} else if (arg.toLowerCase().matches("autolaunchgroupid=.*")) {
 				if (autoLaunchApp) {
-					autoLaunchGroupId = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+					autoLaunchGroupId = arg.substring(arg.indexOf('=') + 1);
 				} else {
 					log.getLogger().severe(
 							"autoLaunchGroupId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
 				}
 			} else if (arg.toLowerCase().matches("autolaunchartifactid=.*")) {
 				if (autoLaunchApp) {
-					autoLaunchArtifactId = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+					autoLaunchArtifactId = arg.substring(arg.indexOf('=') + 1);
 				} else {
 					log.getLogger().severe(
 							"autoLaunchArtifactId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
 				}
 			} else if (arg.toLowerCase().matches("autolaunchclassifier=.*")) {
 				if (autoLaunchApp) {
-					autoLaunchClassifier = arg.substring(arg.toLowerCase().indexOf('=') + 1);
+					autoLaunchClassifier = arg.substring(arg.indexOf('=') + 1);
 				} else {
 					log.getLogger().severe(
 							"autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
