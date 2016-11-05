@@ -10,9 +10,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1845,7 +1842,7 @@ public class App {
 						+ this.getMavenArtifactID() + " autolaunchclassifier=" + this.getMavenClassifier());
 			}
 			
-			sl.setName("Launch " + this.getName());
+			sl.setName(quickInfoText.replace("%s", this.getName()));
 
 			if (common.Common.getPackaging().equals("exe")) {
 				sl.setIconLocation(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
