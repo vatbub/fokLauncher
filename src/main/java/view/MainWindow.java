@@ -947,13 +947,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				@Override
 				public void run() {
 					try {
-						// Attach the on app exit handler if required
-						if (launchLauncherAfterAppExitCheckbox.isSelected()) {
-							appForAutoLaunch.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-						} else {
-							appForAutoLaunch.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-						}
-
 						appForAutoLaunch.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
 								workOfflineCheckbox.isSelected());
 						// Clean up
