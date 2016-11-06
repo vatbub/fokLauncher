@@ -44,13 +44,13 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -638,6 +638,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML
 	void linkButtonOnDragDetected(MouseEvent event) {
 		appListOnDragDetected(event);
+		linkButton.setCursor(Cursor.OPEN_HAND);
+	}
+
+	// Handler for ProgressButton[id="linkButton"] onMousePressed
+	@FXML
+	void linkButtonOnMousePressed(MouseEvent event) {
+		linkButton.setCursor(Cursor.CLOSED_HAND);
+	}
+
+	// Handler for ProgressButton[id="linkButton"] onMouseReleased
+	@FXML
+	void linkButtonOnMouseReleased(MouseEvent event) {
+		linkButton.setCursor(Cursor.OPEN_HAND);
 	}
 
 	// Handler for ListView[fx:id="appList"] onDragOver
@@ -940,7 +953,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 		// add icon to linkButton
 		linkButton.setGraphic(linkIconView);
-		linkButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 
 		// Bind the disabled property of the launchButton to the linkButton
 		linkButton.disableProperty().bind(launchButton.disableProperty());

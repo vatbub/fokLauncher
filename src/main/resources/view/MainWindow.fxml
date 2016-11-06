@@ -24,7 +24,10 @@
                 <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" onDragDetected="#launchButtonOnDragDetected" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
-            <Button fx:id="linkButton" mnemonicParsing="false" onAction="#linkButtonOnAction" onDragDetected="#linkButtonOnDragDetected" text="Icon" />
+            <Button fx:id="linkButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#linkButtonOnAction" onDragDetected="#linkButtonOnDragDetected" onMousePressed="#linkButtonOnMousePressed" onMouseReleased="#linkButtonOnMouseReleased" text="Icon">
+               <cursor>
+                  <Cursor fx:constant="OPEN_HAND" />
+               </cursor></Button>
             <Button fx:id="appInfoButton" disable="true" mnemonicParsing="false" onAction="#appInfoButtonOnAction" text="%appInfo" HBox.hgrow="ALWAYS" />
          </children>
       </HBox>
