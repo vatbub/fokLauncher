@@ -634,6 +634,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		appListOnDragDetected(event);
 	}
 
+	// Handler for ProgressButton[id="linkButton"] onDragDetected
+	@FXML
+	void linkButtonOnDragDetected(MouseEvent event) {
+		appListOnDragDetected(event);
+	}
+
 	// Handler for ListView[fx:id="appList"] onDragOver
 	@FXML
 	void mainFrameOnDragOver(DragEvent event) {
@@ -777,11 +783,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 			log.getLogger().info("Creating shortcut for app " + currentlySelectedApp.getName()
 					+ " at the following location: " + file.getAbsolutePath());
 			currentlySelectedApp.createShortCut(file, bundle.getString("shortcutQuickInfo"));
-			
+
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					Alert alert = new Alert(Alert.AlertType.INFORMATION, bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()));
+					Alert alert = new Alert(Alert.AlertType.INFORMATION,
+							bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()));
 					alert.show();
 
 					Thread t = new Thread() {
@@ -800,8 +807,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		} catch (Exception e) {
 			// Add message about debugging environment
 			String guiString = e.toString();
-			if (e instanceof NullPointerException){
-				guiString = guiString + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
+			if (e instanceof NullPointerException) {
+				guiString = guiString
+						+ "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
 			}
 			log.getLogger().log(Level.SEVERE, "An error occurred", e);
 			currentMainWindowInstance.showErrorMessage(guiString);
