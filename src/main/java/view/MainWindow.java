@@ -50,6 +50,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -59,6 +60,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -82,6 +84,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	private static FOKLogger log;
 	public static AppConfig appConfig;
+	private static ImageView linkIconView = new ImageView(
+			new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
 
 	public static void main(String[] args) {
 		common.Common.setAppName("foklauncher");
@@ -566,6 +570,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // fx:id="launchButton"
 	private ProgressButton launchButton; // Value injected by FXMLLoader
 
+	@FXML // fx:id="linkButton"
+	private Button linkButton; // Value injected by FXMLLoader
+
 	@FXML // fx:id="launchLauncherAfterAppExitCheckbox"
 	private CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
 															// FXMLLoader
@@ -761,6 +768,46 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		}
 	}
 
+	@FXML
+	void linkButtonOnAction(ActionEvent event) {
+		log.getLogger().info("Creating shortcut using linkButton...");
+		File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath() + File.separator
+				+ currentlySelectedApp.getName() + ".lnk");
+		try {
+			log.getLogger().info("Creating shortcut for app " + currentlySelectedApp.getName()
+					+ " at the following location: " + file.getAbsolutePath());
+			currentlySelectedApp.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+			
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					Alert alert = new Alert(Alert.AlertType.INFORMATION, bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()));
+					alert.show();
+
+					Thread t = new Thread() {
+						@Override
+						public void run() {
+							while (alert.isShowing()) {
+								// wait for dialog to be closed
+							}
+						}
+					};
+
+					t.setName("showErrorThread");
+					t.start();
+				}
+			});
+		} catch (Exception e) {
+			// Add message about debugging environment
+			String guiString = e.toString();
+			if (e instanceof NullPointerException){
+				guiString = guiString + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
+			}
+			log.getLogger().log(Level.SEVERE, "An error occurred", e);
+			currentMainWindowInstance.showErrorMessage(guiString);
+		}
+	}
+
 	// Handler for CheckBox[fx:id="workOfflineCheckbox"] onAction
 	@FXML
 	void workOfflineCheckboxOnAction(ActionEvent event) {
@@ -866,21 +913,52 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	@FXML // This method is called by the FXMLLoader when initialization is
 			// complete
 	void initialize() {
-		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert searchField != null : "fx:id=\"searchField\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert launchButton != null : "fx:id=\"launchButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert versionLabel != null : "fx:id=\"versionLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert appList != null : "fx:id=\"appList\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert appInfoButton != null : "fx:id=\"appInfoButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert enableSnapshotsCheckbox != null : "fx:id=\"enableSnapshotsCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
-		assert workOfflineCheckbox != null : "fx:id=\"workOfflineCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
+		assert linkButton != null : "fx:id=\"linkButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
 		assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
 		// Initialize your logic here: all @FXML variables will have been
 		// injected
+
+		// add icon to linkButton
+		linkButton.setGraphic(linkIconView);
+		linkButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+
+		// Bind the disabled property of the launchButton to the linkButton
+		linkButton.disableProperty().bind(launchButton.disableProperty());
+
+		// show gey icon when disabled
+		linkButton.disableProperty().addListener(new ChangeListener<Boolean>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if (newValue.booleanValue() == true) {
+					// disabled, select gray icon
+					linkIconView.setImage(new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
+				} else {
+					// enabled, select blue icon
+					linkIconView.setImage(new Image(MainWindow.class.getResourceAsStream("link.png")));
+				}
+			}
+		});
+
+		// TODO Add icon source
+		// <div>Icons made by <a
+		// href="http://www.flaticon.com/authors/simpleicon"
+		// title="SimpleIcon">SimpleIcon</a> from <a
+		// href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a>
+		// is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"
+		// title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 
 		// Show messages of the day
 		Thread motdThread = new Thread() {
