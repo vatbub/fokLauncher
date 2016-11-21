@@ -4,3 +4,5 @@
 /.settings/org.eclipse.jdt.core.prefs
 /.settings/org.eclipse.core.resources.prefs
 /.project
+/.idea/
+parentPom.iml
