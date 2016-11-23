@@ -1021,6 +1021,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 				appList.setDisable(true);
 				launchButton.setDisable(false);
 				launchButton.setDefaultButton(false);
+				optionButton.disableProperty().unbind();
+				optionButton.setDisable(true);
 				progressBar.setPrefHeight(launchButton.getHeight());
 				launchButton.setStyle("-fx-background-color: transparent;");
 				launchButton.setControlText(bundle.getString("okButton.cancelLaunch"));
@@ -1118,6 +1120,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		Platform.setImplicitExit(true);
 		appList.setDisable(false);
 		progressBar.setVisible(false);
+		optionButton.disableProperty().bind(launchButton.disableProperty());
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
