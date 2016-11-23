@@ -382,8 +382,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
 	@FXML
 	void optionButtonOnAction (ActionEvent event){
-		System.out.println("Hi");
-
         Robot robot = com.sun.glass.ui.Application.GetApplication().createRobot();
 
         double x = robot.getMouseX();
