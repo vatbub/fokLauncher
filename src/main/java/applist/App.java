@@ -1,36 +1,35 @@
 package applist;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.logging.Level;
-
+import common.*;
+import extended.VersionMenuItem;
+import javafx.application.Platform;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.stage.FileChooser;
+import logging.FOKLogger;
+import mslinks.ShellLink;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-
-import common.*;
-import javafx.application.Platform;
-import logging.FOKLogger;
-import mslinks.ShellLink;
 import view.MainWindow;
+
+import javax.swing.filechooser.FileSystemView;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.logging.Level;
+
+import static view.MainWindow.*;
 
 public class App {
 
@@ -228,6 +227,8 @@ public class App {
 	private boolean specificVersionListLoaded = false;
 
 	private boolean deletableVersionListLoaded = false;
+
+	private ContextMenu contextMenu;
 
 	/**
 	 * A list of event handlers that handle the event that this app was launched
@@ -1870,5 +1871,276 @@ public class App {
 		} else {
 			return "";
 		}
+	}
+
+	public ContextMenu getContextMenu(){
+		if (contextMenu==null){
+			contextMenu = this.generateContextMenu();
+		}
+
+		return contextMenu;
+	}
+
+	private ContextMenu generateContextMenu(){
+		ContextMenu contextMenu = new ContextMenu();
+
+		Menu launchSpecificVersionItem = new Menu();
+		// launchSpecificVersionItem.textProperty().bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
+		launchSpecificVersionItem.setText(bundle.getString("launchSpecificVersion").replace("%s", this.toString()));
+
+		MenuItem dummyVersion = new MenuItem();
+		dummyVersion.setText(bundle.getString("waitForVersionList"));
+		launchSpecificVersionItem.getItems().add(dummyVersion);
+		launchSpecificVersionItem.setOnHiding(event2 -> {
+			MainWindow.launchSpecificVersionMenuCanceled = true;
+		});
+		App app = this;
+		launchSpecificVersionItem.setOnShown(event -> {
+			MainWindow.launchSpecificVersionMenuCanceled = false;
+			Thread buildContextMenuThread = new Thread() {
+				@Override
+				public void run() {
+					log.getLogger().info("Getting available online versions...");
+
+					// Get available versions
+					VersionList verList = new VersionList();
+					if (!MainWindow.currentMainWindowInstance.workOffline()) {
+						// Online mode enabled
+						try {
+							verList = app.getAllOnlineVersions();
+							if (MainWindow.currentMainWindowInstance.snapshotsEnabled()) {
+								verList.add(app.getLatestOnlineSnapshotVersion());
+							}
+						} catch (Exception e) {
+							// Something happened, pretend
+							// offline mode
+							verList = app.getCurrentlyInstalledVersions();
+						}
+
+					} else {
+						// Offline mode enabled
+						verList = app.getCurrentlyInstalledVersions();
+					}
+
+					// Sort the list
+					Collections.sort(verList);
+
+					// Clear previous list
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							launchSpecificVersionItem.getItems().clear();
+						}
+					});
+
+					for (Version ver : verList) {
+						VersionMenuItem menuItem = new VersionMenuItem();
+						menuItem.setVersion(ver);
+						menuItem.setText(ver.toString(false));
+						menuItem.setOnAction(event2 -> {
+							// Launch the download
+							MainWindow.downloadAndLaunchThread = new Thread() {
+								@Override
+								public void run() {
+									try {
+										// Attach the on app
+										// exit handler if
+										// required
+										if (MainWindow.currentMainWindowInstance.launchLauncherAfterAppExitCheckbox.isSelected()) {
+											app
+													.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+										} else {
+											app.removeEventHandlerWhenLaunchedAppExits(
+													showLauncherAgain);
+										}
+										app.downloadIfNecessaryAndLaunch(
+												currentMainWindowInstance, menuItem.getVersion(),
+												MainWindow.currentMainWindowInstance.workOffline());
+									} catch (IOException | JDOMException e) {
+										currentMainWindowInstance.showErrorMessage(
+												"An error occurred: \n" + ExceptionUtils.getStackTrace(e));
+										log.getLogger().log(Level.SEVERE, "An error occurred", e);
+									}
+								}
+							};
+
+							downloadAndLaunchThread.setName("downloadAndLaunchThread");
+							downloadAndLaunchThread.start();
+						});
+						Platform.runLater(new Runnable() {
+
+							@Override
+							public void run() {
+								launchSpecificVersionItem.getItems().add(menuItem);
+							}
+						});
+					}
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							if (!launchSpecificVersionMenuCanceled) {
+								launchSpecificVersionItem.hide();
+								launchSpecificVersionItem.show();
+							}
+						}
+					});
+				}
+			};
+
+			if (!this.isSpecificVersionListLoaded()) {
+				buildContextMenuThread.setName("buildContextMenuThread");
+				buildContextMenuThread.start();
+				this.setSpecificVersionListLoaded(true);
+			}
+		});
+
+		Menu deleteItem = new Menu();
+		//deleteItem.textProperty().bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
+		deleteItem.setText(bundle.getString("deleteVersion").replace("%s", this.toString()));
+		MenuItem dummyVersion2 = new MenuItem();
+		dummyVersion2.setText(bundle.getString("waitForVersionList"));
+		deleteItem.getItems().add(dummyVersion2);
+
+		deleteItem.setOnShown(event -> {
+			// App app = apps.get(cell.getIndex());
+
+			if (!app.isDeletableVersionListLoaded()) {
+				// Get deletable versions
+				app.setDeletableVersionListLoaded(true);
+				log.getLogger().info("Getting deletable versions...");
+				deleteItem.getItems().clear();
+
+				VersionList verList = new VersionList();
+				verList = app.getCurrentlyInstalledVersions();
+				Collections.sort(verList);
+
+				for (Version ver : verList) {
+					VersionMenuItem menuItem = new VersionMenuItem();
+					menuItem.setVersion(ver);
+					menuItem.setText(ver.toString(false));
+					menuItem.setOnAction(event2 -> {
+						// Delete the file
+						try {
+							app.delete(menuItem.getVersion());
+						} finally {
+							MainWindow.currentMainWindowInstance.updateLaunchButton();
+						}
+						// Update the list the next time the
+						// user opens it as it has changed
+						app.setDeletableVersionListLoaded(false);
+
+					});
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							deleteItem.getItems().add(menuItem);
+						}
+					});
+				}
+				Platform.runLater(new Runnable() {
+
+					@Override
+					public void run() {
+						deleteItem.hide();
+						deleteItem.show();
+					}
+				});
+			}
+		});
+
+		MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
+		createShortcutOnDesktopMenuItem.setText(bundle.getString("createShortcutOnDesktop"));
+		createShortcutOnDesktopMenuItem.setOnAction(event3 -> {
+			log.getLogger().info("Creating shortcut...");
+			File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
+					+ File.separator + app.getName() + ".lnk");
+			try {
+				log.getLogger().info("Creating shortcut for app " + app.getName()
+						+ " at the following location: " + file.getAbsolutePath());
+				app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+			} catch (Exception e) {
+				log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				currentMainWindowInstance.showErrorMessage(e.toString());
+			}
+		});
+
+		MenuItem createShortcutMenuItem = new MenuItem();
+		createShortcutMenuItem.setText(bundle.getString("createShortcut"));
+		createShortcutMenuItem.setOnAction(event3 -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters()
+					.addAll(new FileChooser.ExtensionFilter(bundle.getString("shortcut"), "*.lnk"));
+			fileChooser.setTitle(bundle.getString("saveShortcut"));
+			File file = fileChooser.showSaveDialog(stage);
+			if (file != null) {
+				log.getLogger().info("Creating shortcut...");
+
+				try {
+					log.getLogger().info("Creating shortcut for app " + this.getName()
+							+ " at the following location: " + file.getAbsolutePath());
+					this.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+				} catch (Exception e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					currentMainWindowInstance.showErrorMessage(e.toString());
+				}
+			}
+		});
+
+		MenuItem exportInfoItem = new MenuItem();
+		exportInfoItem.setText(bundle.getString("exportInfo"));
+		exportInfoItem.setOnAction(event2 -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters()
+					.addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
+			fileChooser.setTitle("Save Image");
+			// TODO Translation
+			File file = fileChooser.showSaveDialog(stage);
+			if (file != null) {
+				log.getLogger().info("Exporting info...");
+				// App app = apps.get(cell.getIndex());
+
+				try {
+					log.getLogger().info("Exporting app info of app " + app.getName() + " to file: "
+							+ file.getAbsolutePath());
+					app.exportInfo(file);
+				} catch (IOException e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					currentMainWindowInstance.showErrorMessage(e.toString());
+				}
+			}
+		});
+
+		contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem,
+				createShortcutOnDesktopMenuItem, createShortcutMenuItem, exportInfoItem);
+
+		MenuItem removeImportedApp = new MenuItem();
+		contextMenu.setOnShowing(event5 -> {
+			if (app.isImported()) {
+				removeImportedApp.setText(bundle.getString("deleteImportedApp"));
+				removeImportedApp.setOnAction(event3 -> {
+					try {
+						app.removeFromImportedAppList();
+						currentMainWindowInstance.loadAppList();
+					} catch (IOException e) {
+						log.getLogger().log(Level.SEVERE, "An error occurred", e);
+						currentMainWindowInstance.showErrorMessage(e.toString());
+					}
+				});
+
+				contextMenu.getItems().add(removeImportedApp);
+			}
+		});
+
+		contextMenu.setOnHidden(event5 -> {
+			// Remove the removeImportedApp-Item again if it exists
+			if (contextMenu.getItems().contains(removeImportedApp)) {
+				contextMenu.getItems().remove(removeImportedApp);
+			}
+		});
+
+		return contextMenu;
 	}
 }
