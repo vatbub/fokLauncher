@@ -56,7 +56,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 	public static AppConfig appConfig;
 	private static ImageView linkIconView = new ImageView(
 			new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
-    private static ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
+	private static ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
+	private static ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
 
 	public static void main(String[] args) {
 		common.Common.setAppName("foklauncher");
@@ -691,6 +692,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 		// add icon to linkButton and optionButton
 		linkButton.setGraphic(linkIconView);
         optionButton.setGraphic(optionIconView);
+		appInfoButton.setGraphic(infoIconView);
 
 		// Bind the disabled property of the launchButton to the linkButton
 		linkButton.disableProperty().bind(launchButton.disableProperty());
@@ -723,6 +725,20 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
             }
         });
+
+		appInfoButton.disableProperty().addListener(new ChangeListener<Boolean>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if (newValue.booleanValue() == true) {
+					// disabled, select gray icon
+					infoIconView.setImage(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+				} else {
+					// enabled, select blue icon
+					infoIconView.setImage(new Image(MainWindow.class.getResourceAsStream("info.png")));
+				}
+			}
+		});
 
         optionButton.disableProperty().bind(launchButton.disableProperty());
 
