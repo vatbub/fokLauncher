@@ -18,10 +18,12 @@ public class AppList extends ArrayList<App> {
 		super();
 	}
 
+	@SuppressWarnings("unused")
 	public AppList(int arg0) {
 		super(arg0);
 	}
 
+	@SuppressWarnings("unused")
 	public AppList(Collection<? extends App> arg0) {
 		super(arg0);
 	}
@@ -29,6 +31,7 @@ public class AppList extends ArrayList<App> {
 	/**
 	 * Clears the version cache of all apps in this list
 	 */
+	@SuppressWarnings("unused")
 	public void clearVersionCache() {
 		for (App app : this) {
 			app.latestOnlineSnapshotVersion = null;
@@ -58,6 +61,7 @@ public class AppList extends ArrayList<App> {
 	 *            The maven artifactId of the app to find
 	 * @return The first matching {@link App} or {@code null} if no app matches.
 	 */
+	@SuppressWarnings("unused")
 	public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId) {
 		return getAppByMavenCoordinates(mavenGroupId, mavenArtifactId, null);
 	}
@@ -73,6 +77,7 @@ public class AppList extends ArrayList<App> {
 	 *            The maven artifactId of the app to find
 	 * @return The first matching {@link App} or {@code null} if no app matches.
 	 */
+	@SuppressWarnings("unused")
 	public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId, String mavenClassifier) {
 		for (App app : this) {
 			if (app.getMavenGroupID().equals(mavenGroupId) && app.getMavenArtifactID().equals(mavenArtifactId)) {

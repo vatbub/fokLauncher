@@ -15,7 +15,7 @@
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
-    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" onMouseClicked="#appListOnMouseClicked" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
+    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
       <HBox layoutX="14.0" layoutY="382.0" spacing="4.0" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
          <children>
             <AnchorPane layoutX="14.0" layoutY="382.0" prefHeight="31.0" HBox.hgrow="ALWAYS">

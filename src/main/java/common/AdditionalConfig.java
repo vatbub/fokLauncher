@@ -1,15 +1,16 @@
 package common;
 
+import logging.FOKLogger;
+
 import java.util.ArrayList;
 import java.util.List;
-import logging.FOKLogger;
 
 public class AdditionalConfig {
 	@SuppressWarnings("unused")
 	private static FOKLogger log = new FOKLogger(AdditionalConfig.class.getName());
 
 	// Project setup
-
+	@SuppressWarnings("unused")
 	public static String getUpdateFileClassifier() {
 		String packaging = Common.getPackaging();
 		if (packaging != null) {
@@ -25,9 +26,9 @@ public class AdditionalConfig {
 	}
 
 	// AppList
-
+	@SuppressWarnings("unused")
 	public static List<String> getSupportedFOKConfigModelVersion() {
-		List<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<>();
 
 		res.add("0.0.1");
 

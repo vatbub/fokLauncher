@@ -131,17 +131,13 @@ public class App {
 	 * 
 	 * @param fileToImportFrom
 	 *            The file to import the info from. Must be a *.foklauncher file
-	 * @throws FileNotFoundException
-	 *             This app cannot be imported for some reason and cannot be
-	 *             deleted from the imported apps list because the xml file of
-	 *             the imported apps list does not exist.
 	 * @throws IOException
 	 *             If the specified file is not a file (but a directory) or if
 	 *             the launcher has no permission to read the file and this app
 	 *             cannot be deleted from the imported app list for some erason.
 	 * @see App#removeFromImportedAppList()
 	 */
-	public App(File fileToImportFrom) throws FileNotFoundException, IOException {
+	public App(File fileToImportFrom) throws IOException {
 		try {
 			this.importInfo(fileToImportFrom);
 		} catch (IOException e) {
@@ -234,7 +230,7 @@ public class App {
 	 * A list of event handlers that handle the event that this app was launched
 	 * and exited then
 	 */
-	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<Runnable>();
+	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<>();
 
 	/**
 	 * @return the name
@@ -261,10 +257,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public VersionList getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
+	public VersionList getAllOnlineVersions() throws JDOMException, IOException {
 		if (onlineVersionList != null) {
 			return onlineVersionList.clone();
 		} else {
@@ -294,10 +288,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public Version getLatestOnlineVersion() throws MalformedURLException, JDOMException, IOException {
+	public Version getLatestOnlineVersion() throws JDOMException, IOException {
 		if (latestOnlineVersion != null) {
 			return latestOnlineVersion.clone();
 		} else {
@@ -322,10 +314,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public Version getLatestOnlineSnapshotVersion() throws MalformedURLException, JDOMException, IOException {
+	public Version getLatestOnlineSnapshotVersion() throws JDOMException, IOException {
 		if (latestOnlineSnapshotVersion != null) {
 			return latestOnlineSnapshotVersion.clone();
 		} else {

@@ -12,10 +12,12 @@ public class VersionMenuItem extends MenuItem {
 		super();
 	}
 
+	@SuppressWarnings("unused")
 	public VersionMenuItem(String arg0) {
 		super(arg0);
 	}
 
+	@SuppressWarnings("unused")
 	public VersionMenuItem(String arg0, Node arg1) {
 		super(arg0, arg1);
 	}

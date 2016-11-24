@@ -30,6 +30,7 @@ public class GuiLanguage {
 	/**
 	 * @return the defaultLocaleText
 	 */
+	@SuppressWarnings("unused")
 	public String getDefaultLocaleText() {
 		return defaultLocaleText;
 	}
@@ -37,6 +38,7 @@ public class GuiLanguage {
 	/**
 	 * @param defaultLocaleText the defaultLocaleText to set
 	 */
+	@SuppressWarnings("unused")
 	public void setDefaultLocale(String defaultLocaleText) {
 		this.defaultLocaleText = defaultLocaleText;
 	}
