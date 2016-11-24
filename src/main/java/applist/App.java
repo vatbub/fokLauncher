@@ -1826,7 +1826,6 @@ public class App {
 	}
 
 	public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
-		System.out.println(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
 		if (SystemUtils.IS_OS_WINDOWS) {
 			ShellLink sl = ShellLink.createLink(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
 
