@@ -34,20 +34,20 @@
 	</parent>
 
 	<scm>
-		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
-		<url>https://github.com/vatbub/foklauncher</url>
-		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
+		<connection>scm:git:git@github.com:vatbub/${gitRepoName}.git</connection>
+		<url>https://github.com/vatbub/${gitRepoName}</url>
+		<developerConnection>scm:git:git@github.com:vatbub/${gitRepoName}.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/vatbub/foklauncher/issues</url>
+		<url>https://github.com/vatbub/${gitRepoName}}/issues</url>
 	</issueManagement>
 
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/vatbub/foklauncher</url>
+		<url>https://travis-ci.org/vatbub/${gitRepoName}</url>
 	</ciManagement>
 
 	<artifactId>foklauncher</artifactId>
@@ -77,31 +77,12 @@
 		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
 		<gitRepoName>fokLauncher</gitRepoName>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<mainClass>view.MainWindow</mainClass>
 	</properties>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<archive>
-								<manifest>
-									<mainClass>view.MainWindow</mainClass>
-								</manifest>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<!-- Build a windows executable -->
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
@@ -121,7 +102,7 @@
 							<dontWrapJar>false</dontWrapJar>
 							<downloadUrl>https://www.java.com/download/</downloadUrl>
 							<classPath>
-								<mainClass>view.MainWindow</mainClass>
+								<mainClass>${mainClass}</mainClass>
 								<preCp>anything</preCp>
 							</classPath>
 							<icon>src/main/resources/view/icon.ico</icon>
