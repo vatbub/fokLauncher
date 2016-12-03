@@ -29,28 +29,28 @@
 	<parent>
 		<groupId>com.github.vatbub</groupId>
 		<artifactId>parentPom</artifactId>
-		<version>0.0.17</version>
+		<version>0.0.19</version>
 	</parent>
 
 	<scm>
-		<connection>scm:git:git@github.com:vatbub/foklauncher.git</connection>
-		<url>https://github.com/vatbub/foklauncher/blob/master/</url>
-		<developerConnection>scm:git:git@github.com:vatbub/foklauncher.git</developerConnection>
-		<tag>foklauncher-0.0.8</tag>
+		<connection>scm:git:git@github.com:vatbub/${gitRepoName}.git</connection>
+		<url>https://github.com/vatbub/${gitRepoName}</url>
+		<developerConnection>scm:git:git@github.com:vatbub/${gitRepoName}.git</developerConnection>
+		<tag>foklauncher-0.0.9</tag>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/vatbub/foklauncher/issues</url>
+		<url>https://github.com/vatbub/${gitRepoName}}/issues</url>
 	</issueManagement>
 
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/vatbub/foklauncher</url>
+		<url>https://travis-ci.org/vatbub/${gitRepoName}</url>
 	</ciManagement>
 
 	<artifactId>foklauncher</artifactId>
-	<version>0.0.8</version>
+	<version>0.0.9</version>
 	<packaging>jar</packaging>
 	<inceptionYear>2016</inceptionYear>
 
@@ -72,34 +72,21 @@
 		</developer>
 	</developers>
 
+	<properties>
+		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+		<gitRepoName>fokLauncher</gitRepoName>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<mainClass>view.MainWindow</mainClass>
+	</properties>
+
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<archive>
-								<manifest>
-									<mainClass>view.MainWindow</mainClass>
-								</manifest>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<!-- Build a windows executable -->
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
-				<version>1.5.1</version>
+				<version>1.7.12</version>
 				<executions>
 					<execution>
 						<id>l4j-clui</id>
@@ -114,7 +101,7 @@
 							<dontWrapJar>false</dontWrapJar>
 							<downloadUrl>https://www.java.com/download/</downloadUrl>
 							<classPath>
-								<mainClass>view.MainWindow</mainClass>
+								<mainClass>${mainClass}</mainClass>
 								<preCp>anything</preCp>
 							</classPath>
 							<icon>src/main/resources/view/icon.ico</icon>
@@ -142,7 +129,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.5</version>
+				<version>1.12</version>
 				<executions>
 					<execution>
 						<id>attach-artifacts</id>
@@ -169,7 +156,12 @@
 		<dependency>
 			<groupId>com.github.vatbub</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.18</version>
+			<version>0.0.19</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.vatbub</groupId>
+			<artifactId>mslinks</artifactId>
+			<version>0.0.2</version>
 		</dependency>
 	</dependencies>
 </project>

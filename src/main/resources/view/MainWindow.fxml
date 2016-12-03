@@ -15,20 +15,30 @@
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
     <Label text="%SelectText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="34.0" />
-    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" onMouseClicked="#appListOnMouseClicked" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
+    <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" />
       <HBox layoutX="14.0" layoutY="382.0" spacing="4.0" AnchorPane.bottomAnchor="195.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
          <children>
             <AnchorPane layoutX="14.0" layoutY="382.0" prefHeight="31.0" HBox.hgrow="ALWAYS">
                <children>
-                <ProgressBar fx:id="progressBar" mouseTransparent="true" opacity="1.0" prefHeight="31.0" progress="0.0" style="" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                <CustomProgressBar fx:id="progressBar" mouseTransparent="true" opacity="1.0" prefHeight="31.0" progress="0.0" style="" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" onDragDetected="#launchButtonOnDragDetected" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <HBox layoutX="357.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Button fx:id="linkButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#linkButtonOnAction" onDragDetected="#linkButtonOnDragDetected" onMousePressed="#linkButtonOnMousePressed" onMouseReleased="#linkButtonOnMouseReleased" styleClass="transparentButton" text="Icon" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <cursor>
+                              <Cursor fx:constant="OPEN_HAND" />
+                           </cursor>
+                        </Button>
+                        <Button fx:id="appInfoButton" contentDisplay="GRAPHIC_ONLY" disable="true" mnemonicParsing="false" onAction="#appInfoButtonOnAction" styleClass="transparentButton" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="optionButton" contentDisplay="GRAPHIC_ONLY" disable="true" layoutX="357.0" layoutY="2.0" mnemonicParsing="false" onAction="#optionButtonOnAction" styleClass="transparentButton" text="..." AnchorPane.bottomAnchor="-2.0" AnchorPane.rightAnchor="65.0" AnchorPane.topAnchor="2.0" />
+                     </children>
+                  </HBox>
                </children>
             </AnchorPane>
-            <Button fx:id="appInfoButton" disable="true" mnemonicParsing="false" onAction="#appInfoButtonOnAction" text="%appInfo" HBox.hgrow="ALWAYS" />
          </children>
       </HBox>
     <Label layoutX="14.0" layoutY="414.0" prefHeight="31.0" style="-fx-font-weight: bold;" text="%settingsLabel" AnchorPane.bottomAnchor="163.0" AnchorPane.leftAnchor="14.0" />
-    <GridPane fx:id="settingsGridView" prefHeight="128.0" prefWidth="572.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0">
+    <GridPane fx:id="settingsGridView" layoutX="22.0" layoutY="459.0" prefHeight="128.0" prefWidth="572.0" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="22.0" AnchorPane.rightAnchor="6.0">
       <children>
         <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />

@@ -1,32 +1,56 @@
 package applist;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.logging.Level;
+/*-
+ * #%L
+ * FOK Launcher
+ * %%
+ * Copyright (C) 2016 Frederik Kammel
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
 
+
+import common.*;
+import extended.VersionMenuItem;
+import javafx.application.Platform;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.stage.FileChooser;
+import logging.FOKLogger;
+import mslinks.ShellLink;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import view.MainWindow;
 
-import common.*;
-import javafx.application.Platform;
-import logging.FOKLogger;
+import javax.swing.filechooser.FileSystemView;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.logging.Level;
+
+import static view.MainWindow.*;
 
 public class App {
 
@@ -128,17 +152,13 @@ public class App {
 	 * 
 	 * @param fileToImportFrom
 	 *            The file to import the info from. Must be a *.foklauncher file
-	 * @throws FileNotFoundException
-	 *             This app cannot be imported for some reason and cannot be
-	 *             deleted from the imported apps list because the xml file of
-	 *             the imported apps list does not exist.
 	 * @throws IOException
 	 *             If the specified file is not a file (but a directory) or if
 	 *             the launcher has no permission to read the file and this app
 	 *             cannot be deleted from the imported app list for some erason.
 	 * @see App#removeFromImportedAppList()
 	 */
-	public App(File fileToImportFrom) throws FileNotFoundException, IOException {
+	public App(File fileToImportFrom) throws IOException {
 		try {
 			this.importInfo(fileToImportFrom);
 		} catch (IOException e) {
@@ -225,11 +245,13 @@ public class App {
 
 	private boolean deletableVersionListLoaded = false;
 
+	private ContextMenu contextMenu;
+
 	/**
 	 * A list of event handlers that handle the event that this app was launched
 	 * and exited then
 	 */
-	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<Runnable>();
+	private List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<>();
 
 	/**
 	 * @return the name
@@ -256,10 +278,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public VersionList getAllOnlineVersions() throws MalformedURLException, JDOMException, IOException {
+	public VersionList getAllOnlineVersions() throws JDOMException, IOException {
 		if (onlineVersionList != null) {
 			return onlineVersionList.clone();
 		} else {
@@ -289,10 +309,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public Version getLatestOnlineVersion() throws MalformedURLException, JDOMException, IOException {
+	public Version getLatestOnlineVersion() throws JDOMException, IOException {
 		if (latestOnlineVersion != null) {
 			return latestOnlineVersion.clone();
 		} else {
@@ -317,10 +335,8 @@ public class App {
 	 *             If the maven metadata file can't be read or downloaded
 	 * @throws JDOMException
 	 *             If the maven metadata file is malformed
-	 * @throws MalformedURLException
-	 *             If the repo base url is malformed
 	 */
-	public Version getLatestOnlineSnapshotVersion() throws MalformedURLException, JDOMException, IOException {
+	public Version getLatestOnlineSnapshotVersion() throws JDOMException, IOException {
 		if (latestOnlineSnapshotVersion != null) {
 			return latestOnlineSnapshotVersion.clone();
 		} else {
@@ -392,9 +408,9 @@ public class App {
 		VersionList res = new VersionList();
 
 		// Load the metadata.xml file
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 
 		try {
@@ -571,9 +587,9 @@ public class App {
 	 *         downloaded, {@code false} otherwise.
 	 */
 	public boolean isPresentOnHarddrive(Version ver) {
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
 		Document versionDoc;
@@ -633,7 +649,7 @@ public class App {
 	 */
 	private void downloadVersionInfo(Version versionToGet, String destFolder)
 			throws MalformedURLException, JDOMException, IOException {
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
 		Document versionDoc;
@@ -1024,8 +1040,8 @@ public class App {
 	public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
 			boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
 		cancelDownloadAndLaunch = false;
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String destFilename;
 
 		if (!disableDownload) {
@@ -1034,8 +1050,15 @@ public class App {
 
 			// download if necessary
 			if (!this.isPresentOnHarddrive(versionToLaunch)) {
-				// app not downloaded at all
-				log.getLogger().info("Downloading package because it was never downloaded before...");
+				// app not downloaded at all or needs to be updated
+				if (!this.isPresentOnHarddrive()) {
+					// App was never downloaded
+					log.getLogger().info("Downloading package because it was never downloaded before...");
+				} else {
+					// App needs an update
+					log.getLogger().info("Downloading package because an update is available...");
+				}
+
 				downloadPerformed = this.download(versionToLaunch, gui);
 			}
 
@@ -1075,6 +1098,9 @@ public class App {
 		if (!(new File(jarFileName)).exists()) {
 			throw new FileNotFoundException(jarFileName);
 		}
+
+		// Set implicit exit = false if handlers are defined when the app exits
+		Platform.setImplicitExit(!this.eventHandlersWhenLaunchedAppExitsAttached());
 
 		log.getLogger().info("Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
 		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks",
@@ -1217,8 +1243,8 @@ public class App {
 			gui.preparePhaseStarted();
 		}
 
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
 		String destFilename;
 		URL repoBaseURL;
 		URL artifactURL;
@@ -1408,16 +1434,16 @@ public class App {
 	 */
 	public static AppList getOnlineAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
-		String fileName = Common.getAndCreateAppDataPath() + File.separator + Config.appListCacheFileName;
+		String fileName = Common.getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
 		try {
-			doc = new SAXBuilder().build(Config.getAppListXMLURL());
+			doc = new SAXBuilder().build(AppConfig.getAppListXMLURL());
 
 			(new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
 		} catch (UnknownHostException e) {
 			try {
 				doc = new SAXBuilder().build(new File(fileName));
 			} catch (FileNotFoundException e1) {
-				throw new UnknownHostException("Could not connect to " + Config.getAppListXMLURL().toString()
+				throw new UnknownHostException("Could not connect to " + AppConfig.getAppListXMLURL().toString()
 						+ " and app list cache not found. \nPlease ensure a stable internet connection.");
 			}
 		}
@@ -1425,7 +1451,7 @@ public class App {
 		String modelVersion = fokLauncherEl.getChild("modelVersion").getValue();
 
 		// Check for unsupported modelVersion
-		if (!Config.getSupportedFOKConfigModelVersion().contains(modelVersion)) {
+		if (!AppConfig.getSupportedFOKConfigModelVersion().contains(modelVersion)) {
 			throw new IllegalStateException(
 					"The modelVersion of the fokprojectsOnLauncher.xml file is not supported! (modelVersion is "
 							+ modelVersion + ")");
@@ -1464,7 +1490,7 @@ public class App {
 	 *             If the xml list is malformed
 	 */
 	public static AppList getImportedAppList() throws JDOMException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		try {
 			AppList res = new AppList();
@@ -1503,9 +1529,9 @@ public class App {
 	public boolean delete(Version versionToDelete) {
 
 		// Delete from metadata
-		String destFolder = Common.getAndCreateAppDataPath()
-				+ Config.subfolderToSaveApps.replace("{appName}", this.getMavenArtifactID());
-		String fileName = destFolder + File.separator + Config.appMetadataFileName;
+		String destFolder = Common.getAndCreateAppDataPath() + AppConfig.subfolderToSaveApps
+				.replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
+		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 		Document versionDoc;
 		Element versions;
 
@@ -1595,6 +1621,17 @@ public class App {
 	}
 
 	/**
+	 * Checks if any handler is attached to the event that the launched app
+	 * exits again.
+	 * 
+	 * @return {@code true} if any event handler is attached, {@code false}, if
+	 *         no event handler is attached.
+	 */
+	public boolean eventHandlersWhenLaunchedAppExitsAttached() {
+		return eventHandlersWhenLaunchedAppExits.size() > 0;
+	}
+
+	/**
 	 * Fires all handlers registered for the launchedAppExits event.
 	 */
 	private void fireLaunchedAppExits() {
@@ -1680,7 +1717,7 @@ public class App {
 	}
 
 	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
 		Document appsDoc;
@@ -1743,7 +1780,7 @@ public class App {
 	}
 
 	public void removeFromImportedAppList() throws FileNotFoundException, IOException {
-		String fileName = Common.getAndCreateAppDataPath() + Config.importedAppListFileName;
+		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
 		Document appsDoc;
@@ -1799,6 +1836,44 @@ public class App {
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
+	public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
+		if (SystemUtils.IS_OS_WINDOWS) {
+			ShellLink sl = ShellLink.createLink(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+
+			if (this.getMavenClassifier().equals("")) {
+				// no classifier set
+				sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
+						+ " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
+						+ " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
+						+ this.getMavenArtifactID());
+			} else {
+				sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
+						+ " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
+						+ " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
+						+ this.getMavenArtifactID() + " autolaunchclassifier=" + this.getMavenClassifier());
+			}
+			
+			sl.setName(quickInfoText.replace("%s", this.getName()));
+
+			if (common.Common.getPackaging().equals("exe")) {
+				sl.setIconLocation(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+			} else {
+				URL inputUrl = MainWindow.class.getResource("icon.ico");
+				File dest = new File(Common.getAndCreateAppDataPath() + "icon.ico");
+				FileUtils.copyURLToFile(inputUrl, dest);
+				sl.setIconLocation(dest.getAbsolutePath());
+			}
+
+			sl.saveTo(shortcutFile.toPath().toString());
+			
+		} else {
+			// Actually does not create a shortcut but a bash script
+			System.out.println(Common.getPathAndNameOfCurrentJar());
+		}
+		// Files.createLink(shortcutFile.toPath(), new
+		// File(Common.getPathAndNameOfCurrentJar()).toPath());
+	}
+
 	@Override
 	public String toString() {
 		if (this.getName() != null) {
@@ -1806,5 +1881,276 @@ public class App {
 		} else {
 			return "";
 		}
+	}
+
+	public ContextMenu getContextMenu(){
+		if (contextMenu==null){
+			contextMenu = this.generateContextMenu();
+		}
+
+		return contextMenu;
+	}
+
+	private ContextMenu generateContextMenu(){
+		ContextMenu contextMenu = new ContextMenu();
+
+		Menu launchSpecificVersionItem = new Menu();
+		// launchSpecificVersionItem.textProperty().bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
+		launchSpecificVersionItem.setText(bundle.getString("launchSpecificVersion").replace("%s", this.toString()));
+
+		MenuItem dummyVersion = new MenuItem();
+		dummyVersion.setText(bundle.getString("waitForVersionList"));
+		launchSpecificVersionItem.getItems().add(dummyVersion);
+		launchSpecificVersionItem.setOnHiding(event2 -> {
+			MainWindow.launchSpecificVersionMenuCanceled = true;
+		});
+		App app = this;
+		launchSpecificVersionItem.setOnShown(event -> {
+			MainWindow.launchSpecificVersionMenuCanceled = false;
+			Thread buildContextMenuThread = new Thread() {
+				@Override
+				public void run() {
+					log.getLogger().info("Getting available online versions...");
+
+					// Get available versions
+					VersionList verList = new VersionList();
+					if (!MainWindow.currentMainWindowInstance.workOffline()) {
+						// Online mode enabled
+						try {
+							verList = app.getAllOnlineVersions();
+							if (MainWindow.currentMainWindowInstance.snapshotsEnabled()) {
+								verList.add(app.getLatestOnlineSnapshotVersion());
+							}
+						} catch (Exception e) {
+							// Something happened, pretend
+							// offline mode
+							verList = app.getCurrentlyInstalledVersions();
+						}
+
+					} else {
+						// Offline mode enabled
+						verList = app.getCurrentlyInstalledVersions();
+					}
+
+					// Sort the list
+					Collections.sort(verList);
+
+					// Clear previous list
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							launchSpecificVersionItem.getItems().clear();
+						}
+					});
+
+					for (Version ver : verList) {
+						VersionMenuItem menuItem = new VersionMenuItem();
+						menuItem.setVersion(ver);
+						menuItem.setText(ver.toString(false));
+						menuItem.setOnAction(event2 -> {
+							// Launch the download
+							MainWindow.downloadAndLaunchThread = new Thread() {
+								@Override
+								public void run() {
+									try {
+										// Attach the on app
+										// exit handler if
+										// required
+										if (MainWindow.currentMainWindowInstance.launchLauncherAfterAppExitCheckbox.isSelected()) {
+											app
+													.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+										} else {
+											app.removeEventHandlerWhenLaunchedAppExits(
+													showLauncherAgain);
+										}
+										app.downloadIfNecessaryAndLaunch(
+												currentMainWindowInstance, menuItem.getVersion(),
+												MainWindow.currentMainWindowInstance.workOffline());
+									} catch (IOException | JDOMException e) {
+										currentMainWindowInstance.showErrorMessage(
+												"An error occurred: \n" + ExceptionUtils.getStackTrace(e));
+										log.getLogger().log(Level.SEVERE, "An error occurred", e);
+									}
+								}
+							};
+
+							downloadAndLaunchThread.setName("downloadAndLaunchThread");
+							downloadAndLaunchThread.start();
+						});
+						Platform.runLater(new Runnable() {
+
+							@Override
+							public void run() {
+								launchSpecificVersionItem.getItems().add(menuItem);
+							}
+						});
+					}
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							if (!launchSpecificVersionMenuCanceled) {
+								launchSpecificVersionItem.hide();
+								launchSpecificVersionItem.show();
+							}
+						}
+					});
+				}
+			};
+
+			if (!this.isSpecificVersionListLoaded()) {
+				buildContextMenuThread.setName("buildContextMenuThread");
+				buildContextMenuThread.start();
+				this.setSpecificVersionListLoaded(true);
+			}
+		});
+
+		Menu deleteItem = new Menu();
+		//deleteItem.textProperty().bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
+		deleteItem.setText(bundle.getString("deleteVersion").replace("%s", this.toString()));
+		MenuItem dummyVersion2 = new MenuItem();
+		dummyVersion2.setText(bundle.getString("waitForVersionList"));
+		deleteItem.getItems().add(dummyVersion2);
+
+		deleteItem.setOnShown(event -> {
+			// App app = apps.get(cell.getIndex());
+
+			if (!app.isDeletableVersionListLoaded()) {
+				// Get deletable versions
+				app.setDeletableVersionListLoaded(true);
+				log.getLogger().info("Getting deletable versions...");
+				deleteItem.getItems().clear();
+
+				VersionList verList = new VersionList();
+				verList = app.getCurrentlyInstalledVersions();
+				Collections.sort(verList);
+
+				for (Version ver : verList) {
+					VersionMenuItem menuItem = new VersionMenuItem();
+					menuItem.setVersion(ver);
+					menuItem.setText(ver.toString(false));
+					menuItem.setOnAction(event2 -> {
+						// Delete the file
+						try {
+							app.delete(menuItem.getVersion());
+						} finally {
+							MainWindow.currentMainWindowInstance.updateLaunchButton();
+						}
+						// Update the list the next time the
+						// user opens it as it has changed
+						app.setDeletableVersionListLoaded(false);
+
+					});
+					Platform.runLater(new Runnable() {
+
+						@Override
+						public void run() {
+							deleteItem.getItems().add(menuItem);
+						}
+					});
+				}
+				Platform.runLater(new Runnable() {
+
+					@Override
+					public void run() {
+						deleteItem.hide();
+						deleteItem.show();
+					}
+				});
+			}
+		});
+
+		MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
+		createShortcutOnDesktopMenuItem.setText(bundle.getString("createShortcutOnDesktop"));
+		createShortcutOnDesktopMenuItem.setOnAction(event3 -> {
+			log.getLogger().info("Creating shortcut...");
+			File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
+					+ File.separator + app.getName() + ".lnk");
+			try {
+				log.getLogger().info("Creating shortcut for app " + app.getName()
+						+ " at the following location: " + file.getAbsolutePath());
+				app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+			} catch (Exception e) {
+				log.getLogger().log(Level.SEVERE, "An error occurred", e);
+				currentMainWindowInstance.showErrorMessage(e.toString());
+			}
+		});
+
+		MenuItem createShortcutMenuItem = new MenuItem();
+		createShortcutMenuItem.setText(bundle.getString("createShortcut"));
+		createShortcutMenuItem.setOnAction(event3 -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters()
+					.addAll(new FileChooser.ExtensionFilter(bundle.getString("shortcut"), "*.lnk"));
+			fileChooser.setTitle(bundle.getString("saveShortcut"));
+			File file = fileChooser.showSaveDialog(stage);
+			if (file != null) {
+				log.getLogger().info("Creating shortcut...");
+
+				try {
+					log.getLogger().info("Creating shortcut for app " + this.getName()
+							+ " at the following location: " + file.getAbsolutePath());
+					this.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+				} catch (Exception e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					currentMainWindowInstance.showErrorMessage(e.toString());
+				}
+			}
+		});
+
+		MenuItem exportInfoItem = new MenuItem();
+		exportInfoItem.setText(bundle.getString("exportInfo"));
+		exportInfoItem.setOnAction(event2 -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters()
+					.addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
+			fileChooser.setTitle("Save Image");
+			// TODO Translation
+			File file = fileChooser.showSaveDialog(stage);
+			if (file != null) {
+				log.getLogger().info("Exporting info...");
+				// App app = apps.get(cell.getIndex());
+
+				try {
+					log.getLogger().info("Exporting app info of app " + app.getName() + " to file: "
+							+ file.getAbsolutePath());
+					app.exportInfo(file);
+				} catch (IOException e) {
+					log.getLogger().log(Level.SEVERE, "An error occurred", e);
+					currentMainWindowInstance.showErrorMessage(e.toString());
+				}
+			}
+		});
+
+		contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem,
+				createShortcutOnDesktopMenuItem, createShortcutMenuItem, exportInfoItem);
+
+		MenuItem removeImportedApp = new MenuItem();
+		contextMenu.setOnShowing(event5 -> {
+			if (app.isImported()) {
+				removeImportedApp.setText(bundle.getString("deleteImportedApp"));
+				removeImportedApp.setOnAction(event3 -> {
+					try {
+						app.removeFromImportedAppList();
+						currentMainWindowInstance.loadAppList();
+					} catch (IOException e) {
+						log.getLogger().log(Level.SEVERE, "An error occurred", e);
+						currentMainWindowInstance.showErrorMessage(e.toString());
+					}
+				});
+
+				contextMenu.getItems().add(removeImportedApp);
+			}
+		});
+
+		contextMenu.setOnHidden(event5 -> {
+			// Remove the removeImportedApp-Item again if it exists
+			if (contextMenu.getItems().contains(removeImportedApp)) {
+				contextMenu.getItems().remove(removeImportedApp);
+			}
+		});
+
+		return contextMenu;
 	}
 }
