@@ -91,7 +91,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     public static ResourceBundle bundle;
 
     private static Runnable firstStartAfterUpdateRunnable = () -> {
-        currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);
+        try {
+        currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);}catch(Exception e){
+            // Try to log, if it does not work just print the error
+            try{
+                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+            }catch(Exception e2){
+                e.printStackTrace();
+            }
+        }
     };
 
     public static void main(String[] args) {
