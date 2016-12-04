@@ -21,14 +21,14 @@ package common;
  */
 
 
+import logging.FOKLogger;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-
-import logging.FOKLogger;
 
 public class AppConfig {
 	private static FOKLogger log = new FOKLogger(AppConfig.class.getName());
@@ -87,7 +87,7 @@ public class AppConfig {
 	 * The subfolder in foklaunchers appdata folder where the actual apps will
 	 * be downloaded to. {appName} will be replaced by the apps name.
 	 */
-	public static final String subfolderToSaveApps = "apps" + File.separator  + "{groupId}" + File.separator + "{artifactId}";
+	public static final String subfolderToSaveApps = "apps" + File.separator  + "{groupId}" + File.separator + "{artifactId}" + File.separator + "[classifier}";
 
 	/**
 	 * The filename of the apps metadata file
