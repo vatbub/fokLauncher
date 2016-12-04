@@ -51,6 +51,7 @@ import javafx.stage.Stage;
 import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
@@ -92,11 +93,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     private static Runnable firstStartAfterUpdateRunnable = () -> {
         try {
-        currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);}catch(Exception e){
+            // delete apps folder
+            FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
+            currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);
+        } catch (Exception e) {
             // Try to log, if it does not work just print the error
-            try{
+            try {
                 log.getLogger().log(Level.SEVERE, "An error occurred", e);
-            }catch(Exception e2){
+            } catch (Exception e2) {
                 e.printStackTrace();
             }
         }
@@ -684,8 +688,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     @FXML
-        // This method is called by the FXMLLoader when initialization is
-        // complete
+    // This method is called by the FXMLLoader when initialization is
+    // complete
     @SuppressWarnings("unused")
     void initialize() {
         assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
