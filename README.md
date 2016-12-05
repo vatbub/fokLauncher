@@ -66,3 +66,6 @@ If you have any problems, don't hesitate to write an email and we will be happy 
 ## Customize the launcher in your way
 If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../master/LICENSE.txt).
 There are plans to make complete customization easier than forking, you can see the progress in [#12](/../../issues/12)
+
+##Docs
+[Maven Site](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/), [JavaDoc](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/apidocs/index.html)
