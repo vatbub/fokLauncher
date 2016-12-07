@@ -262,7 +262,7 @@
                                         ${project.build.directory}/${project.artifactId}-${project.version}-Installer.exe
                                     </file>
                                     <type>exe</type>
-                                    <classifier>WindowsInsatller</classifier>
+                                    <classifier>WindowsInstaller</classifier>
                                 </artifact>
                                 <artifact>
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</file>
