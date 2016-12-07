@@ -27,7 +27,7 @@
         <appversion>${project.version}</appversion>
         <appsubpath>foklauncher</appsubpath>
         <javaversion>1.8</javaversion>
-        <run-privileged/>
+        <!-- <run-privileged/> -->
     </info>
 
     <locale>
