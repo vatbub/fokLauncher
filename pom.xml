@@ -99,7 +99,7 @@
                         <configuration>
                             <tasks>
                                 <copy todir="${izpack.staging}/src/main/izpack">
-                                    <fileset dir="${basedir}/src/main/izpack"/>
+                                    <fileset dir="${basedir}/src/main/izpack/"/>
                                 </copy>
                             </tasks>
                         </configuration>
