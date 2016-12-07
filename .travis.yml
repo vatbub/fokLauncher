@@ -11,7 +11,12 @@ cache:
   - "$HOME/.m2"
 before_install:
 - git clone -b travis `git config --get remote.origin.url` target/travis
-install: echo Install phase has been disabled as a complete build is run during deployment
+install:
+-echo Install phase has been disabled as a complete build is run during deployment
+-cd src/main
+-ls
+-cd ..
+-cd ..
 script:
 - mvn test jacoco:report coveralls:report --settings target/travis/settings.xml
 before_cache:
