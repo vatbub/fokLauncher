@@ -11,6 +11,7 @@ If you want to use a cutting edge copy of the launcher, you can obtain one [here
 Just click the ID of the top most build, click the Module ID, give it a second and then select the file you want to download.
 
 **Keep in mind:**
+- If you download the installer on Windows, it currently does not create shortcuts, not in the start menu, not on the desktop. This is a bug and we're working on it [#29](https://github.com/vatbub/fokLauncher/issues/29).
 - You don't want to download `foklauncher-[version].jar`, this file will not work. Download `foklauncher-[version]-jar-with-dependencies.jar` instead.
 - You don't want to download the `pom` file either, this is just the build config file.
 - The `...-sources.jar` file obviously contains the uncompiled source files

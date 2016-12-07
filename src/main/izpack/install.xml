@@ -32,7 +32,14 @@
 
     <locale>
         <langpack iso3="eng"/>
+        <langpack iso3="deu"/>
+        <langpack iso3="fra"/>
     </locale>
+
+    <variables>
+        <variable name="TargetPanel.dir.windows" value="@{ENV[appdata]}\foklauncher"/>
+        <variable name="TargetPanel.dir.unix" value="/usr/local/myapp"/>
+    </variables>
 
     <guiprefs width="800" height="600" resizable="no">
         <modifier key="useHeadingPanel" value="yes"/>
