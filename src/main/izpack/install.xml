@@ -23,8 +23,8 @@
                      xsi:schemaLocation="http://izpack.org/schema/installation http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
 
     <info>
-        <appname>FOKLauncher</appname>
-        <appversion>${project.version}</appversion>
+        <appname>@{myproduct.name}</appname>
+        <appversion>@{myproduct.version}</appversion>
         <appsubpath>foklauncher</appsubpath>
         <javaversion>1.8</javaversion>
         <!-- <run-privileged/> -->
@@ -46,9 +46,9 @@
     </guiprefs>
 
     <panels>
-        <panel classname="ShortcutPanel"/>
         <panel classname="TargetPanel"/>
         <panel classname="InstallPanel"/>
+        <panel classname="ShortcutPanel"/>
         <panel classname="FinishPanel"/>
     </panels>
 
@@ -56,15 +56,17 @@
         <pack name="FOKlauncher" required="yes">
             <description>The launcher itself</description>
             <fileset dir="app" targetdir="${INSTALL_PATH}" override="true"/>
+            <fileset dir="icons" targetdir="${INSTALL_PATH}${FILE_SEPARATOR}icons" override="true"/>
         </pack>
     </packs>
 
     <resources>
-        <res id="icon.png" src="src/main/izpack/icon.png" parse="yes"/>
-        <res id="icon.ico" src="src/main/izpack/icon.ico" parse="yes"/>
+        <res id="icon.png" src="icons/icon.png" parse="no"/>
+        <res id="icon.ico" src="icons/icon.ico" parse="no"/>
         <res src="src/main/izpack/shortcutSpec.xml" id="shortcutSpec.xml"/>
     </resources>
     <natives>
         <native type="izpack" name="ShellLink.dll"/>
+        <native type="izpack" name="ShellLink_x64.dll"/>
     </natives>
 </izpack:installation>

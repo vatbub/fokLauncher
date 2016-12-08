@@ -81,6 +81,9 @@
 
         <izpack.version>5.0.9</izpack.version>
         <izpack.staging>${project.build.directory}/staging</izpack.staging>
+
+        <myproduct.name>${project.name}</myproduct.name>
+        <myproduct.version>${project.version}</myproduct.version>
     </properties>
 
     <build>
@@ -100,6 +103,22 @@
                             <tasks>
                                 <copy todir="${izpack.staging}/src/main/izpack">
                                     <fileset dir="${basedir}/src/main/izpack/"/>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-icons</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${izpack.staging}/icons">
+                                    <fileset dir="${basedir}/src/main/resources/view">
+                                        <include name="icon.*"/>
+                                    </fileset>
                                 </copy>
                             </tasks>
                         </configuration>
@@ -166,8 +185,12 @@
                         </goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
-                            <outfile>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</outfile>
+                            <jar>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                            </jar>
+                            <outfile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe
+                            </outfile>
                             <dontWrapJar>false</dontWrapJar>
                             <downloadUrl>https://www.java.com/download/</downloadUrl>
                             <classPath>
@@ -189,7 +212,8 @@
                                 <productName>${project.name}</productName>
                                 <companyName>FOK Projects</companyName>
                                 <internalName>${project.artifactId}</internalName>
-                                <originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe</originalFilename>
+                                <originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe
+                                </originalFilename>
                             </versionInfo>
                         </configuration>
                     </execution>
@@ -265,7 +289,9 @@
                                     <classifier>WindowsInstaller</classifier>
                                 </artifact>
                                 <artifact>
-                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</file>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe
+                                    </file>
                                     <type>exe</type>
                                     <classifier>WindowsExecutable</classifier>
                                 </artifact>

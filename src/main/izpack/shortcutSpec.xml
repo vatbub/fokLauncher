@@ -23,19 +23,20 @@
                   xmlns:izpack="http://izpack.org/schema/shortcuts"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xsi:schemaLocation="http://izpack.org/schema/shortcuts http://izpack.org/schema/5.0/izpack-shortcuts-5.0.xsd">
-    <programGroup defaultName="FOKLauncher" location="applications"/>
     <shortcut
             name = "FOKLauncher"
-            target = "$INSTALL_PATH\foklauncher-$APP_VER-jar-with-dependencies.jar"
+            target = "$INSTALL_PATH\foklauncher-${APP_VER}-jar-with-dependencies.jar"
             commandLine = ""
             workingDirectory= "$INSTALL_PATH"
             description="Launch the FOKLauncher"
-            iconFile="$INSTALL_PATH\icon.ico"
+            iconFile="${INSTALL_PATH}${FILE_SEPARATOR}icons${FILE_SEPARATOR}icon.ico"
             iconIndex="0"
             initialState="noShow"
             programGroup="yes"
             desktop="yes"
             applications="yes"
             startMenu="yes"
-            startup="yes"/>
+            startup="yes">
+        <createForPack name="FOKlauncher"/>
+    </shortcut>
 </izpack:shortcuts>
