@@ -90,12 +90,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     private static App currentlySelectedApp = null;
     public static ResourceBundle bundle;
+    /**
+     * {@code true }if this is the first launch after an update
+     */
+    private static boolean isFirstLaunchAfterUpdate = false;
 
     private static Runnable firstStartAfterUpdateRunnable = () -> {
+        isFirstLaunchAfterUpdate = true;
         try {
             // delete apps folder
+            log.getLogger().info("Deleting the apps folder after update...");
             FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
-            currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);
         } catch (Exception e) {
             // Try to log, if it does not work just print the error
             try {
@@ -830,6 +835,23 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
             downloadAndLaunchThread.setName("downloadAndLaunchThread");
             downloadAndLaunchThread.start();
+        }
+
+        // Show alert if this is the first launch after an update
+        if (isFirstLaunchAfterUpdate){
+            // first start consumed
+            isFirstLaunchAfterUpdate = false;
+            try {
+                log.getLogger().fine("Showing message after update...");
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion()), false);
+            } catch (Exception e) {
+                // Try to log, if it does not work just print the error
+                try {
+                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                } catch (Exception e2) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
