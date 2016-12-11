@@ -6,6 +6,15 @@ Though the list of projects that currently use the launcher is small, it can be 
 ## Get the launcher
 We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsReleases/foklauncher#downloads)
 
+### Download the latest snapshot
+If you want to use a cutting edge copy of the launcher, you can obtain one [here](https://oss.jfrog.org/webapp/#/builds/foklauncher).
+Just click the ID of the top most build, click the Module ID, give it a second and then select the file you want to download.
+
+**Keep in mind:**
+- You don't want to download `foklauncher-[version].jar`, this file will not work. Download `foklauncher-[version]-jar-with-dependencies.jar` instead.
+- You don't want to download the `pom` file either, this is just the build config file.
+- The `...-sources.jar` file obviously contains the uncompiled source files
+
 ## Build your own version
 ### Build the current snapshot
 1. Clone this repository
@@ -66,3 +75,6 @@ If you have any problems, don't hesitate to write an email and we will be happy 
 ## Customize the launcher in your way
 If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../master/LICENSE.txt).
 There are plans to make complete customization easier than forking, you can see the progress in [#12](/../../issues/12)
+
+##Docs
+[Maven Site](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/), [JavaDoc](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/apidocs/index.html)

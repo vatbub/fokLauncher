@@ -1,167 +1,317 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<repositories>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-vatbub-fokprojectsReleases</id>
-			<name>bintray</name>
-			<url>http://dl.bintray.com/vatbub/fokprojectsReleases</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-vatbub-fokprojectsSnapshots</id>
-			<name>bintray</name>
-			<url>http://dl.bintray.com/vatbub/fokprojectsSnapshots</url>
-		</repository>
-		<repository>
-			<snapshots />
-			<id>snapshots</id>
-			<name>libs-snapshot</name>
-			<url>https://oss.jfrog.org/artifactory/libs-snapshot</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-vatbub-fokprojectsReleases</id>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/vatbub/fokprojectsReleases</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-vatbub-fokprojectsSnapshots</id>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/vatbub/fokprojectsSnapshots</url>
+        </repository>
+        <repository>
+            <snapshots />
+            <id>snapshots</id>
+            <name>libs-snapshot</name>
+            <url>https://oss.jfrog.org/artifactory/libs-snapshot</url>
+        </repository>
+    </repositories>
 
-	<parent>
-		<groupId>com.github.vatbub</groupId>
-		<artifactId>parentPom</artifactId>
-		<version>0.0.19</version>
-	</parent>
+    <parent>
+        <groupId>com.github.vatbub</groupId>
+        <artifactId>parentPom</artifactId>
+        <version>0.0.19</version>
+    </parent>
 
-	<scm>
-		<connection>scm:git:git@github.com:vatbub/${gitRepoName}.git</connection>
-		<url>https://github.com/vatbub/${gitRepoName}</url>
-		<developerConnection>scm:git:git@github.com:vatbub/${gitRepoName}.git</developerConnection>
-		<tag>foklauncher-0.0.9</tag>
-	</scm>
+    <scm>
+        <connection>scm:git:git@github.com:vatbub/${gitRepoName}.git</connection>
+        <url>https://github.com/vatbub/${gitRepoName}</url>
+        <developerConnection>scm:git:git@github.com:vatbub/${gitRepoName}.git</developerConnection>
+        <tag>foklauncher-0.1.1</tag>
+    </scm>
 
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/vatbub/${gitRepoName}}/issues</url>
-	</issueManagement>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/vatbub/${gitRepoName}}/issues</url>
+    </issueManagement>
 
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/vatbub/${gitRepoName}</url>
-	</ciManagement>
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.org/vatbub/${gitRepoName}</url>
+    </ciManagement>
 
-	<artifactId>foklauncher</artifactId>
-	<version>0.0.9</version>
-	<packaging>jar</packaging>
-	<inceptionYear>2016</inceptionYear>
+    <artifactId>foklauncher</artifactId>
+    <version>0.1.1</version>
+    <packaging>jar</packaging>
+    <inceptionYear>2016</inceptionYear>
 
-	<name>FOK Launcher</name>
-	<description>A Launcher for FOK Projects.</description>
-	<url>https://github.com/vatbub/foklauncher</url>
+    <name>FOK Launcher</name>
+    <description>A Launcher for FOK Projects.</description>
+    <url>https://github.com/vatbub/foklauncher</url>
 
-	<developers>
-		<developer>
-			<id>fkammel</id>
-			<name>Frederik Kammel</name>
-			<email>vatbub123@googlemail.com</email>
-			<url>https://fokprojects.mo-mar.de/</url>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>Europe/Berlin</timezone>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <id>fkammel</id>
+            <name>Frederik Kammel</name>
+            <email>vatbub123@googlemail.com</email>
+            <url>https://fokprojects.mo-mar.de/</url>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Berlin</timezone>
+        </developer>
+    </developers>
 
-	<properties>
-		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-		<gitRepoName>fokLauncher</gitRepoName>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<mainClass>view.MainWindow</mainClass>
-	</properties>
+    <properties>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <gitRepoName>fokLauncher</gitRepoName>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mainClass>view.MainWindow</mainClass>
 
-	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<plugins>
-			<!-- Build a windows executable -->
-			<plugin>
-				<groupId>com.akathist.maven.plugins.launch4j</groupId>
-				<artifactId>launch4j-maven-plugin</artifactId>
-				<version>1.7.12</version>
-				<executions>
-					<execution>
-						<id>l4j-clui</id>
-						<phase>package</phase>
-						<goals>
-							<goal>launch4j</goal>
-						</goals>
-						<configuration>
-							<headerType>gui</headerType>
-							<jar>${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
-							<outfile>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</outfile>
-							<dontWrapJar>false</dontWrapJar>
-							<downloadUrl>https://www.java.com/download/</downloadUrl>
-							<classPath>
-								<mainClass>${mainClass}</mainClass>
-								<preCp>anything</preCp>
-							</classPath>
-							<icon>src/main/resources/view/icon.ico</icon>
-							<jre>
-								<minVersion>1.8.0</minVersion>
-								<jdkPreference>preferJre</jdkPreference>
-							</jre>
-							<versionInfo>
-								<fileVersion>1.0.0.0</fileVersion>
-								<txtFileVersion>${project.version}</txtFileVersion>
-								<fileDescription>${project.description}</fileDescription>
-								<copyright>2016 Frederik Kammel</copyright>
-								<productVersion>1.0.0.0</productVersion>
-								<txtProductVersion>${project.version}</txtProductVersion>
-								<productName>${project.name}</productName>
-								<companyName>FOK Projects</companyName>
-								<internalName>${project.artifactId}</internalName>
-								<originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe</originalFilename>
-							</versionInfo>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!-- Attach the windows executable to the deployed artifacts -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.12</version>
-				<executions>
-					<execution>
-						<id>attach-artifacts</id>
-						<phase>package</phase>
-						<goals>
-							<goal>attach-artifact</goal>
-						</goals>
-						<configuration>
-							<artifacts>
-								<artifact>
-									<file>${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe</file>
-									<type>exe</type>
-									<classifier>WindowsExecutable</classifier>
-								</artifact>
-							</artifacts>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+        <izpack.version>5.0.9</izpack.version>
+        <izpack.staging>${project.build.directory}/staging</izpack.staging>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.github.vatbub</groupId>
-			<artifactId>common</artifactId>
-			<version>0.0.19</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.vatbub</groupId>
-			<artifactId>mslinks</artifactId>
-			<version>0.0.2</version>
-		</dependency>
-	</dependencies>
+        <myproduct.name>${project.name}</myproduct.name>
+        <myproduct.version>${project.version}</myproduct.version>
+    </properties>
+
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <plugins>
+            <!-- Create the installer -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-staging-area</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${izpack.staging}/src/main/izpack">
+                                    <fileset dir="${basedir}/src/main/izpack/" />
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-icons</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${izpack.staging}/icons">
+                                    <fileset dir="${basedir}/src/main/resources/view">
+                                        <include name="icon.*" />
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <!-- Copy the build output to the izPack staging area -->
+                    <execution>
+                        <id>copy-app-to-izPack-staging-area</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${izpack.staging}/app">
+                                    <fileset dir="${project.build.directory}">
+                                        <include name="*jar-with-dependencies.jar" />
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.izpack</groupId>
+                <artifactId>izpack-maven-plugin</artifactId>
+                <version>${izpack.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>izpack</goal>
+                        </goals>
+                        <configuration>
+                            <!-- base for relative paths in izpack descriptor -->
+                            <baseDir>${izpack.staging}</baseDir>
+                            <installFile>${izpack.staging}/src/main/izpack/install.xml</installFile>
+                            <finalName>${project.artifactId}-${project.version}-Installer</finalName>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.izpack</groupId>
+                        <artifactId>izpack-panel</artifactId>
+                        <version>${izpack.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>1.7.12</version>
+                <executions>
+                    <!-- Build a windows executable for the launcher -->
+                    <execution>
+                        <id>wrap-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <jar>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                            </jar>
+                            <outfile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe
+                            </outfile>
+                            <dontWrapJar>false</dontWrapJar>
+                            <downloadUrl>https://www.java.com/download/</downloadUrl>
+                            <classPath>
+                                <mainClass>${mainClass}</mainClass>
+                                <preCp>anything</preCp>
+                            </classPath>
+                            <icon>src/main/resources/view/icon.ico</icon>
+                            <jre>
+                                <minVersion>1.8.0</minVersion>
+                                <jdkPreference>preferJre</jdkPreference>
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
+                                <fileDescription>${project.description}</fileDescription>
+                                <copyright>2016 Frederik Kammel</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
+                                <productName>${project.name}</productName>
+                                <companyName>FOK Projects</companyName>
+                                <internalName>${project.artifactId}</internalName>
+                                <originalFilename>${project.artifactId}-${project.version}-WindowsExecutable.exe
+                                </originalFilename>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                    <!-- Build a windows executable for the installer -->
+                    <execution>
+                        <id>wrap-installer</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <jar>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-Installer.jar
+                            </jar>
+                            <outfile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-Installer.exe
+                            </outfile>
+                            <dontWrapJar>false</dontWrapJar>
+                            <downloadUrl>https://www.java.com/download/</downloadUrl>
+                            <classPath>
+                                <mainClass>com.izforge.izpack.installer.bootstrap.Installer</mainClass>
+                                <preCp>anything</preCp>
+                            </classPath>
+                            <icon>src/main/resources/view/icon.ico</icon>
+                            <jre>
+                                <minVersion>1.8.0</minVersion>
+                                <jdkPreference>preferJre</jdkPreference>
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
+                                <fileDescription>${project.description}</fileDescription>
+                                <copyright>2016 Frederik Kammel</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
+                                <productName>${project.name}</productName>
+                                <companyName>FOK Projects</companyName>
+                                <internalName>${project.artifactId}</internalName>
+                                <originalFilename>${project.artifactId}-${project.version}-Installer.exe
+                                </originalFilename>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Attach the windows executable to the deployed artifacts -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.12</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-Installer.jar
+                                    </file>
+                                    <type>jar</type>
+                                    <classifier>Installer</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-Installer.exe
+                                    </file>
+                                    <type>exe</type>
+                                    <classifier>WindowsInstaller</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>
+                                        ${project.build.directory}/${project.artifactId}-${project.version}-WindowsExecutable.exe
+                                    </file>
+                                    <type>exe</type>
+                                    <classifier>WindowsExecutable</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.vatbub</groupId>
+            <artifactId>common</artifactId>
+            <version>0.0.21</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vatbub</groupId>
+            <artifactId>mslinks</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+    </dependencies>
 </project>

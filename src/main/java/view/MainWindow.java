@@ -51,6 +51,7 @@ import javafx.stage.Stage;
 import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
@@ -89,9 +90,25 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     private static App currentlySelectedApp = null;
     public static ResourceBundle bundle;
+    /**
+     * {@code true }if this is the first launch after an update
+     */
+    private static boolean isFirstLaunchAfterUpdate = false;
 
     private static Runnable firstStartAfterUpdateRunnable = () -> {
-        currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate"), false);
+        isFirstLaunchAfterUpdate = true;
+        try {
+            // delete apps folder
+            log.getLogger().info("Deleting the apps folder after update...");
+            FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
+        } catch (Exception e) {
+            // Try to log, if it does not work just print the error
+            try {
+                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+            } catch (Exception e2) {
+                e.printStackTrace();
+            }
+        }
     };
 
     public static void main(String[] args) {
@@ -676,8 +693,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     @FXML
-        // This method is called by the FXMLLoader when initialization is
-        // complete
+    // This method is called by the FXMLLoader when initialization is
+    // complete
     @SuppressWarnings("unused")
     void initialize() {
         assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
@@ -818,6 +835,23 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
             downloadAndLaunchThread.setName("downloadAndLaunchThread");
             downloadAndLaunchThread.start();
+        }
+
+        // Show alert if this is the first launch after an update
+        if (isFirstLaunchAfterUpdate){
+            // first start consumed
+            isFirstLaunchAfterUpdate = false;
+            try {
+                log.getLogger().fine("Showing message after update...");
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion()), false);
+            } catch (Exception e) {
+                // Try to log, if it does not work just print the error
+                try {
+                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                } catch (Exception e2) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
