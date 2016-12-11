@@ -51,7 +51,6 @@ import javafx.stage.Stage;
 import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
@@ -97,18 +96,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     private static Runnable firstStartAfterUpdateRunnable = () -> {
         isFirstLaunchAfterUpdate = true;
-        try {
-            // delete apps folder
-            log.getLogger().info("Deleting the apps folder after update...");
-            FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
-        } catch (Exception e) {
-            // Try to log, if it does not work just print the error
-            try {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
-            } catch (Exception e2) {
-                e.printStackTrace();
-            }
-        }
     };
 
     public static void main(String[] args) {
