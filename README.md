@@ -6,6 +6,11 @@ Though the list of projects that currently use the launcher is small, it can be 
 ## Get the launcher
 We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsReleases/foklauncher#downloads)
 
+###Upgrading from older versions
+The FOKLauncher has an integrated update checker that does the entire job for you, even if you've used the installer to install the FOKLauncher.
+ 
+Once a new version is available, the FOKLauncher will inform you at startup. If you don't wish to upgrade right now, you can ignore the update and repeat the update at any time using the *"Check for updates"*-link.
+
 ### Download the latest snapshot
 If you want to use a cutting edge copy of the launcher, you can obtain one [here](https://oss.jfrog.org/webapp/#/builds/foklauncher).
 Just click the ID of the top most build, click the Module ID, give it a second and then select the file you want to download.
