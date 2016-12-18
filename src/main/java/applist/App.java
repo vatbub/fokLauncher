@@ -646,7 +646,7 @@ public class App {
 	 *             If the maven metadata file cannot be downloaded
 	 */
 	private void downloadVersionInfo(Version versionToGet, String destFolder)
-			throws JDOMException, IOException {
+			throws MalformedURLException, JDOMException, IOException {
 		String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
 		Element root;
@@ -742,7 +742,7 @@ public class App {
 	 *             If the maven metadata file cannot be downloaded
 	 */
 	private Document getMavenMetadata(boolean snapshotsEnabled)
-			throws JDOMException, IOException {
+			throws MalformedURLException, JDOMException, IOException {
 
 		Document mavenMetadata;
 
@@ -775,7 +775,7 @@ public class App {
 	 * @throws IOException
 	 *             If the maven metadata file cannot be downloaded
 	 */
-	public boolean downloadRequired(boolean snapshotsEnabled) throws JDOMException, IOException {
+	public boolean downloadRequired(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
 		if (this.isPresentOnHarddrive() && (!snapshotsEnabled)
 				&& !this.getCurrentlyInstalledVersions().containsRelease()) {
 			// App is downloaded, most current version on harddrive is a
@@ -785,7 +785,15 @@ public class App {
 			// App is downloaded, most current version on harddrive is not a
 			// snapshot and snapshots are disabled, so no download is required
 			return false;
-		} else return !(this.isPresentOnHarddrive() && snapshotsEnabled);
+		} else if (this.isPresentOnHarddrive() && snapshotsEnabled) {
+			// A version is available on the harddrive and snapshots are
+			// enabled, so we don't matter if the downloaded version is a
+			// snapshot or not.
+			return false;
+		} else {
+			// App not downloaded at all
+			return true;
+		}
 	}
 
 	/**
@@ -801,7 +809,7 @@ public class App {
 	 * @throws IOException
 	 *             If the maven metadata file cannot be downloaded
 	 */
-	public boolean updateAvailable(boolean snapshotsEnabled) throws JDOMException, IOException {
+	public boolean updateAvailable(boolean snapshotsEnabled) throws MalformedURLException, JDOMException, IOException {
 		Version onlineVersion;
 
 		if (snapshotsEnabled) {
@@ -826,7 +834,7 @@ public class App {
 	 * @throws IOException
 	 *             If the maven metadata file cannot be downloaded
 	 */
-	public boolean updateAvailable(Version versionToCheck) throws JDOMException, IOException {
+	public boolean updateAvailable(Version versionToCheck) throws MalformedURLException, JDOMException, IOException {
 		return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) == 1;
 	}
 
@@ -1227,7 +1235,7 @@ public class App {
 	 * 
 	 */
 	public boolean download(Version versionToDownload, HidableUpdateProgressDialog gui)
-			throws IOException, JDOMException {
+			throws MalformedURLException, IOException, JDOMException {
 		if (gui != null) {
 			gui.preparePhaseStarted();
 		}
@@ -1395,7 +1403,7 @@ public class App {
 	 * @see App#getOnlineAppList()
 	 * @see App#getImportedAppList()
 	 */
-	public static AppList getAppList() throws JDOMException, IOException {
+	public static AppList getAppList() throws MalformedURLException, JDOMException, IOException {
 		AppList res = getOnlineAppList();
 		try {
 			res.addAll(getImportedAppList());
@@ -1420,7 +1428,7 @@ public class App {
 	 *             If the app list or metadata of some apps cannot be
 	 *             downloaded.
 	 */
-	public static AppList getOnlineAppList() throws JDOMException, IOException {
+	public static AppList getOnlineAppList() throws MalformedURLException, JDOMException, IOException {
 		Document doc = null;
 		String fileName = Common.getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
 		try {
@@ -1703,7 +1711,7 @@ public class App {
 		fileReader.close();
 	}
 
-	public static void addImportedApp(File infoFile) throws IOException {
+	public static void addImportedApp(File infoFile) throws FileNotFoundException, IOException {
 		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
@@ -1766,7 +1774,7 @@ public class App {
 		(new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
 	}
 
-	public void removeFromImportedAppList() throws IOException {
+	public void removeFromImportedAppList() throws FileNotFoundException, IOException {
 		String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
 		Element root;
