@@ -74,7 +74,6 @@ import java.util.logging.Level;
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
 
     private static FOKLogger log;
-    public static AppConfig appConfig;
     private static ImageView linkIconView = new ImageView(
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
@@ -1039,7 +1038,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         showErrorMessage(message, false);
     }
 
-    public void showErrorMessage(String message, boolean closeWhenDialogIsClosed) {
+    public void showErrorMessage(String message, @SuppressWarnings("SameParameterValue") boolean closeWhenDialogIsClosed) {
         showMessage(Alert.AlertType.ERROR, message, closeWhenDialogIsClosed);
     }
 

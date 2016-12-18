@@ -22,6 +22,7 @@ package common;
 
 
 import logging.FOKLogger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -105,6 +106,7 @@ public class AppConfig {
 	public static final String importedAppListFileName = "importedApps.xml";
 	
 	//MOTD
+	@NotNull
 	public static final URL getMotdFeedUrl(){
 		try {
 			return  new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
