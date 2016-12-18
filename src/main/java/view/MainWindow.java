@@ -23,9 +23,10 @@ package view;
 
 import applist.App;
 import applist.AppList;
+import com.oracle.deploy.update.UpdateInfo;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
-import common.*;
+import common.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Application;
@@ -48,12 +49,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
+import sun.util.logging.resources.logging.FOKLogger;
 import view.motd.MOTD;
 import view.motd.MOTDDialog;
 import view.updateAvailableDialog.UpdateAvailableDialog;
@@ -94,7 +95,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      */
     private static boolean isFirstLaunchAfterUpdate = false;
 
-    private static Runnable firstStartAfterUpdateRunnable = () -> {
+    private static CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
     };
 
