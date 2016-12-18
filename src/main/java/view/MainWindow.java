@@ -93,7 +93,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      * {@code true }if this is the first launch after an update
      */
     private static boolean isFirstLaunchAfterUpdate = false;
-    private static String firstUpdateMessageText;
+    private static String firstUpdateMessageTextKey;
 
     private static UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
@@ -102,7 +102,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
 
             // use the old alert message
-            firstUpdateMessageText = bundle.getString("firstLaunchAfterUpdateDeletedApps").replace("%v",Common.getAppVersion());
+            firstUpdateMessageTextKey = "firstLaunchAfterUpdateDeletedApps";
             try {
                 // delete apps folder
                 log.getLogger().info("Deleting the apps folder after update...");
@@ -116,7 +116,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
             }
         }else{
-            firstUpdateMessageText = bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion());
+            firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
         }
     };
 
@@ -852,7 +852,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             isFirstLaunchAfterUpdate = false;
             try {
                 log.getLogger().fine("Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, firstUpdateMessageText, false);
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v",Common.getAppVersion()), false);
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
