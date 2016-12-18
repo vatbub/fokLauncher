@@ -51,6 +51,7 @@ import javafx.stage.Stage;
 import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
@@ -92,9 +93,31 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      * {@code true }if this is the first launch after an update
      */
     private static boolean isFirstLaunchAfterUpdate = false;
+    private static String firstUpdateMessageText;
 
     private static UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
+
+        if (oldVersion == null) {
+            // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
+
+            // use the old alert message
+            firstUpdateMessageText = bundle.getString("firstLaunchAfterUpdateDeletedApps").replace("%v",Common.getAppVersion());
+            try {
+                // delete apps folder
+                log.getLogger().info("Deleting the apps folder after update...");
+                FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
+            } catch (Exception e) {
+                // Try to log, if it does not work just print the error
+                try {
+                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                } catch (Exception e2) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            firstUpdateMessageText = bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion());
+        }
     };
 
     public static void main(String[] args) {
@@ -824,12 +847,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
 
         // Show alert if this is the first launch after an update
-        if (isFirstLaunchAfterUpdate){
+        if (isFirstLaunchAfterUpdate) {
             // first start consumed
             isFirstLaunchAfterUpdate = false;
             try {
                 log.getLogger().fine("Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion()), false);
+                this.showMessage(Alert.AlertType.INFORMATION, firstUpdateMessageText, false);
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
