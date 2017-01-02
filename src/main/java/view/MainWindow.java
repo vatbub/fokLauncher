@@ -120,6 +120,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     public static void main(String[] args) {
         common.Common.setAppName("foklauncher");
+        FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
         boolean autoLaunchApp = false;
