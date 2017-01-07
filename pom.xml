@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <repositories>
@@ -19,7 +20,7 @@
             <url>http://dl.bintray.com/vatbub/fokprojectsSnapshots</url>
         </repository>
         <repository>
-            <snapshots />
+            <snapshots/>
             <id>snapshots</id>
             <name>libs-snapshot</name>
             <url>https://oss.jfrog.org/artifactory/libs-snapshot</url>
@@ -74,6 +75,21 @@
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
+            <!-- Create the jar-with-dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>buildMainExecutableJar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Create the installer -->
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -87,7 +103,7 @@
                         <configuration>
                             <tasks>
                                 <copy todir="${izpack.staging}/src/main/izpack">
-                                    <fileset dir="${basedir}/src/main/izpack/" />
+                                    <fileset dir="${basedir}/src/main/izpack/"/>
                                 </copy>
                             </tasks>
                         </configuration>
@@ -102,7 +118,7 @@
                             <tasks>
                                 <copy todir="${izpack.staging}/icons">
                                     <fileset dir="${basedir}/src/main/resources/view">
-                                        <include name="icon.*" />
+                                        <include name="icon.*"/>
                                     </fileset>
                                 </copy>
                             </tasks>
@@ -119,7 +135,7 @@
                             <tasks>
                                 <copy todir="${izpack.staging}/app">
                                     <fileset dir="${project.build.directory}">
-                                        <include name="*jar-with-dependencies.jar" />
+                                        <include name="*jar-with-dependencies.jar"/>
                                     </fileset>
                                 </copy>
                             </tasks>
