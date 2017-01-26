@@ -26,7 +26,7 @@ Just click the ID of the top most build, click the Module ID, give it a second a
 2. Run `mvn package`
 
 ### Build the latest release
-Repeat the steps mentioned above but switch to the `release` branch by running `git checkout release` prior to runing `mvn package`.
+Repeat the steps mentioned above but switch to the `release` branch by running `git checkout release` prior to running `mvn package`.
 
 ## What it does
 The launcher has a App-Store like gui. It presents the user a list of available applications. The user can then choose an app from the list and the launcher will download and launch that app. 
@@ -69,7 +69,7 @@ Please make sure to escape all `:` in the urls (they should look like this then:
 ## Prerequisites
 To be able to add your app to the launcher, it needs to meet the following conditions:
 - It must be released to a maven repository. Ideally, you use [maven](http://maven.apache.org/) for that, but you can use any build tool that can release software to a maven repo.
-- Your app must have a public release repository and snapshot repository. There are plans to make the snapshot repository optional, see [#14](/../../issues/14) for the current progrress
+- Your app must have a public release repository and snapshot repository. There are plans to make the snapshot repository optional, see [#14](/../../issues/14) for the current progress
 - The release repo and snapshot repo cannot have the same url.
 - Your app must be packaged to a runnable jar file. That means, that all of your dependencies must be packaged in that jar file too and a main class must be defined in the jars manifest (See [this](http://stackoverflow.com/questions/1729054/including-dependencies-in-a-jar-with-maven) and [this](http://www.avajava.com/tutorials/lessons/how-do-i-specify-a-main-class-in-the-manifest-of-my-generated-jar-file.html) for help)
 - Currently, the launcher only supports to download one jar file and no additional files. If you need to download some additional files for your app, either implement the download in your app or submit a new issue for that.

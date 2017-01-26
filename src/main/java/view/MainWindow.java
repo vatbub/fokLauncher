@@ -74,10 +74,10 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
-    private static ImageView linkIconView = new ImageView(
+    private static final ImageView linkIconView = new ImageView(
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
-    private static ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
-    private static ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+    private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
+    private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
 
     /**
      * This reference always refers to the currently used instance of the
@@ -94,7 +94,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private static boolean isFirstLaunchAfterUpdate = false;
     private static String firstUpdateMessageTextKey;
 
-    private static UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
+    private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
 
         if (oldVersion == null) {
@@ -201,7 +201,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             if (autoLaunchRepoURL == null || autoLaunchSnapshotRepoURL == null || autoLaunchGroupId == null
                     || autoLaunchArtifactId == null) {
                 // not sufficient info specified
-                FOKLogger.severe(MainWindow.class.getName(), "Cannot auto-launch app as unsufficient download info was specified.");
+                FOKLogger.severe(MainWindow.class.getName(), "Cannot auto-launch app as insufficient download info was specified.");
             } else {
                 if (autoLaunchClassifier == null) {
                     // No classifier specified
@@ -230,7 +230,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     private static App appForAutoLaunch = null;
 
-    private Runnable getAppListRunnable = new Runnable() {
+    private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
             try {
@@ -329,6 +329,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @FXML // fx:id="linkButton"
     private Button linkButton; // Value injected by FXMLLoader
 
+    @SuppressWarnings("CanBeFinal")
     @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
     public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
     // FXMLLoader
@@ -499,7 +500,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
     }
 
-    public static Runnable showLauncherAgain = new Runnable() {
+    public static final Runnable showLauncherAgain = new Runnable() {
         @Override
         public void run() {
 

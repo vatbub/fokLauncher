@@ -75,7 +75,7 @@ public class AppConfig {
 	}
 
 	public static List<String> getSupportedFOKConfigModelVersion() {
-		List<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<>();
 
 		res.add("0.0.1");
 
@@ -105,11 +105,12 @@ public class AppConfig {
 	
 	//MOTD
 	@NotNull
-	public static final URL getMotdFeedUrl(){
+	public static URL getMotdFeedUrl(){
 		try {
 			return  new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
 		} catch (MalformedURLException e) {
 			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
+			//noinspection ConstantConditions
 			return null;
 		}
 	}
