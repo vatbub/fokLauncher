@@ -26,6 +26,7 @@ import applist.AppList;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
 import common.*;
+import common.internet.Internet;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Application;
