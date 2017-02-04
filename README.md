@@ -83,3 +83,6 @@ There are plans to make complete customization easier than forking, you can see 
 
 ##Docs
 [Maven Site](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/), [JavaDoc](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/apidocs/index.html)
+
+## Contributing
+Contributions of any kind are very welcome. Just fork and submit a Pull Request and we will be happy to merge. Just keep in mind that we use [Issue driven development](https://github.com/vatbub/defaultRepo/wiki/Issue-driven-development).
