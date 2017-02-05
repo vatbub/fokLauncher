@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/vatbub/fokLauncher/tree/HEAD)
+
+[Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...HEAD)
+
+**Closed issues:**
+
+- Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
+
 ## [foklauncher-0.1.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.1) (2016-12-11)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.0...foklauncher-0.1.1)
 
