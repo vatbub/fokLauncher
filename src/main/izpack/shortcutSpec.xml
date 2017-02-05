@@ -31,7 +31,7 @@
             description="Launch the FOKLauncher"
             iconFile="${INSTALL_PATH}${FILE_SEPARATOR}icons${FILE_SEPARATOR}icon.ico"
             iconIndex="0"
-            initialState="noShow"
+            initialState="normal"
             programGroup="yes"
             desktop="yes"
             applications="yes"
