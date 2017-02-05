@@ -43,11 +43,14 @@ import org.jetbrains.annotations.Nullable;
 import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
+import java.awt.*;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Level;
 
 import static view.MainWindow.*;
@@ -115,6 +118,10 @@ public class App {
      * A webpage where the user finds additional info for this app.
      */
     private URL additionalInfoURL;
+    /**
+     * A webpage where the user finds a changelog for this app.
+     */
+    private URL changelogURL;
     private boolean specificVersionListLoaded = false;
     private boolean deletableVersionListLoaded = false;
     private ContextMenu contextMenu;
@@ -179,6 +186,27 @@ public class App {
      */
     public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
                String mavenArtifactId, String mavenClassifier, URL additionalInfoURL) {
+        this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, mavenClassifier, additionalInfoURL, null);
+    }
+
+    /**
+     * Creates a new App with the specified coordinates.
+     *
+     * @param name                     The name of the app
+     * @param mavenRepoBaseURL         Base URL of the maven repo where the artifact can be
+     *                                 downloaded from.
+     * @param mavenSnapshotRepoBaseURL The URL of the maven repo where snapshots of the artifact can
+     *                                 be downloaded from.
+     * @param mavenGroupId             The artifacts group id.
+     * @param mavenArtifactId          The artifacts artifact id
+     * @param mavenClassifier          The artifacts classifier or {@code ""} if the default artifact
+     *                                 shall be used.
+     * @param additionalInfoURL        The url to a webpage where the user finds additional info
+     *                                 about this app.
+     * @param changelogURL             The url to the webpage where the user finds a changelog for this app.
+     */
+    public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
+               String mavenArtifactId, String mavenClassifier, URL additionalInfoURL, URL changelogURL) {
         this.setName(name);
         this.setMavenRepoBaseURL(mavenRepoBaseURL);
         this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
@@ -186,6 +214,7 @@ public class App {
         this.setMavenArtifactID(mavenArtifactId);
         this.setMavenClassifier(mavenClassifier);
         this.setAdditionalInfoURL(additionalInfoURL);
+        this.setChangelogURL(changelogURL);
     }
 
     /**
@@ -284,6 +313,10 @@ public class App {
                 newApp.setAdditionalInfoURL(new URL(app.getChild("additionalInfoURL").getValue()));
             }
 
+            if (app.getChild("changelogURL") != null) {
+                newApp.setChangelogURL(new URL(app.getChild("changelogURL").getValue()));
+            }
+
             res.add(newApp);
         }
 
@@ -367,6 +400,7 @@ public class App {
         for (Element app : appsElement.getChildren()) {
             if (app.getChild("fileName").getValue().equals(infoFile.getAbsolutePath())) {
                 fileFound = true;
+                break;
             }
         }
 
@@ -389,6 +423,14 @@ public class App {
         f.getParentFile().mkdirs();
         // Create empty file on disk if necessary
         (new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+    }
+
+    public URL getChangelogURL() {
+        return changelogURL;
+    }
+
+    public void setChangelogURL(URL changelogURL) {
+        this.changelogURL = changelogURL;
     }
 
     /**
@@ -1548,6 +1590,9 @@ public class App {
         if (this.getAdditionalInfoURL() != null) {
             props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
         }
+        if (this.getChangelogURL() != null) {
+            props.setProperty("changelogURL", this.getChangelogURL().toString());
+        }
 
         FileOutputStream out = new FileOutputStream(fileToWrite);
         props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
@@ -1589,6 +1634,9 @@ public class App {
 
         if (!props.getProperty("additionalInfoURL", "").equals("")) {
             this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
+        }
+        if (!props.getProperty("changelogURL", "").equals("")) {
+            this.setChangelogURL(new URL(props.getProperty("changelogURL")));
         }
 
         if (fileReader != null) {
@@ -1844,6 +1892,21 @@ public class App {
                 });
             }
         });
+
+        MenuItem changelogMenuItem = new MenuItem(bundle.getString("openChangelog"));
+        changelogMenuItem.setOnAction(event -> {
+            FOKLogger.info(App.class.getName(), "Opening the changelog...");
+            try {
+                Desktop.getDesktop().browse(this.getChangelogURL().toURI());
+            } catch (IOException | URISyntaxException e) {
+                FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                currentMainWindowInstance.showErrorMessage(e.toString());
+            }
+        });
+
+        if (this.getChangelogURL()!=null){
+            contextMenu.getItems().add(changelogMenuItem);
+        }
 
         MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
         createShortcutOnDesktopMenuItem.setText(bundle.getString("createShortcutOnDesktop"));
