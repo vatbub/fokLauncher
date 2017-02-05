@@ -4,6 +4,10 @@
 
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...HEAD)
 
+**Implemented enhancements:**
+
+- Create a "See changelog" button [\#30](https://github.com/vatbub/fokLauncher/issues/30)
+
 **Closed issues:**
 
 - Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
