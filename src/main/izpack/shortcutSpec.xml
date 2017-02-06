@@ -36,7 +36,7 @@
             desktop="yes"
             applications="yes"
             startMenu="yes"
-            startup="yes">
+            startup="no">
         <createForPack name="FOKlauncher"/>
     </shortcut>
 </izpack:shortcuts>
