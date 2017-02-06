@@ -8,6 +8,10 @@
 
 - Create a "See changelog" button [\#30](https://github.com/vatbub/fokLauncher/issues/30)
 
+**Fixed bugs:**
+
+- Remove the option from the installer to install the launcher to the AutoStart [\#33](https://github.com/vatbub/fokLauncher/issues/33)
+
 **Closed issues:**
 
 - Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
