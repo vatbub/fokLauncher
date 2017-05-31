@@ -6,6 +6,7 @@
 
 **Implemented enhancements:**
 
+- Force enabled snapshot downloads for autolaunched apps with command line parameter [\#34](https://github.com/vatbub/fokLauncher/issues/34)
 - Create a "See changelog" button [\#30](https://github.com/vatbub/fokLauncher/issues/30)
 
 **Fixed bugs:**
