@@ -78,6 +78,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+    private static boolean autoLaunchUseSnapshots;
 
     /**
      * This reference always refers to the currently used instance of the
@@ -193,6 +194,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 } else {
                     FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+                }
+            } else if (arg.toLowerCase().matches("autolaunchenablesnapshots")) {
+                if (autoLaunchApp) {
+                    autoLaunchUseSnapshots=true;
+                } else {
+                    FOKLogger.severe(MainWindow.class.getName(),
+                            "autolaunchenablesnapshots argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             }
         }
@@ -831,7 +839,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             // Launch the download
             downloadAndLaunchThread = new Thread(() -> {
                 try {
-                    appForAutoLaunch.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
+                    appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || enableSnapshotsCheckbox.isSelected(), gui,
                             workOfflineCheckbox.isSelected());
                 } catch (Exception e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
