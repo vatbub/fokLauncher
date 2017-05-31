@@ -254,9 +254,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 ObservableList<App> items = FXCollections.observableArrayList();
                 FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
 
-                for (App app : apps) {
-                    items.add(app);
-                }
+                items.addAll(apps);
 
                 // Add filter functionality
                 searchField.textProperty().addListener(obs -> {
