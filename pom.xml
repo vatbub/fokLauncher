@@ -313,7 +313,7 @@
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>mslinks</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.3.1</version>
         </dependency>
     </dependencies>
 </project>
