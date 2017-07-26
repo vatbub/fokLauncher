@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/vatbub/fokLauncher/tree/HEAD)
-
-[Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...HEAD)
+## [foklauncher-0.1.2](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.2) (2017-07-26)
+[Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...foklauncher-0.1.2)
 
 **Implemented enhancements:**
 
