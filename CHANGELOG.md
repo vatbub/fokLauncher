@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/vatbub/fokLauncher/tree/HEAD)
+
+[Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.2...HEAD)
+
+**Fixed bugs:**
+
+- Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
+
 ## [foklauncher-0.1.2](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.2) (2017-07-26)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...foklauncher-0.1.2)
 
