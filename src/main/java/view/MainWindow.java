@@ -78,23 +78,26 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
-    private static boolean autoLaunchUseSnapshots;
-
+    private static final String enableSnapshotsPrefKey = "enableSnapshots";
+    private static final String showLauncherAgainPrefKey = "showLauncherAgain";
+    private static final String guiLanguagePrefKey = "guiLanguage";
     /**
      * This reference always refers to the currently used instance of the
      * MainWidow. The purpose of this field that {@code this} can be accessed in
      * a convenient way in static methods.
      */
     public static MainWindow currentMainWindowInstance;
-
-    private static App currentlySelectedApp = null;
     public static ResourceBundle bundle;
+    public static Stage stage;
+    public static Thread downloadAndLaunchThread = new Thread();
+    public static boolean launchSpecificVersionMenuCanceled = false;
+    private static boolean autoLaunchUseSnapshots;
+    private static App currentlySelectedApp = null;
     /**
      * {@code true }if this is the first launch after an update
      */
     private static boolean isFirstLaunchAfterUpdate = false;
     private static String firstUpdateMessageTextKey;
-
     private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
 
@@ -115,8 +118,130 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     e.printStackTrace();
                 }
             }
-        }else{
+        } else {
             firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
+        }
+    };
+    private static Prefs prefs;
+    private static AppList apps;
+    private static Locale systemDefaultLocale;
+    public static final Runnable showLauncherAgain = new Runnable() {
+        @Override
+        public void run() {
+
+            // reset the ui
+            try {
+                currentMainWindowInstance.start(stage);
+            } catch (Exception e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.INFO,
+                        "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
+                        e);
+            }
+            Platform.setImplicitExit(true);
+        }
+    };
+    private static App appForAutoLaunch = null;
+    @SuppressWarnings("CanBeFinal")
+    @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
+    public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
+    private Date latestProgressBarUpdate = Date.from(Instant.now());
+    /**
+     * The thread that gets the app list
+     */
+    private Thread getAppListThread;
+
+
+    @FXML // fx:id="appList"
+    private ListView<App> appList; // Value injected by FXMLLoader
+
+    @FXML // fx:id="searchField"
+    private TextField searchField; // Value injected by FXMLLoader
+
+    @FXML // fx:id="enableSnapshotsCheckbox"
+    private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
+    @FXML // fx:id="launchButton"
+    private ProgressButton launchButton; // Value injected by FXMLLoader
+    @FXML
+    private Button optionButton;
+    @FXML // fx:id="linkButton"
+    private Button linkButton; // Value injected by FXMLLoader
+    @FXML // fx:id="languageSelector"
+    private ComboBox<GuiLanguage> languageSelector; // Value injected by
+    @FXML // fx:id="progressBar"
+    private CustomProgressBar progressBar; // Value injected by FXMLLoader
+    // FXMLLoader
+    @FXML // fx:id="workOfflineCheckbox"
+    private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
+    // FXMLLoader
+    @FXML
+    private Hyperlink updateLink; // Value injected by FXMLLoader
+    @FXML
+    private Label versionLabel; // Value injected by FXMLLoader
+    @FXML // fx:id="settingsGridView"
+    private GridPane settingsGridView; // Value injected by FXMLLoader
+    @FXML // fx:id="appInfoButton"
+    private Button appInfoButton; // Value injected by FXMLLoader
+    private final Runnable getAppListRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+
+                Platform.runLater(() -> {
+                    appList.setItems(FXCollections.observableArrayList());
+                    appList.setDisable(true);
+                    appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
+                });
+
+                apps = App.getAppList();
+
+                ObservableList<App> items = FXCollections.observableArrayList();
+                FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
+
+                items.addAll(apps);
+
+                // Add filter functionality
+                searchField.textProperty().addListener(obs -> {
+                    String filter = searchField.getText();
+                    if (filter == null || filter.length() == 0) {
+                        filteredData.setPredicate(s -> true);
+                    } else {
+                        filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
+                    }
+                });
+
+                // Build the context menu
+                appList.setCellFactory(lv -> {
+
+                    CustomListCell<App> cell = new CustomListCell<>();
+
+                    cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+                        if (isNowEmpty) {
+                            cell.setContextMenu(null);
+                        } else {
+                            // cell.setContextMenu(contextMenu);
+                            cell.setContextMenu(cell.getItem().getContextMenu());
+                        }
+                    });
+                    return cell;
+                });
+
+                Platform.runLater(() -> {
+                    appList.setItems(filteredData);
+                    appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
+
+                    // Only enable if no download is running
+                    if (downloadAndLaunchThread == null) {
+                        appList.setDisable(false);
+                    } else if (!downloadAndLaunchThread.isAlive()) {
+                        appList.setDisable(false);
+                    }
+                });
+
+            } catch (JDOMException | IOException e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                currentMainWindowInstance
+                        .showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+            }
         }
     };
 
@@ -197,7 +322,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
             } else if (arg.toLowerCase().matches("autolaunchenablesnapshots")) {
                 if (autoLaunchApp) {
-                    autoLaunchUseSnapshots=true;
+                    autoLaunchUseSnapshots = true;
                 } else {
                     FOKLogger.severe(MainWindow.class.getName(),
                             "autolaunchenablesnapshots argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
@@ -223,99 +348,33 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             }
         }
 
-        launch(args);
-    }
+        try {
+            launch(args);
+        } catch (RuntimeException e) {
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "Could not launch GUI", e);
+            // auto launch app if one was specified
+            if (appForAutoLaunch != null) {
+                currentlySelectedApp = appForAutoLaunch;
 
-    private static Prefs prefs;
-    private static final String enableSnapshotsPrefKey = "enableSnapshots";
-    private static final String showLauncherAgainPrefKey = "showLauncherAgain";
-    private static final String guiLanguagePrefKey = "guiLanguage";
-    private static AppList apps;
-    public static Stage stage;
-    public static Thread downloadAndLaunchThread = new Thread();
-    public static boolean launchSpecificVersionMenuCanceled = false;
-    private static Locale systemDefaultLocale;
-    private Date latestProgressBarUpdate = Date.from(Instant.now());
-    private static App appForAutoLaunch = null;
-
-    private final Runnable getAppListRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-
-                Platform.runLater(() -> {
-                    appList.setItems(FXCollections.observableArrayList());
-                    appList.setDisable(true);
-                    appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
-                });
-
-                apps = App.getAppList();
-
-                ObservableList<App> items = FXCollections.observableArrayList();
-                FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
-
-                items.addAll(apps);
-
-                // Add filter functionality
-                searchField.textProperty().addListener(obs -> {
-                    String filter = searchField.getText();
-                    if (filter == null || filter.length() == 0) {
-                        filteredData.setPredicate(s -> true);
-                    } else {
-                        filteredData.setPredicate(s -> s.getName().toLowerCase().contains(filter.toLowerCase()));
+                // Launch the download
+                downloadAndLaunchThread = new Thread(() -> {
+                    try {
+                        FOKLogger.info(MainWindow.class.getName(), "Auto-launching app without GUI...");
+                        appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")), null,
+                                !Internet.isConnected());
+                    } catch (Exception e2) {
+                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e2);
+                    } finally {
+                        // Clean up
+                        appForAutoLaunch = null;
                     }
                 });
 
-                // Build the context menu
-                appList.setCellFactory(lv -> {
-
-                    CustomListCell<App> cell = new CustomListCell<>();
-
-                    cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
-                        if (isNowEmpty) {
-                            cell.setContextMenu(null);
-                        } else {
-                            // cell.setContextMenu(contextMenu);
-                            cell.setContextMenu(cell.getItem().getContextMenu());
-                        }
-                    });
-                    return cell;
-                });
-
-                Platform.runLater(() -> {
-                    appList.setItems(filteredData);
-                    appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
-
-                    // Only enable if no download is running
-                    if (downloadAndLaunchThread == null) {
-                        appList.setDisable(false);
-                    } else if (!downloadAndLaunchThread.isAlive()) {
-                        appList.setDisable(false);
-                    }
-                });
-
-            } catch (JDOMException | IOException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
-                currentMainWindowInstance
-                        .showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+                downloadAndLaunchThread.setName("downloadAndLaunchThread");
+                downloadAndLaunchThread.start();
             }
         }
-    };
-
-    /**
-     * The thread that gets the app list
-     */
-    private Thread getAppListThread;
-
-
-    @FXML // fx:id="appList"
-    private ListView<App> appList; // Value injected by FXMLLoader
-
-    @FXML // fx:id="searchField"
-    private TextField searchField; // Value injected by FXMLLoader
-
-    @FXML // fx:id="enableSnapshotsCheckbox"
-    private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
+    }
 
     /**
      * Returns {@code true} if snapshots are enabled
@@ -326,30 +385,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         return enableSnapshotsCheckbox.isSelected();
     }
 
-    @FXML // fx:id="launchButton"
-    private ProgressButton launchButton; // Value injected by FXMLLoader
-
-    @FXML
-    private Button optionButton;
-
-    @FXML // fx:id="linkButton"
-    private Button linkButton; // Value injected by FXMLLoader
-
-    @SuppressWarnings("CanBeFinal")
-    @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
-    public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
-    // FXMLLoader
-
-    @FXML // fx:id="languageSelector"
-    private ComboBox<GuiLanguage> languageSelector; // Value injected by
-    // FXMLLoader
-
-    @FXML // fx:id="progressBar"
-    private CustomProgressBar progressBar; // Value injected by FXMLLoader
-
-    @FXML // fx:id="workOfflineCheckbox"
-    private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
-
     /**
      * Returns {@code true} if the app needs to work offline
      *
@@ -358,18 +393,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     public boolean workOffline() {
         return workOfflineCheckbox.isSelected();
     }
-
-    @FXML
-    private Hyperlink updateLink; // Value injected by FXMLLoader
-
-    @FXML
-    private Label versionLabel; // Value injected by FXMLLoader
-
-    @FXML // fx:id="settingsGridView"
-    private GridPane settingsGridView; // Value injected by FXMLLoader
-
-    @FXML // fx:id="appInfoButton"
-    private Button appInfoButton; // Value injected by FXMLLoader
 
     // Handler for AnchorPane[id="AnchorPane"] onDragDetected
     @SuppressWarnings("unused")
@@ -505,22 +528,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             }
         }
     }
-
-    public static final Runnable showLauncherAgain = new Runnable() {
-        @Override
-        public void run() {
-
-            // reset the ui
-            try {
-                currentMainWindowInstance.start(stage);
-            } catch (Exception e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.INFO,
-                        "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
-                        e);
-            }
-            Platform.setImplicitExit(true);
-        }
-    };
 
     @FXML
     @SuppressWarnings("unused")
@@ -858,7 +865,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             isFirstLaunchAfterUpdate = false;
             try {
                 FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v",Common.getAppVersion()), false);
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getAppVersion()), false);
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
