@@ -21,40 +21,40 @@ package extended;
  */
 
 
-import common.Version;
+import com.github.vatbub.common.updater.Version;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 
 public class VersionMenuItem extends MenuItem {
-	
-	private Version version;
 
-	public VersionMenuItem() {
-		super();
-	}
+    private Version version;
 
-	@SuppressWarnings("unused")
-	public VersionMenuItem(String arg0) {
-		super(arg0);
-	}
+    public VersionMenuItem() {
+        super();
+    }
 
-	@SuppressWarnings("unused")
-	public VersionMenuItem(String arg0, Node arg1) {
-		super(arg0, arg1);
-	}
+    @SuppressWarnings("unused")
+    public VersionMenuItem(String arg0) {
+        super(arg0);
+    }
 
-	/**
-	 * @return the version
-	 */
-	public Version getVersion() {
-		return version;
-	}
+    @SuppressWarnings("unused")
+    public VersionMenuItem(String arg0, Node arg1) {
+        super(arg0, arg1);
+    }
 
-	/**
-	 * @param version the version to set
-	 */
-	public void setVersion(Version version) {
-		this.version = version;
-	}
+    /**
+     * @return the version
+     */
+    public Version getVersion() {
+        return version;
+    }
+
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(Version version) {
+        this.version = version;
+    }
 
 }

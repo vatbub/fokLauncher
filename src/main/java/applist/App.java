@@ -21,14 +21,19 @@ package applist;
  */
 
 
-import common.*;
+import com.github.vatbub.common.core.Common;
+import com.github.vatbub.common.core.logging.FOKLogger;
+import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
+import com.github.vatbub.common.updater.Version;
+import com.github.vatbub.common.updater.VersionList;
+import common.AdditionalConfig;
+import common.AppConfig;
 import extended.VersionMenuItem;
 import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
-import logging.FOKLogger;
 import mslinks.ShellLink;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
@@ -942,7 +947,7 @@ public class App {
             onlineVersion = this.getLatestOnlineVersion();
         }
 
-        return onlineVersion.compareTo(this.getCurrentlyInstalledVersion(snapshotsEnabled)) == 1;
+        return onlineVersion.compareTo(this.getCurrentlyInstalledVersion(snapshotsEnabled)) > 0;
     }
 
     /**
@@ -953,7 +958,7 @@ public class App {
      */
     @SuppressWarnings("unused")
     public boolean updateAvailable(Version versionToCheck) {
-        return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) == 1;
+        return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) > 0;
     }
 
     /**
@@ -1721,7 +1726,7 @@ public class App {
 
             sl.setName(quickInfoText.replace("%s", this.getName()));
 
-            if (common.Common.getPackaging().equals("exe")) {
+            if (Common.getPackaging().equals("exe")) {
                 sl.setIconLocation(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
             } else {
                 URL inputUrl = MainWindow.class.getResource("icon.ico");
@@ -1904,7 +1909,7 @@ public class App {
             }
         });
 
-        if (this.getChangelogURL()!=null){
+        if (this.getChangelogURL() != null) {
             contextMenu.getItems().add(changelogMenuItem);
         }
 

@@ -21,7 +21,8 @@ package common;
  */
 
 
-import logging.FOKLogger;
+import com.github.vatbub.common.core.Common;
+import com.github.vatbub.common.core.logging.FOKLogger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -32,86 +33,82 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class AppConfig {
-	// Project setup
-	public static URL getUpdateRepoBaseURL() {
-		URL res = null;
-		try {
-			res = new URL("https://dl.bintray.com/vatbub/fokprojectsReleases");
-		} catch (MalformedURLException e) {
-			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
-		}
+    public static final String artifactID = "foklauncher";
+    public static final String groupID = "com.github.vatbub";
+    /**
+     * The subfolder in foklaunchers appdata folder where the actual apps will
+     * be downloaded to. {appName} will be replaced by the apps name.
+     */
+    public static final String subfolderToSaveApps = "apps" + File.separator + "{groupId}" + File.separator + "{artifactId}" + File.separator + "{classifier}";
+    /**
+     * The filename of the apps metadata file
+     */
+    public static final String appMetadataFileName = "metadata.xml";
 
-		return res;
-	}
+    // AppList
+    /**
+     * The file name where the app list cache is saved
+     */
+    public static final String appListCacheFileName = "appListCache.xml";
+    /**
+     * The name of the xml file where the list of imported apps is saved.
+     */
+    public static final String importedAppListFileName = "importedApps.xml";
 
-	public static final String artifactID = "foklauncher";
-	public static final String groupID = "com.github.vatbub";
+    // Project setup
+    public static URL getUpdateRepoBaseURL() {
+        URL res = null;
+        try {
+            res = new URL("https://dl.bintray.com/vatbub/fokprojectsReleases");
+        } catch (MalformedURLException e) {
+            FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
+        }
 
-	public static String getUpdateFileClassifier() {
-		String packaging = Common.getPackaging();
-		if (packaging != null) {
-			if (packaging.equals("exe")) {
-				return "WindowsExecutable";
-			} else {
-				return "jar-with-dependencies";
-			}
-		} else {
-			// no packaging found
-			return "jar-with-dependencies";
-		}
-	}
+        return res;
+    }
 
-	// AppList
+    public static String getUpdateFileClassifier() {
+        String packaging = Common.getPackaging();
+        if (packaging != null) {
+            if (packaging.equals("exe")) {
+                return "WindowsExecutable";
+            } else {
+                return "jar-with-dependencies";
+            }
+        } else {
+            // no packaging found
+            return "jar-with-dependencies";
+        }
+    }
 
-	public static URL getAppListXMLURL() {
-		URL res = null;
-		try {
-			res = new URL("https://www.dropbox.com/s/muikjvx0x2tpetb/fokprojectsOnLauncher.xml?dl=1");
-		} catch (MalformedURLException e) {
-			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
-		}
+    public static URL getAppListXMLURL() {
+        URL res = null;
+        try {
+            res = new URL("https://www.dropbox.com/s/muikjvx0x2tpetb/fokprojectsOnLauncher.xml?dl=1");
+        } catch (MalformedURLException e) {
+            FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
+        }
 
-		return res;
-	}
+        return res;
+    }
 
-	public static List<String> getSupportedFOKConfigModelVersion() {
-		List<String> res = new ArrayList<>();
+    public static List<String> getSupportedFOKConfigModelVersion() {
+        List<String> res = new ArrayList<>();
 
-		res.add("0.0.1");
+        res.add("0.0.1");
 
-		return res;
-	}
+        return res;
+    }
 
-	/**
-	 * The subfolder in foklaunchers appdata folder where the actual apps will
-	 * be downloaded to. {appName} will be replaced by the apps name.
-	 */
-	public static final String subfolderToSaveApps = "apps" + File.separator  + "{groupId}" + File.separator + "{artifactId}" + File.separator + "{classifier}";
-
-	/**
-	 * The filename of the apps metadata file
-	 */
-	public static final String appMetadataFileName = "metadata.xml";
-
-	/**
-	 * The file name where the app list cache is saved
-	 */
-	public static final String appListCacheFileName = "appListCache.xml";
-	
-	/**
-	 * The name of the xml file where the list of imported apps is saved.
-	 */
-	public static final String importedAppListFileName = "importedApps.xml";
-	
-	//MOTD
-	@NotNull
-	public static URL getMotdFeedUrl(){
-		try {
-			return  new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
-		} catch (MalformedURLException e) {
-			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
-			//noinspection ConstantConditions
-			return null;
-		}
-	}
+    //MOTD
+    @NotNull
+    public static URL getMotdFeedUrl() {
+        try {
+            return new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
+        } catch (MalformedURLException e) {
+            FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
+            //noinspection ConstantConditions
+            return null;
+        }
+    }
 }

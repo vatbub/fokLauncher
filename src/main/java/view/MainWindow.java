@@ -23,10 +23,22 @@ package view;
 
 import applist.App;
 import applist.AppList;
+import com.github.vatbub.common.core.Common;
+import com.github.vatbub.common.core.Prefs;
+import com.github.vatbub.common.core.logging.FOKLogger;
+import com.github.vatbub.common.internet.Internet;
+import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
+import com.github.vatbub.common.updater.UpdateChecker;
+import com.github.vatbub.common.updater.UpdateInfo;
+import com.github.vatbub.common.updater.Version;
+import com.github.vatbub.common.updater.view.UpdateAvailableDialog;
+import com.github.vatbub.common.view.core.CustomProgressBar;
+import com.github.vatbub.common.view.core.ProgressButton;
+import com.github.vatbub.common.view.motd.MOTD;
+import com.github.vatbub.common.view.motd.MOTDDialog;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
-import common.*;
-import common.internet.Internet;
+import common.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Application;
@@ -49,16 +61,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import logging.FOKLogger;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
-import view.motd.MOTD;
-import view.motd.MOTDDialog;
-import view.updateAvailableDialog.UpdateAvailableDialog;
 
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
@@ -246,7 +254,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     };
 
     public static void main(String[] args) {
-        common.Common.setAppName("foklauncher");
+        Common.setAppName("foklauncher");
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
