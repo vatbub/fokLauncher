@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.*?>
-<?import view.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.*?>
 <?scenebuilder-preview-i18n-resource MainWindow.properties?>
 <?scenebuilder-stylesheet MainWindow.css?>
 
+<?import com.github.vatbub.common.view.core.CustomProgressBar?>
+<?import com.github.vatbub.common.view.core.ProgressButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.*?>
 <AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onDragDropped="#mainFrameOnDragDropped" onDragOver="#mainFrameOnDragOver" prefHeight="608.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.MainWindow">
   <children>
     <Label text="%WelcomeText" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
