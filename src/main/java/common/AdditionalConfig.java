@@ -21,15 +21,10 @@ package common;
  */
 
 
-import logging.FOKLogger;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class AdditionalConfig {
-	@SuppressWarnings("unused")
-	private static FOKLogger log = new FOKLogger(AdditionalConfig.class.getName());
-
 	// Project setup
 	@SuppressWarnings("unused")
 	public static String getUpdateFileClassifier() {

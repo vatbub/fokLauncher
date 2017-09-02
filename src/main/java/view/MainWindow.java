@@ -26,6 +26,7 @@ import applist.AppList;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
 import common.*;
+import common.internet.Internet;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Application;
@@ -73,13 +74,11 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
-
-    private static FOKLogger log;
-    public static AppConfig appConfig;
-    private static ImageView linkIconView = new ImageView(
+    private static final ImageView linkIconView = new ImageView(
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
-    private static ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
-    private static ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+    private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
+    private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+    private static boolean autoLaunchUseSnapshots;
 
     /**
      * This reference always refers to the currently used instance of the
@@ -94,26 +93,36 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      * {@code true }if this is the first launch after an update
      */
     private static boolean isFirstLaunchAfterUpdate = false;
+    private static String firstUpdateMessageTextKey;
 
-    private static Runnable firstStartAfterUpdateRunnable = () -> {
+    private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
         isFirstLaunchAfterUpdate = true;
-        try {
-            // delete apps folder
-            log.getLogger().info("Deleting the apps folder after update...");
-            FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
-        } catch (Exception e) {
-            // Try to log, if it does not work just print the error
+
+        if (oldVersion == null) {
+            // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
+
+            // use the old alert message
+            firstUpdateMessageTextKey = "firstLaunchAfterUpdateDeletedApps";
             try {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
-            } catch (Exception e2) {
-                e.printStackTrace();
+                // delete apps folder
+                FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
+                FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
+            } catch (Exception e) {
+                // Try to log, if it does not work just print the error
+                try {
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                } catch (Exception e2) {
+                    e.printStackTrace();
+                }
             }
+        }else{
+            firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
         }
     };
 
     public static void main(String[] args) {
         common.Common.setAppName("foklauncher");
-        log = new FOKLogger(MainWindow.class.getName());
+        FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
         boolean autoLaunchApp = false;
@@ -146,11 +155,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     try {
                         autoLaunchRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
                     } catch (MalformedURLException e) {
-                        log.getLogger().log(Level.SEVERE,
+                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
                                 "Ignoring argument autoLaunchRepoURL due to MalformedURLException", e);
                     }
                 } else {
-                    log.getLogger().severe(
+                    FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchsnapshotrepourl=.*")) {
@@ -158,33 +167,40 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     try {
                         autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
                     } catch (MalformedURLException e) {
-                        log.getLogger().log(Level.SEVERE,
+                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
                                 "Ignoring argument autoLaunchSnapshotRepoURL due to MalformedURLException", e);
                     }
                 } else {
-                    log.getLogger().severe(
+                    FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchSnapshotRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchgroupid=.*")) {
                 if (autoLaunchApp) {
                     autoLaunchGroupId = arg.substring(arg.indexOf('=') + 1);
                 } else {
-                    log.getLogger().severe(
+                    FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchGroupId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchartifactid=.*")) {
                 if (autoLaunchApp) {
                     autoLaunchArtifactId = arg.substring(arg.indexOf('=') + 1);
                 } else {
-                    log.getLogger().severe(
+                    FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchArtifactId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchclassifier=.*")) {
                 if (autoLaunchApp) {
                     autoLaunchClassifier = arg.substring(arg.indexOf('=') + 1);
                 } else {
-                    log.getLogger().severe(
+                    FOKLogger.severe(MainWindow.class.getName(),
                             "autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
+                }
+            } else if (arg.toLowerCase().matches("autolaunchenablesnapshots")) {
+                if (autoLaunchApp) {
+                    autoLaunchUseSnapshots=true;
+                } else {
+                    FOKLogger.severe(MainWindow.class.getName(),
+                            "autolaunchenablesnapshots argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             }
         }
@@ -193,7 +209,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             if (autoLaunchRepoURL == null || autoLaunchSnapshotRepoURL == null || autoLaunchGroupId == null
                     || autoLaunchArtifactId == null) {
                 // not sufficient info specified
-                log.getLogger().severe("Cannot auto-launch app as unsufficient download info was specified.");
+                FOKLogger.severe(MainWindow.class.getName(), "Cannot auto-launch app as insufficient download info was specified.");
             } else {
                 if (autoLaunchClassifier == null) {
                     // No classifier specified
@@ -222,7 +238,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     private static App appForAutoLaunch = null;
 
-    private Runnable getAppListRunnable = new Runnable() {
+    private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
             try {
@@ -238,9 +254,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 ObservableList<App> items = FXCollections.observableArrayList();
                 FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
 
-                for (App app : apps) {
-                    items.add(app);
-                }
+                items.addAll(apps);
 
                 // Add filter functionality
                 searchField.textProperty().addListener(obs -> {
@@ -281,7 +295,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 });
 
             } catch (JDOMException | IOException e) {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 currentMainWindowInstance
                         .showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
             }
@@ -321,6 +335,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @FXML // fx:id="linkButton"
     private Button linkButton; // Value injected by FXMLLoader
 
+    @SuppressWarnings("CanBeFinal")
     @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
     public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
     // FXMLLoader
@@ -369,7 +384,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 content.putFiles(Collections.singletonList(tempFile));
                 db.setContent(content);
             } catch (IOException e) {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
             }
         }
     }
@@ -432,7 +447,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                         return;
                     }
                 } catch (IOException | ShellLinkException e) {
-                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 }
             }
         } else {
@@ -447,11 +462,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         for (File f : files) {
             try {
                 if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")) {
-                    log.getLogger().info("Importing app from " + f.getAbsolutePath() + "...");
+                    FOKLogger.info(MainWindow.class.getName(), "Importing app from " + f.getAbsolutePath() + "...");
                     App.addImportedApp(f);
                     currentMainWindowInstance.loadAppList();
                 } else if ((FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString()))) {
-                    log.getLogger().info("Running link from lnk file " + f.getAbsolutePath());
+                    FOKLogger.info(MainWindow.class.getName(), "Running link from lnk file " + f.getAbsolutePath());
                     ShellLink link = new ShellLink(f);
                     File target = new File(link.resolveTarget());
                     String launchCommand = "";
@@ -478,20 +493,20 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             Thread.sleep(5000);
                             Platform.exit();
                         } catch (InterruptedException e) {
-                            log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                         }
                     });
 
                     t.start();
                 }
             } catch (IOException | ShellLinkException e) {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 currentMainWindowInstance.showErrorMessage(e.toString(), false);
             }
         }
     }
 
-    public static Runnable showLauncherAgain = new Runnable() {
+    public static final Runnable showLauncherAgain = new Runnable() {
         @Override
         public void run() {
 
@@ -499,7 +514,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             try {
                 currentMainWindowInstance.start(stage);
             } catch (Exception e) {
-                log.getLogger().log(Level.INFO,
+                FOKLogger.log(MainWindow.class.getName(), Level.INFO,
                         "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
                         e);
             }
@@ -524,7 +539,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @FXML
     @SuppressWarnings("unused")
     void languageSelectorOnAction(ActionEvent event) {
-        log.getLogger().info("Switching gui language to: "
+        FOKLogger.info(MainWindow.class.getName(), "Switching gui language to: "
                 + languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
         prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
                 .get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
@@ -536,7 +551,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         try {
             currentMainWindowInstance.start(stage);
         } catch (Exception e) {
-            log.getLogger().log(Level.INFO, "An error occurred while setting a new gui language", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.INFO, "An error occurred while setting a new gui language", e);
         }
         Platform.setImplicitExit(implicitExit);
     }
@@ -562,7 +577,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             workOfflineCheckbox.isSelected());
                 } catch (IOException | JDOMException e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 }
             });
 
@@ -576,11 +591,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @FXML
     @SuppressWarnings("unused")
     void linkButtonOnAction(ActionEvent event) {
-        log.getLogger().info("Creating shortcut using linkButton...");
+        FOKLogger.info(MainWindow.class.getName(), "Creating shortcut using linkButton...");
         File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath() + File.separator
                 + currentlySelectedApp.getName() + ".lnk");
         try {
-            log.getLogger().info("Creating shortcut for app " + currentlySelectedApp.getName()
+            FOKLogger.info(MainWindow.class.getName(), "Creating shortcut for app " + currentlySelectedApp.getName()
                     + " at the following location: " + file.getAbsolutePath());
             currentlySelectedApp.createShortCut(file, bundle.getString("shortcutQuickInfo"));
 
@@ -592,7 +607,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 guiString = guiString
                         + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
             }
-            log.getLogger().log(Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
             currentMainWindowInstance.showErrorMessage(guiString);
         }
     }
@@ -618,7 +633,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         try {
             Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
         } catch (IOException | URISyntaxException e) {
-            log.getLogger().log(Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
         }
     }
 
@@ -636,7 +651,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             if (systemDefaultLocale == null) {
                 systemDefaultLocale = Locale.getDefault();
             }
-            log.getLogger().info("Setting language: " + guiLanguageCode);
+            FOKLogger.info(MainWindow.class.getName(), "Setting language: " + guiLanguageCode);
             Locale.setDefault(new Locale(guiLanguageCode));
         }
 
@@ -674,7 +689,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
             primaryStage.show();
         } catch (Exception e) {
-            log.getLogger().log(Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
         }
     }
 
@@ -686,7 +701,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 currentlySelectedApp.cancelDownloadAndLaunch(this);
             }
         } catch (Exception e) {
-            log.getLogger().log(Level.SEVERE,
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
                     "An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.",
                     e);
         }
@@ -772,7 +787,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     Platform.runLater(() -> new MOTDDialog(motd, motd.getEntry().getTitle()));
                 }
             } catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
             }
         });
         motdThread.setName("motdThread");
@@ -822,11 +837,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             // Launch the download
             downloadAndLaunchThread = new Thread(() -> {
                 try {
-                    appForAutoLaunch.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
+                    appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || enableSnapshotsCheckbox.isSelected(), gui,
                             workOfflineCheckbox.isSelected());
                 } catch (Exception e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 } finally {
                     // Clean up
                     appForAutoLaunch = null;
@@ -838,16 +853,16 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
 
         // Show alert if this is the first launch after an update
-        if (isFirstLaunchAfterUpdate){
+        if (isFirstLaunchAfterUpdate) {
             // first start consumed
             isFirstLaunchAfterUpdate = false;
             try {
-                log.getLogger().fine("Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString("firstLaunchAfterUpdate").replace("%v",Common.getAppVersion()), false);
+                FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v",Common.getAppVersion()), false);
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
-                    log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
                 } catch (Exception e2) {
                     e.printStackTrace();
                 }
@@ -943,7 +958,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     }
                 }
             } catch (JDOMException | IOException e) {
-                log.getLogger().log(Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
 
                 // Switch to offline mode
                 workOfflineCheckbox.setSelected(true);
@@ -1052,7 +1067,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         showErrorMessage(message, false);
     }
 
-    public void showErrorMessage(String message, boolean closeWhenDialogIsClosed) {
+    public void showErrorMessage(String message, @SuppressWarnings("SameParameterValue") boolean closeWhenDialogIsClosed) {
         showMessage(Alert.AlertType.ERROR, message, closeWhenDialogIsClosed);
     }
 
@@ -1087,7 +1102,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     @Override
     public void operationCanceled() {
-        log.getLogger().info("Operation cancelled.");
+        FOKLogger.info(MainWindow.class.getName(), "Operation cancelled.");
         Platform.setImplicitExit(true);
         appList.setDisable(false);
         progressBar.setVisible(false);
@@ -1105,7 +1120,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             progressBar.setProgressAnimated(0);
             launchButton.setProgressText(bundle.getString("cancelRequested"));
             launchButton.setDisable(true);
-            log.getLogger().info("Requested to cancel the current operation, Cancel in progress...");
+            FOKLogger.info(MainWindow.class.getName(), "Requested to cancel the current operation, Cancel in progress...");
         }
     }
 

@@ -22,6 +22,7 @@ package common;
 
 
 import logging.FOKLogger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -31,15 +32,13 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class AppConfig {
-	private static FOKLogger log = new FOKLogger(AppConfig.class.getName());
-
 	// Project setup
 	public static URL getUpdateRepoBaseURL() {
 		URL res = null;
 		try {
 			res = new URL("https://dl.bintray.com/vatbub/fokprojectsReleases");
 		} catch (MalformedURLException e) {
-			log.getLogger().log(Level.SEVERE, "Malicious config", e);
+			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
 		}
 
 		return res;
@@ -69,14 +68,14 @@ public class AppConfig {
 		try {
 			res = new URL("https://www.dropbox.com/s/muikjvx0x2tpetb/fokprojectsOnLauncher.xml?dl=1");
 		} catch (MalformedURLException e) {
-			log.getLogger().log(Level.SEVERE, "Malicious config", e);
+			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
 		}
 
 		return res;
 	}
 
 	public static List<String> getSupportedFOKConfigModelVersion() {
-		List<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<>();
 
 		res.add("0.0.1");
 
@@ -105,11 +104,13 @@ public class AppConfig {
 	public static final String importedAppListFileName = "importedApps.xml";
 	
 	//MOTD
-	public static final URL getMotdFeedUrl(){
+	@NotNull
+	public static URL getMotdFeedUrl(){
 		try {
 			return  new URL("https://fokprojects.mo-mar.de/message-of-the-day/feed/");
 		} catch (MalformedURLException e) {
-			log.getLogger().log(Level.SEVERE, "Malicious config", e);
+			FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, "Malicious config", e);
+			//noinspection ConstantConditions
 			return null;
 		}
 	}
