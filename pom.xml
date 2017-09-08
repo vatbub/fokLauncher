@@ -300,27 +300,27 @@
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.core</artifactId>
-            <version>0.0.25-SNAPSHOT</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.internet</artifactId>
-            <version>0.0.25-SNAPSHOT</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.updater</artifactId>
-            <version>0.0.25-SNAPSHOT</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.motd</artifactId>
-            <version>0.0.25-SNAPSHOT</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.core</artifactId>
-            <version>0.0.25-SNAPSHOT</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
@@ -336,6 +336,11 @@
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
             <version>1.7.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>java-dogstatsd-client</artifactId>
+            <version>2.3</version>
         </dependency>
     </dependencies>
 </project>

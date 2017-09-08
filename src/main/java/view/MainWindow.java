@@ -38,6 +38,9 @@ import com.github.vatbub.common.view.motd.MOTD;
 import com.github.vatbub.common.view.motd.MOTDDialog;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
+import com.timgroup.statsd.Event;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
 import common.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
@@ -89,6 +92,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private static final String enableSnapshotsPrefKey = "enableSnapshots";
     private static final String showLauncherAgainPrefKey = "showLauncherAgain";
     private static final String guiLanguagePrefKey = "guiLanguage";
+    private static final StatsDClient statsClient = new NonBlockingStatsDClient(
+            "com.github.vatbub.foklauncher",
+            /*"ec2-35-157-23-171.eu-central-1.compute.amazonaws.com",*/
+            "localhost",
+            8125);
     /**
      * This reference always refers to the currently used instance of the
      * MainWidow. The purpose of this field that {@code this} can be accessed in
@@ -157,8 +165,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      * The thread that gets the app list
      */
     private Thread getAppListThread;
-
-
     @FXML // fx:id="appList"
     private ListView<App> appList; // Value injected by FXMLLoader
 
@@ -257,6 +263,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         Common.setAppName("foklauncher");
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
+
+        statsClient.recordSetValue("users.uniques", Common.getUniqueDeviceIdentifier());
+        statsClient.recordEvent(com.timgroup.statsd.Event.builder().withAlertType(Event.AlertType.INFO).withTitle("Application started").withText("It works!").build());
 
         boolean autoLaunchApp = false;
         URL autoLaunchRepoURL = null;
@@ -710,6 +719,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     @Override
     public void stop() {
+        statsClient.stop();
         try {
             UpdateChecker.cancelUpdateCompletion();
             if (currentlySelectedApp != null) {
