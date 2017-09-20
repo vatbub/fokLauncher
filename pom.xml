@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.github.vatbub</groupId>
         <artifactId>parentPom</artifactId>
-        <version>0.0.22-SNAPSHOT</version>
+        <version>0.0.23-SNAPSHOT</version>
     </parent>
 
     <scm>
@@ -62,6 +62,8 @@
 
         <myproduct.name>${project.name}</myproduct.name>
         <myproduct.version>${project.version}</myproduct.version>
+
+        <common.version>0.1.2-SNAPSHOT</common.version>
     </properties>
 
     <build>
@@ -300,27 +302,27 @@
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.core</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.internet</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.updater</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.motd</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.core</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>${common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
