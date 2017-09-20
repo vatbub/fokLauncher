@@ -969,8 +969,8 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     @SuppressWarnings("unused")
-    public void downloadIfNecessaryAndLaunch() throws IOException, JDOMException {
-        downloadIfNecessaryAndLaunch(null);
+    public void downloadIfNecessaryAndLaunch(String... startupArgs) throws IOException, JDOMException {
+        downloadIfNecessaryAndLaunch(null, startupArgs);
     }
 
     /**
@@ -982,8 +982,8 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui) throws IOException, JDOMException {
-        downloadIfNecessaryAndLaunch(false, gui);
+    public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, String... startupArgs) throws IOException, JDOMException {
+        downloadIfNecessaryAndLaunch(false, gui, startupArgs);
     }
 
     /**
@@ -994,8 +994,8 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     @SuppressWarnings("unused")
-    public void downloadSnapshotIfNecessaryAndLaunch() throws IOException, JDOMException {
-        downloadSnapshotIfNecessaryAndLaunch(null);
+    public void downloadSnapshotIfNecessaryAndLaunch(String... startupArgs) throws IOException, JDOMException {
+        downloadSnapshotIfNecessaryAndLaunch(null, startupArgs);
     }
 
     /**
@@ -1007,9 +1007,9 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    public void downloadSnapshotIfNecessaryAndLaunch(HidableUpdateProgressDialog gui)
+    public void downloadSnapshotIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, String... startupArgs)
             throws IOException, JDOMException {
-        downloadIfNecessaryAndLaunch(true, gui);
+        downloadIfNecessaryAndLaunch(true, gui, startupArgs);
     }
 
     /**
@@ -1021,9 +1021,9 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
+    public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui, String... startupArgs)
             throws IOException, JDOMException {
-        downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, false);
+        downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, false, startupArgs);
     }
 
     /**
@@ -1035,8 +1035,8 @@ public class App {
      * @throws IllegalStateException If {@code this.downloadRequired()==true} too
      */
     @SuppressWarnings("unused")
-    public void launchWithoutDownload() throws IOException, JDOMException, IllegalStateException {
-        launchWithoutDownload(false);
+    public void launchWithoutDownload(String... startupArgs) throws IOException, JDOMException, IllegalStateException {
+        launchWithoutDownload(false, startupArgs);
     }
 
     /**
@@ -1047,8 +1047,8 @@ public class App {
      * @throws IllegalStateException If {@code this.downloadRequired()==true} too
      */
     @SuppressWarnings("unused")
-    public void launchSnapshotWithoutDownload() throws IOException, JDOMException, IllegalStateException {
-        launchWithoutDownload(true);
+    public void launchSnapshotWithoutDownload(String... startupArgs) throws IOException, JDOMException, IllegalStateException {
+        launchWithoutDownload(true, startupArgs);
     }
 
     /**
@@ -1059,9 +1059,9 @@ public class App {
      * @throws JDOMException         If the maven metadata file is malformed
      * @throws IllegalStateException If {@code this.downloadRequired()==true} too
      */
-    public void launchWithoutDownload(boolean snapshotsEnabled)
+    public void launchWithoutDownload(boolean snapshotsEnabled, String... startupArgs)
             throws IOException, JDOMException, IllegalStateException {
-        launchWithoutDownload(snapshotsEnabled, null);
+        launchWithoutDownload(snapshotsEnabled, null, startupArgs);
     }
 
     /**
@@ -1074,9 +1074,9 @@ public class App {
      * @throws JDOMException         If the maven metadata file is malformed
      * @throws IllegalStateException If {@code this.downloadRequired()==true} too
      */
-    public void launchWithoutDownload(boolean snapshotsEnabled, HidableUpdateProgressDialog gui)
+    public void launchWithoutDownload(boolean snapshotsEnabled, HidableUpdateProgressDialog gui, String... startupArgs)
             throws IOException, JDOMException, IllegalStateException {
-        downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, true);
+        downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, true, startupArgs);
     }
 
     /**
@@ -1092,7 +1092,7 @@ public class App {
      *                               {@code this.downloadRequired()==true} too
      */
     public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
-                                             boolean disableDownload) throws IOException, JDOMException, IllegalStateException {
+                                             boolean disableDownload, String... startupArgs) throws IOException, JDOMException, IllegalStateException {
         Version versionToLaunch;
 
         if (!disableDownload) {
@@ -1105,7 +1105,7 @@ public class App {
             versionToLaunch = this.getCurrentlyInstalledVersion();
         }
 
-        downloadIfNecessaryAndLaunch(gui, versionToLaunch, disableDownload);
+        downloadIfNecessaryAndLaunch(gui, versionToLaunch, disableDownload, startupArgs);
     }
 
     /**
@@ -1120,7 +1120,7 @@ public class App {
      *                               {@code this.downloadRequired()==true} too
      */
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
-                                             boolean disableDownload) throws IOException, IllegalStateException {
+                                             boolean disableDownload, String... startupArgs) throws IOException, IllegalStateException {
         cancelDownloadAndLaunch = false;
         String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String destFilename;
@@ -1183,9 +1183,17 @@ public class App {
         // Set implicit exit = false if handlers are defined when the app exits
         Platform.setImplicitExit(!this.eventHandlersWhenLaunchedAppExitsAttached());
 
-        FOKLogger.info(App.class.getName(), "Launching app using the command: java -jar " + jarFileName + " disableUpdateChecks");
-        ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFileName, "disableUpdateChecks",
-                "locale=" + Locale.getDefault().getLanguage()).inheritIO();
+        List<String> finalCommand = new ArrayList<>(startupArgs.length + 5);
+        finalCommand.add("java");
+        finalCommand.add("-jar");
+        finalCommand.add(jarFileName);
+        finalCommand.add("disableUpdateChecks");
+        finalCommand.add("locale=" + Locale.getDefault().getLanguage());
+        finalCommand.addAll(Arrays.asList(startupArgs));
+
+        FOKLogger.info(App.class.getName(), "Launching app using the command: " + String.join(" ", finalCommand));
+
+        ProcessBuilder pb = new ProcessBuilder(finalCommand.toArray(new String[0])).inheritIO();
         Process process;
 
         if (gui != null) {

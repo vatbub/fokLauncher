@@ -157,6 +157,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
     };
     private static App appForAutoLaunch = null;
+    private static List<String> autoLaunchAdditionalStartupArgs;
     @SuppressWarnings("CanBeFinal")
     @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
     public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
@@ -273,6 +274,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         String autoLaunchGroupId = null;
         String autoLaunchArtifactId = null;
         String autoLaunchClassifier = null;
+        List<String> autoLaunchAdditionalStartupArgs = new ArrayList<>(Arrays.asList(args));
 
         // Complete the update
         UpdateChecker.completeUpdate(args, firstStartAfterUpdateRunnable);
@@ -282,17 +284,22 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 // Set the mock version
                 String version = arg.substring(arg.toLowerCase().indexOf('=') + 1);
                 Common.setMockAppVersion(version);
+                autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches("mockbuildnumber=.*")) {
                 // Set the mock build number
                 String buildnumber = arg.substring(arg.toLowerCase().indexOf('=') + 1);
                 Common.setMockBuildNumber(buildnumber);
+                autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches("mockpackaging=.*")) {
                 // Set the mock packaging
                 String packaging = arg.substring(arg.toLowerCase().indexOf('=') + 1);
                 Common.setMockPackaging(packaging);
+                autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches(".*launch")) {
                 autoLaunchApp = true;
+                autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches("autolaunchrepourl=.*")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     try {
                         autoLaunchRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
@@ -305,6 +312,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             "autoLaunchRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchsnapshotrepourl=.*")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     try {
                         autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
@@ -317,6 +325,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             "autoLaunchSnapshotRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchgroupid=.*")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     autoLaunchGroupId = arg.substring(arg.indexOf('=') + 1);
                 } else {
@@ -324,6 +333,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             "autoLaunchGroupId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchartifactid=.*")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     autoLaunchArtifactId = arg.substring(arg.indexOf('=') + 1);
                 } else {
@@ -331,6 +341,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             "autoLaunchArtifactId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchclassifier=.*")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     autoLaunchClassifier = arg.substring(arg.indexOf('=') + 1);
                 } else {
@@ -338,6 +349,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             "autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
                 }
             } else if (arg.toLowerCase().matches("autolaunchenablesnapshots")) {
+                autoLaunchAdditionalStartupArgs.remove(arg);
                 if (autoLaunchApp) {
                     autoLaunchUseSnapshots = true;
                 } else {
@@ -346,6 +358,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
             }
         }
+
+        MainWindow.autoLaunchAdditionalStartupArgs = autoLaunchAdditionalStartupArgs;
 
         if (autoLaunchApp) {
             if (autoLaunchRepoURL == null || autoLaunchSnapshotRepoURL == null || autoLaunchGroupId == null
@@ -378,7 +392,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     try {
                         FOKLogger.info(MainWindow.class.getName(), "Auto-launching app without GUI...");
                         appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")), null,
-                                !Internet.isConnected());
+                                !Internet.isConnected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                     } catch (Exception e2) {
                         FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e2);
                     } finally {
@@ -598,7 +612,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     }
 
                     currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected());
+                            workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (IOException | JDOMException e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
@@ -863,7 +877,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             downloadAndLaunchThread = new Thread(() -> {
                 try {
                     appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected());
+                            workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (Exception e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
