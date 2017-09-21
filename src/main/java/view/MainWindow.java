@@ -264,6 +264,10 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
     };
 
+    public static MetricRegistry getMetricsRegistry() {
+        return metricsRegistry;
+    }
+
     private static void initDataDogReporting(String apiKey) throws IOException {
         HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build();
         DatadogReporter reporter = DatadogReporter.forRegistry(metricsRegistry)
@@ -285,7 +289,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             e.printStackTrace();
         }
 
-        metricsRegistry.histogram(MetricRegistry.name(MainWindow.class, "users", "unique")).update(Common.getUniqueDeviceIdentifierAsDecInt());
+        metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getUniqueDeviceIdentifierAsDecInt());
 
         boolean autoLaunchApp = false;
         URL autoLaunchRepoURL = null;

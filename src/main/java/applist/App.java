@@ -651,6 +651,14 @@ public class App {
         this.mavenGroupID = mavenGroupID;
     }
 
+    public String getMavenCoordinateString(Version version) {
+        if (getMavenClassifier().equals("")) {
+            return String.join(":", getMavenGroupID(), getMavenArtifactID(), version.toString());
+        } else {
+            return String.join(":", getMavenGroupID(), getMavenArtifactID(), version.toString(), getMavenClassifier());
+        }
+    }
+
     /**
      * @return the mavenArtifactID
      */
@@ -1195,15 +1203,16 @@ public class App {
 
         ProcessBuilder pb = new ProcessBuilder(finalCommand.toArray(new String[0])).inheritIO();
         Process process;
+        MainWindow.getMetricsRegistry().counter("foklauncher.applaunches." + getMavenCoordinateString(versionToLaunch)).inc();
+
+        FOKLogger.info(App.class.getName(), "Launching application " + destFilename);
+
+        System.out.println("------------------------------------------------------------------");
+        System.out.println("The following output is coming from " + destFilename);
+        System.out.println("------------------------------------------------------------------");
 
         if (gui != null) {
             gui.hide();
-
-            FOKLogger.info(App.class.getName(), "Launching application " + destFilename);
-
-            System.out.println("------------------------------------------------------------------");
-            System.out.println("The following output is coming from " + destFilename);
-            System.out.println("------------------------------------------------------------------");
 
             process = pb.start();
         } else {
@@ -1432,6 +1441,7 @@ public class App {
             gui.installStarted();
         }
 
+        MainWindow.getMetricsRegistry().counter("foklauncher.appdownloads." + getMavenCoordinateString(versionToDownload)).inc();
         return true;
 
     }
