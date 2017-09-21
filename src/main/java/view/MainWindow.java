@@ -23,6 +23,7 @@ package view;
 
 import applist.App;
 import applist.AppList;
+import com.codahale.metrics.MetricRegistry;
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.Prefs;
 import com.github.vatbub.common.core.logging.FOKLogger;
@@ -41,9 +42,6 @@ import com.github.vatbub.safeAPIKeyStore.common.BadRequestException;
 import com.github.vatbub.safeAPIKeyStore.common.InternalServerException;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
-import com.timgroup.statsd.Event;
-import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
 import common.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
@@ -72,6 +70,8 @@ import mslinks.ShellLinkException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.coursera.metrics.datadog.DatadogReporter;
+import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.jdom2.JDOMException;
 
 import javax.crypto.BadPaddingException;
@@ -87,8 +87,11 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
+
+import static org.coursera.metrics.datadog.DatadogReporter.Expansion.*;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
     private static final ImageView linkIconView = new ImageView(
@@ -98,11 +101,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private static final String enableSnapshotsPrefKey = "enableSnapshots";
     private static final String showLauncherAgainPrefKey = "showLauncherAgain";
     private static final String guiLanguagePrefKey = "guiLanguage";
-    private static final StatsDClient statsClient = new NonBlockingStatsDClient(
-            "com.github.vatbub.foklauncher",
-            /*"ec2-35-157-23-171.eu-central-1.compute.amazonaws.com",*/
-            "localhost",
-            8125);
+    private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
+    private static final MetricRegistry metricsRegistry = new MetricRegistry();
     /**
      * This reference always refers to the currently used instance of the
      * MainWidow. The purpose of this field that {@code this} can be accessed in
@@ -174,10 +174,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private Thread getAppListThread;
     @FXML // fx:id="appList"
     private ListView<App> appList; // Value injected by FXMLLoader
-
     @FXML // fx:id="searchField"
     private TextField searchField; // Value injected by FXMLLoader
-
     @FXML // fx:id="enableSnapshotsCheckbox"
     private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
     @FXML // fx:id="launchButton"
@@ -266,19 +264,28 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
     };
 
+    private static void initDataDogReporting(String apiKey) throws IOException {
+        HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build();
+        DatadogReporter reporter = DatadogReporter.forRegistry(metricsRegistry)
+                .withTransport(httpTransport)
+                .withExpansions(expansions)
+                .build();
+
+        reporter.start(10, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) {
         Common.setAppName("foklauncher");
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
         try {
-            System.out.println(APIKeyClient.getApiKey("35.157.23.171", "datadog"));
+            initDataDogReporting(APIKeyClient.getApiKey("35.157.23.171", "datadog"));
         } catch (IOException | IllegalBlockSizeException | BadPaddingException | InternalServerException | BadRequestException | TimeoutException e) {
             e.printStackTrace();
         }
 
-        statsClient.recordSetValue("users.uniques", Common.getUniqueDeviceIdentifier());
-        statsClient.recordEvent(com.timgroup.statsd.Event.builder().withAlertType(Event.AlertType.INFO).withTitle("Application started").withText("It works!").build());
+        metricsRegistry.histogram(MetricRegistry.name(MainWindow.class, "users", "unique")).update(Common.getUniqueDeviceIdentifierAsDecInt());
 
         boolean autoLaunchApp = false;
         URL autoLaunchRepoURL = null;
@@ -745,7 +752,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     @Override
     public void stop() {
-        statsClient.stop();
         try {
             UpdateChecker.cancelUpdateCompletion();
             if (currentlySelectedApp != null) {
