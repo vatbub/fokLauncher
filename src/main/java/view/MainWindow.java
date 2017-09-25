@@ -249,9 +249,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 
                     // Only enable if no download is running
-                    if (downloadAndLaunchThread == null) {
-                        appList.setDisable(false);
-                    } else if (!downloadAndLaunchThread.isAlive()) {
+                    if (downloadAndLaunchThread == null || !downloadAndLaunchThread.isAlive()) {
                         appList.setDisable(false);
                     }
                 });
@@ -1119,7 +1117,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @Override
     public void launchStarted() {
         Platform.runLater(() -> {
-            progressBar.setProgressAnimated(2.0 / 2.0);
+            progressBar.setProgressAnimated(1);
             launchButton.setProgressText(bundle.getString("progress.launching"));
         });
     }

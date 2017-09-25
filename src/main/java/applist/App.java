@@ -26,7 +26,6 @@ import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 import com.github.vatbub.common.updater.Version;
 import com.github.vatbub.common.updater.VersionList;
-import common.AdditionalConfig;
 import common.AppConfig;
 import extended.VersionMenuItem;
 import javafx.application.Platform;
@@ -1240,8 +1239,7 @@ public class App {
     }
 
     /**
-     * Downloads this artifact to the location specified in the
-     * {@link AdditionalConfig}. Does not take snapshots into account.
+     * Downloads this artifact. Does not take snapshots into account.
      *
      * @return {@code true} if the download finished successfully, {@code false}
      * if the download was cancelled using
@@ -1255,8 +1253,7 @@ public class App {
     }
 
     /**
-     * Downloads this artifact to the location specified in the
-     * {@link AdditionalConfig}. Does not take snapshots into account.
+     * Downloads this artifact. Does not take snapshots into account.
      *
      * @param gui The {@link HidableUpdateProgressDialog} that represents the
      *            gui to inform the user about the progress.
@@ -1271,8 +1268,7 @@ public class App {
     }
 
     /**
-     * Downloads this artifact to the location specified in the
-     * {@link AdditionalConfig}. Only takes snapshots into account.
+     * Downloads this artifact. Only takes snapshots into account.
      *
      * @return {@code true} if the download finished successfully, {@code false}
      * if the download was cancelled using
@@ -1286,8 +1282,7 @@ public class App {
     }
 
     /**
-     * Downloads this artifact to the location specified in the
-     * {@link AdditionalConfig}. Only takes snapshots into account.
+     * Downloads this artifact. Only takes snapshots into account.
      *
      * @param gui The {@link HidableUpdateProgressDialog} that represents the
      *            gui to inform the user about the progress.
@@ -1302,8 +1297,7 @@ public class App {
     }
 
     /**
-     * Downloads this artifact to the location specified in the
-     * {@link AdditionalConfig}.
+     * Downloads this artifact.
      *
      * @param versionToDownload The {@link Version} to be downloaded.
      * @param gui               The {@link HidableUpdateProgressDialog} that represents the
