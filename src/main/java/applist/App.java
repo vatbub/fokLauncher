@@ -1202,7 +1202,7 @@ public class App {
 
         ProcessBuilder pb = new ProcessBuilder(finalCommand.toArray(new String[0])).inheritIO();
         Process process;
-        MainWindow.getMetricsRegistry().counter("foklauncher.applaunches." + getMavenCoordinateString(versionToLaunch)).inc();
+        // MainWindow.getMetricsRegistry().counter("foklauncher.applaunches." + getMavenCoordinateString(versionToLaunch)).inc();
 
         FOKLogger.info(App.class.getName(), "Launching application " + destFilename);
 
@@ -1435,7 +1435,7 @@ public class App {
             gui.installStarted();
         }
 
-        MainWindow.getMetricsRegistry().counter("foklauncher.appdownloads." + getMavenCoordinateString(versionToDownload)).inc();
+        // MainWindow.getMetricsRegistry().counter("foklauncher.appdownloads." + getMavenCoordinateString(versionToDownload)).inc();
         return true;
 
     }

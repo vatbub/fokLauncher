@@ -23,7 +23,6 @@ package view;
 
 import applist.App;
 import applist.AppList;
-import com.codahale.metrics.MetricRegistry;
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.Prefs;
 import com.github.vatbub.common.core.logging.FOKLogger;
@@ -70,7 +69,6 @@ import mslinks.ShellLinkException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.coursera.metrics.datadog.DatadogReporter;
 import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.jdom2.JDOMException;
 
@@ -87,11 +85,8 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-
-import static org.coursera.metrics.datadog.DatadogReporter.Expansion.*;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
     private static final ImageView linkIconView = new ImageView(
@@ -101,8 +96,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private static final String enableSnapshotsPrefKey = "enableSnapshots";
     private static final String showLauncherAgainPrefKey = "showLauncherAgain";
     private static final String guiLanguagePrefKey = "guiLanguage";
-    private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
-    private static final MetricRegistry metricsRegistry = new MetricRegistry();
+    // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
+    // private static final MetricRegistry metricsRegistry = new MetricRegistry();
     /**
      * This reference always refers to the currently used instance of the
      * MainWidow. The purpose of this field that {@code this} can be accessed in
@@ -262,18 +257,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         }
     };
 
-    public static MetricRegistry getMetricsRegistry() {
+    /*public static MetricRegistry getMetricsRegistry()
+    {
         return metricsRegistry;
-    }
+    }*/
 
     private static void initDataDogReporting(String apiKey) throws IOException {
         HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build();
-        DatadogReporter reporter = DatadogReporter.forRegistry(metricsRegistry)
+        /*DatadogReporter reporter = DatadogReporter.forRegistry(metricsRegistry)
                 .withTransport(httpTransport)
                 .withExpansions(expansions)
                 .build();
 
-        reporter.start(10, TimeUnit.SECONDS);
+        reporter.start(10, TimeUnit.SECONDS);*/
     }
 
     public static void main(String[] args) {
@@ -287,7 +283,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             e.printStackTrace();
         }
 
-        metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getInstance().getUniqueDeviceIdentifierAsDecInt());
+        // metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getInstance().getUniqueDeviceIdentifierAsDecInt());
 
         boolean autoLaunchApp = false;
         URL autoLaunchRepoURL = null;
