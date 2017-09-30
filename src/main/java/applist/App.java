@@ -278,7 +278,7 @@ public class App {
      */
     public static AppList getOnlineAppList() throws JDOMException, IOException {
         Document doc;
-        String fileName = Common.getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
+        String fileName = Common.getInstance().getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
         try {
             doc = new SAXBuilder().build(AppConfig.getAppListXMLURL());
 
@@ -337,7 +337,7 @@ public class App {
      */
     @SuppressWarnings("unused")
     public static AppList getImportedAppList() throws JDOMException, IOException {
-        String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
+        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
         try {
             AppList res = new AppList();
@@ -365,7 +365,7 @@ public class App {
     }
 
     public static void addImportedApp(File infoFile) throws IOException {
-        String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
+        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
         Element root;
         Document appsDoc;
@@ -584,7 +584,7 @@ public class App {
         VersionList res = new VersionList();
 
         // Load the metadata.xml file
-        String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
         Document versionDoc;
 
@@ -762,7 +762,7 @@ public class App {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
-        String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
         Element root;
@@ -1129,7 +1129,7 @@ public class App {
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
                                              boolean disableDownload, String... startupArgs) throws IOException, IllegalStateException {
         cancelDownloadAndLaunch = false;
-        String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String destFilename;
 
         if (!disableDownload) {
@@ -1313,7 +1313,7 @@ public class App {
             gui.preparePhaseStarted();
         }
 
-        String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String destFilename;
         URL repoBaseURL;
         URL artifactURL;
@@ -1473,7 +1473,7 @@ public class App {
     public boolean delete(Version versionToDelete) {
 
         // Delete from metadata
-        String destFolder = Common.getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
         Document versionDoc;
         Element versions;
@@ -1662,7 +1662,7 @@ public class App {
     }
 
     public void removeFromImportedAppList() throws IOException {
-        String fileName = Common.getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
+        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
 
         Element root;
         Document appsDoc;
@@ -1721,7 +1721,7 @@ public class App {
 
     public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
         if (SystemUtils.IS_OS_WINDOWS) {
-            ShellLink sl = ShellLink.createLink(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+            ShellLink sl = ShellLink.createLink(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString());
 
             if (this.getMavenClassifier().equals("")) {
                 // no classifier set
@@ -1738,11 +1738,11 @@ public class App {
 
             sl.setName(quickInfoText.replace("%s", this.getName()));
 
-            if (Common.getPackaging().equals("exe")) {
-                sl.setIconLocation(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString());
+            if (Common.getInstance().getPackaging().equals("exe")) {
+                sl.setIconLocation(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString());
             } else {
                 URL inputUrl = MainWindow.class.getResource("icon.ico");
-                File dest = new File(Common.getAndCreateAppDataPath() + "icon.ico");
+                File dest = new File(Common.getInstance().getAndCreateAppDataPath() + "icon.ico");
                 FileUtils.copyURLToFile(inputUrl, dest);
                 sl.setIconLocation(dest.getAbsolutePath());
             }
@@ -1751,7 +1751,7 @@ public class App {
 
         } else {
             // Actually does not create a shortcut but a bash script
-            System.out.println(Common.getPathAndNameOfCurrentJar());
+            System.out.println(Common.getInstance().getPathAndNameOfCurrentJar());
         }
         // Files.createLink(shortcutFile.toPath(), new
         // File(Common.getPathAndNameOfCurrentJar()).toPath());

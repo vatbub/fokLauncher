@@ -131,7 +131,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             try {
                 // delete apps folder
                 FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
-                FileUtils.deleteDirectory(new File(Common.getAndCreateAppDataPath() + "apps"));
+                FileUtils.deleteDirectory(new File(Common.getInstance().getAndCreateAppDataPath() + "apps"));
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
@@ -277,7 +277,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     public static void main(String[] args) {
-        Common.setAppName("foklauncher");
+        Common.getInstance().setAppName("foklauncher");
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
@@ -287,7 +287,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             e.printStackTrace();
         }
 
-        metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getUniqueDeviceIdentifierAsDecInt());
+        metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getInstance().getUniqueDeviceIdentifierAsDecInt());
 
         boolean autoLaunchApp = false;
         URL autoLaunchRepoURL = null;
@@ -304,17 +304,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             if (arg.toLowerCase().matches("mockappversion=.*")) {
                 // Set the mock version
                 String version = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.setMockAppVersion(version);
+                Common.getInstance().setMockAppVersion(version);
                 autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches("mockbuildnumber=.*")) {
                 // Set the mock build number
                 String buildnumber = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.setMockBuildNumber(buildnumber);
+                Common.getInstance().setMockBuildNumber(buildnumber);
                 autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches("mockpackaging=.*")) {
                 // Set the mock packaging
                 String packaging = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.setMockPackaging(packaging);
+                Common.getInstance().setMockPackaging(packaging);
                 autoLaunchAdditionalStartupArgs.remove(arg);
             } else if (arg.toLowerCase().matches(".*launch")) {
                 autoLaunchApp = true;
@@ -451,7 +451,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @FXML
     void appListOnDragDetected(MouseEvent event) {
         if (currentlySelectedApp != null) {
-            File tempFile = new File(Common.getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
+            File tempFile = new File(Common.getInstance().getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
             try {
                 currentlySelectedApp.createShortCut(tempFile, bundle.getString("shortcutQuickInfo"));
                 Dragboard db = appList.startDragAndDrop(TransferMode.MOVE);
@@ -515,7 +515,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 try {
                     if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")) {
                         event.acceptTransferModes(TransferMode.LINK);
-                    } else if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString())) {
+                    } else if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString())) {
                         event.acceptTransferModes(TransferMode.COPY);
                     } else {
                         event.consume();
@@ -540,7 +540,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     FOKLogger.info(MainWindow.class.getName(), "Importing app from " + f.getAbsolutePath() + "...");
                     App.addImportedApp(f);
                     currentMainWindowInstance.loadAppList();
-                } else if ((FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getPathAndNameOfCurrentJar()).toPath().toString()))) {
+                } else if ((FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString()))) {
                     FOKLogger.info(MainWindow.class.getName(), "Running link from lnk file " + f.getAbsolutePath());
                     ShellLink link = new ShellLink(f);
                     File target = new File(link.resolveTarget());
@@ -588,7 +588,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         Thread updateThread = new Thread(() -> {
             UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(AppConfig.getUpdateRepoBaseURL(),
                     AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
-                    Common.getPackaging());
+                    Common.getInstance().getPackaging());
             Platform.runLater(() -> new UpdateAvailableDialog(update));
         });
         updateThread.setName("manualUpdateThread");
@@ -723,7 +723,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             Thread updateThread = new Thread(() -> {
                 UpdateInfo update = UpdateChecker.isUpdateAvailable(AppConfig.getUpdateRepoBaseURL(),
                         AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
-                        Common.getPackaging());
+                        Common.getInstance().getPackaging());
                 if (update.showAlert) {
                     Platform.runLater(() -> new UpdateAvailableDialog(update));
                 }
@@ -859,7 +859,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 .setSelected(Boolean.parseBoolean(prefs.getPreference(showLauncherAgainPrefKey, "false")));
 
         try {
-            versionLabel.setText(new Version(Common.getAppVersion(), Common.getBuildNumber()).toString(false));
+            versionLabel.setText(new Version(Common.getInstance().getAppVersion(), Common.getInstance().getBuildNumber()).toString(false));
         } catch (IllegalArgumentException e) {
             versionLabel.setText(Common.UNKNOWN_APP_VERSION);
         }
@@ -917,7 +917,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             isFirstLaunchAfterUpdate = false;
             try {
                 FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getAppVersion()), false);
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getInstance().getAppVersion()), false);
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
@@ -930,7 +930,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     private void loadAvailableGuiLanguages() {
-        List<Locale> supportedGuiLocales = Common.getLanguagesSupportedByResourceBundle(bundle);
+        List<Locale> supportedGuiLocales = Common.getInstance().getLanguagesSupportedByResourceBundle(bundle);
         List<GuiLanguage> convertedList = new ArrayList<>(supportedGuiLocales.size());
 
         for (Locale lang : supportedGuiLocales) {

@@ -68,7 +68,7 @@ public class AppConfig {
     }
 
     public static String getUpdateFileClassifier() {
-        String packaging = Common.getPackaging();
+        String packaging = Common.getInstance().getPackaging();
         if (packaging != null) {
             if (packaging.equals("exe")) {
                 return "WindowsExecutable";
