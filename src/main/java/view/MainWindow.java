@@ -36,9 +36,6 @@ import com.github.vatbub.common.view.core.CustomProgressBar;
 import com.github.vatbub.common.view.core.ProgressButton;
 import com.github.vatbub.common.view.motd.MOTD;
 import com.github.vatbub.common.view.motd.MOTDDialog;
-import com.github.vatbub.safeAPIKeyStore.client.APIKeyClient;
-import com.github.vatbub.safeAPIKeyStore.common.BadRequestException;
-import com.github.vatbub.safeAPIKeyStore.common.InternalServerException;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
 import common.AppConfig;
@@ -72,8 +69,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.jdom2.JDOMException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
@@ -85,7 +80,6 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
 public class MainWindow extends Application implements HidableUpdateProgressDialog {
@@ -277,11 +271,11 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
 
-        try {
+        /*try {
             initDataDogReporting(APIKeyClient.getApiKey("35.157.23.171", "datadog"));
         } catch (IOException | IllegalBlockSizeException | BadPaddingException | InternalServerException | BadRequestException | TimeoutException e) {
             e.printStackTrace();
-        }
+        }*/
 
         // metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getInstance().getUniqueDeviceIdentifierAsDecInt());
 
