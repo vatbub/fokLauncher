@@ -107,6 +107,7 @@
             <!-- Create the installer -->
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.1</version>
                 <executions>
                     <execution>
                         <id>create-staging-area</id>
@@ -357,7 +358,7 @@
         <dependency>
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
-            <version>1.7.4</version>
+            <version>1.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
