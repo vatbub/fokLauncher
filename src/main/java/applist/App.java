@@ -1797,8 +1797,15 @@ public class App {
                     // Online mode enabled
                     try {
                         verList = app.getAllOnlineVersions();
+                        VersionList additionalVersions = app.getCurrentlyInstalledVersions();
                         if (MainWindow.currentMainWindowInstance.snapshotsEnabled()) {
-                            verList.add(app.getLatestOnlineSnapshotVersion());
+                            additionalVersions.add(app.getLatestOnlineSnapshotVersion());
+                        }
+
+                        for (Version additionalVersion : additionalVersions) {
+                            if (!verList.contains(additionalVersion)) {
+                                verList.add(additionalVersion);
+                            }
                         }
                     } catch (Exception e) {
                         // Something happened, pretend
