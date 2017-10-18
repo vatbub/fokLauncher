@@ -23,6 +23,7 @@ package view;
 
 import applist.App;
 import applist.AppList;
+import applist.MVNCoordinates;
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.Prefs;
 import com.github.vatbub.common.core.logging.FOKLogger;
@@ -380,12 +381,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             } else {
                 if (autoLaunchClassifier == null) {
                     // No classifier specified
-                    appForAutoLaunch = new App("autoLaunchApp", autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
-                            autoLaunchGroupId, autoLaunchArtifactId);
+                    appForAutoLaunch = new App("autoLaunchApp", new MVNCoordinates(autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
+                            autoLaunchGroupId, autoLaunchArtifactId));
                 } else {
                     // Classifier specified
-                    appForAutoLaunch = new App("autoLaunchApp", autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
-                            autoLaunchGroupId, autoLaunchArtifactId, autoLaunchClassifier);
+                    appForAutoLaunch = new App("autoLaunchApp", new MVNCoordinates(autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
+                            autoLaunchGroupId, autoLaunchArtifactId, autoLaunchClassifier));
                 }
             }
         }
