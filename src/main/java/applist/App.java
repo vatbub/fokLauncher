@@ -263,7 +263,7 @@ public class App {
         try {
             res.addAll(getImportedAppList());
         } catch (JDOMException | IOException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
         return res;
     }
@@ -1221,7 +1221,7 @@ public class App {
         try {
             process.waitFor();
         } catch (InterruptedException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
 
         // Check the status code of the process
@@ -1848,7 +1848,7 @@ public class App {
                             } catch (IOException e) {
                                 currentMainWindowInstance.showErrorMessage(
                                         "An error occurred: \n" + ExceptionUtils.getStackTrace(e));
-                                FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                             }
                         });
 
@@ -1923,7 +1923,7 @@ public class App {
             try {
                 Desktop.getDesktop().browse(this.getChangelogURL().toURI());
             } catch (IOException | URISyntaxException e) {
-                FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 currentMainWindowInstance.showErrorMessage(e.toString());
             }
         });
@@ -1943,7 +1943,7 @@ public class App {
                         + " at the following location: " + file.getAbsolutePath());
                 app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
             } catch (Exception e) {
-                FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 currentMainWindowInstance.showErrorMessage(e.toString());
             }
         });
@@ -1964,7 +1964,7 @@ public class App {
                             + " at the following location: " + file.getAbsolutePath());
                     this.createShortCut(file, bundle.getString("shortcutQuickInfo"));
                 } catch (Exception e) {
-                    FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                     currentMainWindowInstance.showErrorMessage(e.toString());
                 }
             }
@@ -1988,7 +1988,7 @@ public class App {
                             + file.getAbsolutePath());
                     app.exportInfo(file);
                 } catch (IOException e) {
-                    FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                     currentMainWindowInstance.showErrorMessage(e.toString());
                 }
             }
@@ -2006,7 +2006,7 @@ public class App {
                         app.removeFromImportedAppList();
                         currentMainWindowInstance.loadAppList();
                     } catch (IOException e) {
-                        FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred", e);
+                        FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                         currentMainWindowInstance.showErrorMessage(e.toString());
                     }
                 });

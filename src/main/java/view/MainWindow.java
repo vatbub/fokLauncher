@@ -124,7 +124,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 } catch (Exception e2) {
                     e.printStackTrace();
                 }
@@ -244,7 +244,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 });
 
             } catch (JDOMException | IOException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 currentMainWindowInstance
                         .showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
             }
@@ -405,7 +405,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                         appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")), null,
                                 !Internet.isConnected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                     } catch (Exception e2) {
-                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e2);
+                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e2);
                     } finally {
                         // Clean up
                         appForAutoLaunch = null;
@@ -449,7 +449,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 content.putFiles(Collections.singletonList(tempFile));
                 db.setContent(content);
             } catch (IOException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         }
     }
@@ -512,7 +512,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                         return;
                     }
                 } catch (IOException | ShellLinkException e) {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 }
             }
         } else {
@@ -558,14 +558,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             Thread.sleep(5000);
                             Platform.exit();
                         } catch (InterruptedException e) {
-                            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                         }
                     });
 
                     t.start();
                 }
             } catch (IOException | ShellLinkException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 currentMainWindowInstance.showErrorMessage(e.toString(), false);
             }
         }
@@ -626,7 +626,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (IOException | JDOMException e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 }
             });
 
@@ -656,7 +656,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 guiString = guiString
                         + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
             }
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             currentMainWindowInstance.showErrorMessage(guiString);
         }
     }
@@ -682,7 +682,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         try {
             Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
         } catch (IOException | URISyntaxException e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
     }
 
@@ -738,7 +738,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
             primaryStage.show();
         } catch (Exception e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
     }
 
@@ -836,7 +836,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     Platform.runLater(() -> new MOTDDialog(motd, motd.getEntry().getTitle()));
                 }
             } catch (IllegalArgumentException | FeedException | IOException | ClassNotFoundException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         });
         motdThread.setName("motdThread");
@@ -890,7 +890,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                             workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (Exception e) {
                     gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 } finally {
                     // Clean up
                     appForAutoLaunch = null;
@@ -911,7 +911,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             } catch (Exception e) {
                 // Try to log, if it does not work just print the error
                 try {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 } catch (Exception e2) {
                     e.printStackTrace();
                 }
@@ -1007,7 +1007,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     }
                 }
             } catch (JDOMException | IOException e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred", e);
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
 
                 // Switch to offline mode
                 workOfflineCheckbox.setSelected(true);
