@@ -119,15 +119,19 @@ public class AppListFile {
      */
     public class FileFormat {
         public static final String MODEL_VERSION_TAG_NAME = "modelVersion";
-        public final static String APP_LIST_TAG_NAME = "apps";
-        public final static String APP_TAG_NAME = "app";
-        public final static String REPO_BASE_URL_TAG_NAME = "repoBaseURL";
-        public final static String SNAPSHOT_REPO_BASE_URL_TAG_NAME = "snapshotRepoBaseURL";
-        public final static String GROUP_ID_TAG_NAME = "groupId";
-        public final static String ARTIFACT_ID_TAG_NAME = "artifactId";
-        public final static String APP_NAME_TAG_NAME = "name";
-        public final static String CLASSIFIER_TAG_NAME = "classifier";
-        public final static String ADDITIONAL_INFO_TAG_NAME = "additionalInfoURL";
-        public final static String CHANGELOG_URL_TAG_NAME = "changelogURL";
+        public static final String APP_LIST_TAG_NAME = "apps";
+        public static final String APP_TAG_NAME = "app";
+        public static final String REPO_BASE_URL_TAG_NAME = "repoBaseURL";
+        public static final String SNAPSHOT_REPO_BASE_URL_TAG_NAME = "snapshotRepoBaseURL";
+        public static final String GROUP_ID_TAG_NAME = "groupId";
+        public static final String ARTIFACT_ID_TAG_NAME = "artifactId";
+        public static final String APP_NAME_TAG_NAME = "name";
+        public static final String CLASSIFIER_TAG_NAME = "classifier";
+        public static final String ADDITIONAL_INFO_TAG_NAME = "additionalInfoURL";
+        public static final String CHANGELOG_URL_TAG_NAME = "changelogURL";
+
+        private FileFormat() {
+            throw new IllegalStateException("Class may not be instantiated");
+        }
     }
 }

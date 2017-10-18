@@ -119,10 +119,14 @@ public class ImportedAppListFile {
     }
 
     public class FileFormat {
-        public final static String ROOT_NODE_NAME = "fokLauncher";
-        public final static String MODEL_VERSION_TAG_NAME = "modelVersion";
-        public final static String APP_LIST_TAG_NAME = "importedApps";
-        public final static String APP_TAG_NAME = "app";
-        public final static String FILE_NAME_TAG_NAME = "fileName";
+        public static final String ROOT_NODE_NAME = "fokLauncher";
+        public static final String MODEL_VERSION_TAG_NAME = "modelVersion";
+        public static final String APP_LIST_TAG_NAME = "importedApps";
+        public static final String APP_TAG_NAME = "app";
+        public static final String FILE_NAME_TAG_NAME = "fileName";
+
+        private FileFormat() {
+            throw new IllegalStateException("Class may not be instantiated");
+        }
     }
 }

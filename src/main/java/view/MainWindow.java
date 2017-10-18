@@ -123,12 +123,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
                 FileUtils.deleteDirectory(new File(Common.getInstance().getAndCreateAppDataPath() + "apps"));
             } catch (Exception e) {
-                // Try to log, if it does not work just print the error
-                try {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                } catch (Exception e2) {
-                    e.printStackTrace();
-                }
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         } else {
             firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
@@ -227,7 +222,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                         if (isNowEmpty) {
                             cell.setContextMenu(null);
                         } else {
-                            // cell.setContextMenu(contextMenu);
                             cell.setContextMenu(cell.getItem().getContextMenu());
                         }
                     });
@@ -247,7 +241,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             } catch (JDOMException | IOException e) {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 currentMainWindowInstance
-                        .showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+                        .showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
             }
         }
     };
@@ -535,15 +529,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     FOKLogger.info(MainWindow.class.getName(), "Running link from lnk file " + f.getAbsolutePath());
                     ShellLink link = new ShellLink(f);
                     File target = new File(link.resolveTarget());
-                    String launchCommand = "";
+                    StringBuilder launchCommand = new StringBuilder();
 
                     if (FilenameUtils.getExtension(target.getAbsolutePath()).equals("jar")) {
-                        launchCommand = "java -jar ";
+                        launchCommand.append("java -jar ");
                     }
 
-                    launchCommand = launchCommand + link.resolveTarget() + " " + link.getCMDArgs();
+                    launchCommand.append(link.resolveTarget()).append(" ").append(link.getCMDArgs());
 
-                    Runtime.getRuntime().exec(launchCommand);
+                    Runtime.getRuntime().exec(launchCommand.toString());
 
                     preparePhaseStarted();
 
@@ -626,7 +620,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
                             workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (IOException | JDOMException e) {
-                    gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+                    gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 }
             });
@@ -890,7 +884,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || enableSnapshotsCheckbox.isSelected(), gui,
                             workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
                 } catch (Exception e) {
-                    gui.showErrorMessage("An error occurred: \n" + e.getClass().getName() + "\n" + e.getMessage());
+                    gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + " \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 } finally {
                     // Clean up
@@ -910,12 +904,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
                 this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getInstance().getAppVersion()), false);
             } catch (Exception e) {
-                // Try to log, if it does not work just print the error
-                try {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                } catch (Exception e2) {
-                    e.printStackTrace();
-                }
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         }
     }
@@ -949,11 +938,8 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
      * Loads the app list using the {@link App#getAppList()}-method
      */
     public void loadAppList() {
-        if (getAppListThread != null) {
-            // If thread is not null and running, quit
-            if (getAppListThread.isAlive()) {
-                return;
-            }
+        if (getAppListThread != null && getAppListThread.isAlive()) {
+            return;
         }
 
         // Thread is either null or not running anymore
@@ -1140,7 +1126,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
 
                 if (closeWhenDialogIsClosed) {
-                    System.err.println("Closing app after exception, good bye...");
+                    FOKLogger.severe(getClass().getName(), "Closing app after exception, good bye...");
                     Platform.exit();
                 }
             });

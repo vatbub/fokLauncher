@@ -35,6 +35,7 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import mslinks.ShellLink;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.Document;
@@ -52,6 +53,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -191,11 +193,7 @@ public class App {
      */
     public static AppList getAppList() throws JDOMException, IOException {
         AppList res = getOnlineAppList();
-        try {
-            res.addAll(getImportedAppList());
-        } catch (JDOMException | IOException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-        }
+        res.addAll(getImportedAppList());
         return res;
     }
 
@@ -216,11 +214,9 @@ public class App {
      * cannot be imported, it will be removed from the list permanently
      *
      * @return The list of apps that were imported by the user.
-     * @throws IOException   If the xml list cannot be read
-     * @throws JDOMException If the xml list is malformed
      */
     @SuppressWarnings("unused")
-    public static AppList getImportedAppList() throws JDOMException, IOException {
+    public static AppList getImportedAppList() {
         AppList res = new ImportedAppListFile().getAppList();
         return res == null ? new AppList() : res;
     }
@@ -397,11 +393,8 @@ public class App {
         try {
             versionDoc = new SAXBuilder().build(fileName);
         } catch (JDOMException | IOException e) {
-            System.err.println("Cannot retrieve currently installed version of app " + this.getName()
-                    + ", probably because it is not installed.");
-            // only info level as exceptions can happen if the app was never
-            // installed on this machine before
-            FOKLogger.log(App.class.getName(), Level.INFO, "An error occurred!", e);
+            FOKLogger.log(App.class.getName(), Level.SEVERE, "Cannot retrieve currently installed version of app " + this.getName()
+                    + ", probably because it is not installed.", e);
             return null;
         }
 
@@ -659,7 +652,7 @@ public class App {
             return false;
 
         } catch (JDOMException | IOException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred!", e);
+            FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             return false;
         }
     }
@@ -888,24 +881,22 @@ public class App {
      * Launches the artifact and forces offline mode. Does not take snapshots
      * into account.
      *
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws JDOMException         If the maven metadata file is malformed
-     * @throws IllegalStateException If {@code this.downloadRequired()==true} too
+     * @throws IOException   If the maven metadata cannot be downloaded
+     * @throws JDOMException If the maven metadata file is malformed
      */
     @SuppressWarnings("unused")
-    public void launchWithoutDownload(String... startupArgs) throws IOException, JDOMException, IllegalStateException {
+    public void launchWithoutDownload(String... startupArgs) throws IOException, JDOMException {
         launchWithoutDownload(false, startupArgs);
     }
 
     /**
      * Launches the artifact and forces offline mode. Only launches snapshots.
      *
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws JDOMException         If the maven metadata file is malformed
-     * @throws IllegalStateException If {@code this.downloadRequired()==true} too
+     * @throws IOException   If the maven metadata cannot be downloaded
+     * @throws JDOMException If the maven metadata file is malformed
      */
     @SuppressWarnings("unused")
-    public void launchSnapshotWithoutDownload(String... startupArgs) throws IOException, JDOMException, IllegalStateException {
+    public void launchSnapshotWithoutDownload(String... startupArgs) throws IOException, JDOMException {
         launchWithoutDownload(true, startupArgs);
     }
 
@@ -913,12 +904,11 @@ public class App {
      * Launches the artifact and forces offline mode
      *
      * @param snapshotsEnabled {@code true} if snapshots shall be taken into account.
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws JDOMException         If the maven metadata file is malformed
-     * @throws IllegalStateException If {@code this.downloadRequired()==true} too
+     * @throws IOException   If the maven metadata cannot be downloaded
+     * @throws JDOMException If the maven metadata file is malformed
      */
     public void launchWithoutDownload(boolean snapshotsEnabled, String... startupArgs)
-            throws IOException, JDOMException, IllegalStateException {
+            throws IOException, JDOMException {
         launchWithoutDownload(snapshotsEnabled, null, startupArgs);
     }
 
@@ -928,12 +918,11 @@ public class App {
      * @param snapshotsEnabled {@code true} if snapshots shall be taken into account.
      * @param gui              A reference to a gui that shows the update and launch
      *                         progress.
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws JDOMException         If the maven metadata file is malformed
-     * @throws IllegalStateException If {@code this.downloadRequired()==true} too
+     * @throws IOException   If the maven metadata cannot be downloaded
+     * @throws JDOMException If the maven metadata file is malformed
      */
     public void launchWithoutDownload(boolean snapshotsEnabled, HidableUpdateProgressDialog gui, String... startupArgs)
-            throws IOException, JDOMException, IllegalStateException {
+            throws IOException, JDOMException {
         downloadIfNecessaryAndLaunch(snapshotsEnabled, gui, true, startupArgs);
     }
 
@@ -944,13 +933,11 @@ public class App {
      * @param gui              A reference to a gui that shows the update and launch
      *                         progress.
      * @param disableDownload  If {@code true}, the method will be forced to work offline.
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws JDOMException         If the maven metadata file is malformed
-     * @throws IllegalStateException If {@code disableDownload==true} but
-     *                               {@code this.downloadRequired()==true} too
+     * @throws IOException   If the maven metadata cannot be downloaded
+     * @throws JDOMException If the maven metadata file is malformed
      */
     public void downloadIfNecessaryAndLaunch(boolean snapshotsEnabled, HidableUpdateProgressDialog gui,
-                                             boolean disableDownload, String... startupArgs) throws IOException, JDOMException, IllegalStateException {
+                                             boolean disableDownload, String... startupArgs) throws IOException, JDOMException {
         Version versionToLaunch;
 
         if (!disableDownload) {
@@ -973,12 +960,10 @@ public class App {
      *                        progress.
      * @param versionToLaunch The version of the app to be downloaded and launched.
      * @param disableDownload If {@code true}, the method will be forced to work offline.
-     * @throws IOException           If the maven metadata cannot be downloaded
-     * @throws IllegalStateException If {@code disableDownload==true} but
-     *                               {@code this.downloadRequired()==true} too
+     * @throws IOException If the maven metadata cannot be downloaded
      */
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
-                                             boolean disableDownload, String... startupArgs) throws IOException, IllegalStateException {
+                                             boolean disableDownload, String... startupArgs) throws IOException {
         cancelDownloadAndLaunch = false;
         String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String destFilename;
@@ -1057,9 +1042,9 @@ public class App {
 
         FOKLogger.info(App.class.getName(), "Launching application " + destFilename);
 
-        System.out.println("------------------------------------------------------------------");
-        System.out.println("The following output is coming from " + destFilename);
-        System.out.println("------------------------------------------------------------------");
+        FOKLogger.info(getClass().getName(), "------------------------------------------------------------------");
+        FOKLogger.info(getClass().getName(), "The following output is coming from " + destFilename);
+        FOKLogger.info(getClass().getName(), "------------------------------------------------------------------");
 
         if (gui != null) {
             gui.hide();
@@ -1231,7 +1216,6 @@ public class App {
 
         FOKLogger.info(App.class.getName(), "Downloading artifact from " + artifactURL.toString() + "...");
         FOKLogger.info(App.class.getName(), "Downloading to: " + outputFile.getAbsolutePath());
-        // FileUtils.copyURLToFile(artifactURL, outputFile);
 
         HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
         long completeFileSize = httpConnection.getContentLength();
@@ -1259,8 +1243,7 @@ public class App {
             if (cancelDownloadAndLaunch) {
                 bout.close();
                 in.close();
-                //noinspection ResultOfMethodCallIgnored
-                outputFile.delete();
+                Files.delete(outputFile.toPath());
                 if (gui != null) {
                     gui.operationCanceled();
                 }
@@ -1317,11 +1300,10 @@ public class App {
      * Deletes the specified artifact version.
      *
      * @param versionToDelete The version to be deleted.
-     * @return {@code true} if the artifact was successfully deleted,
-     * {@code false} otherwise
+     * @return {@code true} if the artifact was successfully deleted, {@code false} otherwise
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean delete(Version versionToDelete) {
+    public boolean delete(Version versionToDelete) throws IOException {
         // TODO: Optimize
         // Delete from metadata
         String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
@@ -1333,9 +1315,8 @@ public class App {
             versionDoc = new SAXBuilder().build(fileName);
             versions = versionDoc.getRootElement().getChild("versions");
         } catch (JDOMException | IOException e) {
-            System.err.println("Cannot retrieve currently installed version of app " + this.getName()
-                    + ", probably because it is not installed.");
-            FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred!", e);
+            FOKLogger.log(App.class.getName(), Level.SEVERE, "Cannot retrieve currently installed version of app " + this.getName()
+                    + ", probably because it is not installed.", e);
             return false;
         }
 
@@ -1356,7 +1337,7 @@ public class App {
             try {
                 (new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
             } catch (IOException e) {
-                FOKLogger.log(App.class.getName(), Level.SEVERE, "An error occurred!", e);
+                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         }
 
@@ -1372,7 +1353,8 @@ public class App {
 
         File appFile = new File(destFolder + File.separator + appFileName);
 
-        return appFile.delete();
+        Files.delete(appFile.toPath());
+        return false;
     }
 
     /**
@@ -1441,11 +1423,8 @@ public class App {
      */
     public void exportInfo(File fileToWrite) throws IOException {
         // TODO: Optimize
-        if (!fileToWrite.exists()) {
-            // Create a new file
-            //noinspection ResultOfMethodCallIgnored
-            fileToWrite.createNewFile();
-        }
+        //noinspection ResultOfMethodCallIgnored
+        fileToWrite.createNewFile();
 
         // We either have an empty file or a file that needs to be overwritten
         Properties props = new Properties();
@@ -1559,10 +1538,8 @@ public class App {
 
         } else {
             // Actually does not create a shortcut but a bash script
-            System.out.println(Common.getInstance().getPathAndNameOfCurrentJar());
+            throw new NotImplementedException();
         }
-        // Files.createLink(shortcutFile.toPath(), new
-        // File(Common.getPathAndNameOfCurrentJar()).toPath());
     }
 
     @Override
@@ -1588,7 +1565,6 @@ public class App {
         ContextMenu contextMenu = new ContextMenu();
 
         Menu launchSpecificVersionItem = new Menu();
-        // launchSpecificVersionItem.textProperty().bind(Bindings.format(bundle.getString("launchSpecificVersion"), cell.itemProperty()));
         launchSpecificVersionItem.setText(bundle.getString("launchSpecificVersion").replace("%s", this.toString()));
 
         MenuItem dummyVersion = new MenuItem();
@@ -1646,8 +1622,7 @@ public class App {
                                 // exit handler if
                                 // required
                                 if (MainWindow.currentMainWindowInstance.launchLauncherAfterAppExitCheckbox.isSelected()) {
-                                    app
-                                            .addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+                                    app.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
                                 } else {
                                     app.removeEventHandlerWhenLaunchedAppExits(
                                             showLauncherAgain);
@@ -1683,15 +1658,12 @@ public class App {
         });
 
         Menu deleteItem = new Menu();
-        //deleteItem.textProperty().bind(Bindings.format(bundle.getString("deleteVersion"), cell.itemProperty()));
         deleteItem.setText(bundle.getString("deleteVersion").replace("%s", this.toString()));
         MenuItem dummyVersion2 = new MenuItem();
         dummyVersion2.setText(bundle.getString("waitForVersionList"));
         deleteItem.getItems().add(dummyVersion2);
 
         deleteItem.setOnShown(event -> {
-            // App app = apps.get(cell.getIndex());
-
             if (!app.isDeletableVersionListLoaded()) {
                 // Get deletable versions
                 app.setDeletableVersionListLoaded(true);
@@ -1710,6 +1682,8 @@ public class App {
                         // Delete the file
                         try {
                             app.delete(menuItem.getVersion());
+                        } catch (IOException e) {
+                            FOKLogger.log(getClass().getName(), Level.SEVERE, "Unable to delete the app " + app.getName(), e);
                         } finally {
                             MainWindow.currentMainWindowInstance.updateLaunchButton();
                         }
@@ -1791,8 +1765,6 @@ public class App {
             File file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 FOKLogger.info(App.class.getName(), "Exporting info...");
-                // App app = apps.get(cell.getIndex());
-
                 try {
                     FOKLogger.info(App.class.getName(), "Exporting app info of app " + app.getName() + " to file: "
                             + file.getAbsolutePath());
