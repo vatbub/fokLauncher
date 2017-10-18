@@ -95,12 +95,12 @@ public class AppList extends ArrayList<App> {
     @SuppressWarnings("unused")
     public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId, String mavenClassifier) {
         for (App app : this) {
-            if (app.getMavenGroupID().equals(mavenGroupId) && app.getMavenArtifactID().equals(mavenArtifactId)) {
+            if (app.getMvnCoordinates().getGroupId().equals(mavenGroupId) && app.getMvnCoordinates().getArtifactId().equals(mavenArtifactId)) {
                 // ArtifactId and groupId match, check if classifier matches too
                 // if required
                 if (mavenClassifier != null) {
                     // We need to check the classifier too
-                    if (app.getMavenClassifier().equals(mavenClassifier)) {
+                    if (app.getMvnCoordinates().getClassifier().equals(mavenClassifier)) {
                         // Everything matches
                         return app;
                     }

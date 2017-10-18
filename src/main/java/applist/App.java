@@ -96,28 +96,9 @@ public class App {
      * {@code true} if the user requested to cancel the current action.
      */
     private boolean cancelDownloadAndLaunch;
-    /**
-     * Base URL of the maven repo where the artifact can be downloaded from.
-     */
-    private URL mavenRepoBaseURL;
-    /**
-     * The URL of the maven repo where snapshots of the artifact can be
-     * downloaded from.
-     */
-    private URL mavenSnapshotRepoBaseURL;
-    /**
-     * The artifacts group id.
-     */
-    private String mavenGroupID;
-    /**
-     * The artifacts artifact id
-     */
-    private String mavenArtifactID;
-    /**
-     * The artifacts classifier or {@code ""} if the default artifact shall be
-     * used.
-     */
-    private String mavenClassifier;
+
+    private MVNCoordinates mvnCoordinates;
+
     /**
      * A webpage where the user finds additional info for this app.
      */
@@ -136,89 +117,45 @@ public class App {
      * @param name The name of the app.
      */
     public App(String name) {
-        this(name, null, null, "", "");
+        this(name, new MVNCoordinates());
     }
 
     /**
      * Creates a new App with the specified coordinates.
      *
-     * @param name                     The name of the app
-     * @param mavenRepoBaseURL         Base URL of the maven repo where the artifact can be
-     *                                 downloaded from.
-     * @param mavenSnapshotRepoBaseURL The URL of the maven repo where snapshots of the artifact can
-     *                                 be downloaded from.
-     * @param mavenGroupId             The artifacts group id.
-     * @param mavenArtifactId          The artifacts artifact id
+     * @param name           The name of the app
+     * @param mvnCoordinates The maven coordinates of the app
      */
-    public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
-               String mavenArtifactId) {
-        this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, "");
+    public App(String name, MVNCoordinates mvnCoordinates) {
+        this(name, mvnCoordinates, null);
     }
 
     /**
      * Creates a new App with the specified coordinates.
      *
-     * @param name                     The name of the app
-     * @param mavenRepoBaseURL         Base URL of the maven repo where the artifact can be
-     *                                 downloaded from.
-     * @param mavenSnapshotRepoBaseURL The URL of the maven repo where snapshots of the artifact can
-     *                                 be downloaded from.
-     * @param mavenGroupId             The artifacts group id.
-     * @param mavenArtifactId          The artifacts artifact id
-     * @param mavenClassifier          The artifacts classifier or {@code ""} if the default artifact
-     *                                 shall be used.
+     * @param name              The name of the app
+     * @param mvnCoordinates    The maven coordinates of the app
+     * @param additionalInfoURL The url to a webpage where the user finds additional info
+     *                          about this app.
      */
-    public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
-               String mavenArtifactId, String mavenClassifier) {
-        this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, mavenClassifier, null);
+    public App(String name, MVNCoordinates mvnCoordinates, URL additionalInfoURL) {
+        this(name, mvnCoordinates, additionalInfoURL, null);
     }
 
     /**
      * Creates a new App with the specified coordinates.
      *
-     * @param name                     The name of the app
-     * @param mavenRepoBaseURL         Base URL of the maven repo where the artifact can be
-     *                                 downloaded from.
-     * @param mavenSnapshotRepoBaseURL The URL of the maven repo where snapshots of the artifact can
-     *                                 be downloaded from.
-     * @param mavenGroupId             The artifacts group id.
-     * @param mavenArtifactId          The artifacts artifact id
-     * @param mavenClassifier          The artifacts classifier or {@code ""} if the default artifact
-     *                                 shall be used.
-     * @param additionalInfoURL        The url to a webpage where the user finds additional info
-     *                                 about this app.
+     * @param name              The name of the app
+     * @param mvnCoordinates    The maven coordinates of the app
+     * @param additionalInfoURL The url to a webpage where the user finds additional info
+     *                          about this app.
+     * @param changelogURL      The url to the webpage where the user finds a changelog for this app.
      */
-    public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
-               String mavenArtifactId, String mavenClassifier, URL additionalInfoURL) {
-        this(name, mavenRepoBaseURL, mavenSnapshotRepoBaseURL, mavenGroupId, mavenArtifactId, mavenClassifier, additionalInfoURL, null);
-    }
-
-    /**
-     * Creates a new App with the specified coordinates.
-     *
-     * @param name                     The name of the app
-     * @param mavenRepoBaseURL         Base URL of the maven repo where the artifact can be
-     *                                 downloaded from.
-     * @param mavenSnapshotRepoBaseURL The URL of the maven repo where snapshots of the artifact can
-     *                                 be downloaded from.
-     * @param mavenGroupId             The artifacts group id.
-     * @param mavenArtifactId          The artifacts artifact id
-     * @param mavenClassifier          The artifacts classifier or {@code ""} if the default artifact
-     *                                 shall be used.
-     * @param additionalInfoURL        The url to a webpage where the user finds additional info
-     *                                 about this app.
-     * @param changelogURL             The url to the webpage where the user finds a changelog for this app.
-     */
-    public App(String name, URL mavenRepoBaseURL, URL mavenSnapshotRepoBaseURL, String mavenGroupId,
-               String mavenArtifactId, String mavenClassifier, URL additionalInfoURL, URL changelogURL) {
-        this.setName(name);
-        this.setMavenRepoBaseURL(mavenRepoBaseURL);
-        this.setMavenSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
-        this.setMavenGroupID(mavenGroupId);
-        this.setMavenArtifactID(mavenArtifactId);
-        this.setMavenClassifier(mavenClassifier);
-        this.setAdditionalInfoURL(additionalInfoURL);
-        this.setChangelogURL(changelogURL);
+    public App(String name, MVNCoordinates mvnCoordinates, URL additionalInfoURL, URL changelogURL) {
+        setName(name);
+        setMvnCoordinates(mvnCoordinates);
+        setAdditionalInfoURL(additionalInfoURL);
+        setChangelogURL(changelogURL);
     }
 
     /**
@@ -304,13 +241,14 @@ public class App {
         AppList res = new AppList();
 
         for (Element app : fokLauncherEl.getChild("apps").getChildren("app")) {
-            App newApp = new App(app.getChild("name").getValue(), new URL(app.getChild("repoBaseURL").getValue()),
+            MVNCoordinates mvnCoordinates = new MVNCoordinates(new URL(app.getChild("repoBaseURL").getValue()),
                     new URL(app.getChild("snapshotRepoBaseURL").getValue()), app.getChild("groupId").getValue(),
                     app.getChild("artifactId").getValue());
+            App newApp = new App(app.getChild("name").getValue(), mvnCoordinates);
 
             // Add classifier only if one is defined
             if (app.getChild("classifier") != null) {
-                newApp.setMavenClassifier(app.getChild("classifier").getValue());
+                newApp.getMvnCoordinates().setClassifier(app.getChild("classifier").getValue());
             }
 
             if (app.getChild("additionalInfoURL") != null) {
@@ -523,8 +461,8 @@ public class App {
                     mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
 
             Document snapshotMetadata = new SAXBuilder()
-                    .build(new URL(this.getMavenSnapshotRepoBaseURL().toString() + "/" + mavenGroupID.replace('.', '/')
-                            + "/" + mavenArtifactID + "/" + res.getVersion() + "/maven-metadata.xml"));
+                    .build(new URL(this.getMvnCoordinates().getSnapshotRepoBaseURL().toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/')
+                            + "/" + getMvnCoordinates().getArtifactId() + "/" + res.getVersion() + "/maven-metadata.xml"));
 
             if (!res.isSnapshot()) {
                 throw new IllegalStateException(
@@ -610,80 +548,130 @@ public class App {
 
     /**
      * @return the mavenRepoBaseURL
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public URL getMavenRepoBaseURL() {
-        return mavenRepoBaseURL;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        return getMvnCoordinates().getRepoBaseURL();
     }
 
     /**
      * @param mavenRepoBaseURL the mavenRepoBaseURL to set
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public void setMavenRepoBaseURL(URL mavenRepoBaseURL) {
-        this.mavenRepoBaseURL = mavenRepoBaseURL;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        getMvnCoordinates().setRepoBaseURL(mavenRepoBaseURL);
     }
 
     /**
      * @return the mavenSnapshotRepoBaseURL
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public URL getMavenSnapshotRepoBaseURL() {
-        return mavenSnapshotRepoBaseURL;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        return getMvnCoordinates().getSnapshotRepoBaseURL();
     }
 
     /**
      * @param mavenSnapshotRepoBaseURL the mavenSnapshotRepoBaseURL to set
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public void setMavenSnapshotRepoBaseURL(URL mavenSnapshotRepoBaseURL) {
-        this.mavenSnapshotRepoBaseURL = mavenSnapshotRepoBaseURL;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        getMvnCoordinates().setSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
     }
 
     /**
      * @return the mavenGroupID
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public String getMavenGroupID() {
-        return mavenGroupID;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        return getMvnCoordinates().getGroupId();
     }
 
     /**
      * @param mavenGroupID the mavenGroupID to set
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public void setMavenGroupID(String mavenGroupID) {
-        this.mavenGroupID = mavenGroupID;
-    }
-
-    public String getMavenCoordinateString(Version version) {
-        if (getMavenClassifier().equals("")) {
-            return String.join(":", getMavenGroupID(), getMavenArtifactID(), version.toString());
-        } else {
-            return String.join(":", getMavenGroupID(), getMavenArtifactID(), version.toString(), getMavenClassifier());
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
         }
+        getMvnCoordinates().setGroupId(mavenGroupID);
     }
 
     /**
      * @return the mavenArtifactID
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public String getMavenArtifactID() {
-        return mavenArtifactID;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        return getMvnCoordinates().getArtifactId();
     }
 
     /**
      * @param mavenArtifactID the mavenArtifactID to set
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public void setMavenArtifactID(String mavenArtifactID) {
-        this.mavenArtifactID = mavenArtifactID;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        getMvnCoordinates().setArtifactId(mavenArtifactID);
     }
 
     /**
      * @return the mavenClassifier
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public String getMavenClassifier() {
-        return mavenClassifier;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        return getMvnCoordinates().getClassifier();
     }
 
     /**
      * @param mavenClassifier the mavenClassifier to set
+     * @deprecated Use {@link #getMvnCoordinates()} instead
      */
+    @Deprecated
     public void setMavenClassifier(String mavenClassifier) {
-        this.mavenClassifier = mavenClassifier;
+        if (getMvnCoordinates() == null) {
+            setMvnCoordinates(new MVNCoordinates());
+        }
+        getMvnCoordinates().setClassifier(mavenClassifier);
+    }
+
+    public MVNCoordinates getMvnCoordinates() {
+        return mvnCoordinates;
+    }
+
+    public void setMvnCoordinates(MVNCoordinates mvnCoordinates) {
+        this.mvnCoordinates = mvnCoordinates;
     }
 
     /**
@@ -854,8 +842,8 @@ public class App {
             root.addContent(versions);
         }
 
-        artifactId.setText(this.getMavenArtifactID());
-        groupId.setText(this.getMavenGroupID());
+        artifactId.setText(getMvnCoordinates().getArtifactId());
+        groupId.setText(getMvnCoordinates().getGroupId());
 
         boolean versionFound = false;
 
@@ -914,12 +902,12 @@ public class App {
         if (snapshotsEnabled) {
             // Snapshots enabled
             mavenMetadata = new SAXBuilder().build(new URL(
-                    this.getMavenSnapshotRepoBaseURL().toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
-                            + this.getMavenArtifactID() + "/maven-metadata.xml"));
+                    getMvnCoordinates().getSnapshotRepoBaseURL().toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
+                            + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
         } else {
             // Snapshots disabled
-            mavenMetadata = new SAXBuilder().build(new URL(this.getMavenRepoBaseURL().toString() + "/"
-                    + this.getMavenGroupID().replace('.', '/') + "/" + mavenArtifactID + "/maven-metadata.xml"));
+            mavenMetadata = new SAXBuilder().build(new URL(getMvnCoordinates().getRepoBaseURL().toString() + "/"
+                    + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
         }
 
         return mavenMetadata;
@@ -1168,12 +1156,12 @@ public class App {
             return;
         }
 
-        if (this.getMavenClassifier().equals("")) {
+        if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
-            destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + ".jar";
+            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToLaunch.toString() + ".jar";
         } else {
-            destFilename = this.getMavenArtifactID() + "-" + versionToLaunch.toString() + "-"
-                    + this.getMavenClassifier() + ".jar";
+            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToLaunch.toString() + "-"
+                    + getMvnCoordinates().getClassifier() + ".jar";
         }
 
         if (gui != null) {
@@ -1328,30 +1316,30 @@ public class App {
 
         if (versionToDownload.isSnapshot()) {
             // Snapshot
-            repoBaseURL = this.getMavenSnapshotRepoBaseURL();
+            repoBaseURL = getMvnCoordinates().getSnapshotRepoBaseURL();
         } else {
             // Not a snapshot
-            repoBaseURL = this.getMavenRepoBaseURL();
+            repoBaseURL = getMvnCoordinates().getRepoBaseURL();
         }
 
         // Construct the download url
-        if (this.getMavenClassifier().equals("")) {
-            artifactURL = new URL(repoBaseURL.toString() + "/" + this.mavenGroupID.replace('.', '/') + "/"
-                    + this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
+        if (getMvnCoordinates().getClassifier() == null) {
+            artifactURL = new URL(repoBaseURL.toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
+                    + getMvnCoordinates().getArtifactId() + "/" + versionToDownload.getVersion() + "/" + getMvnCoordinates().getArtifactId()
                     + "-" + versionToDownload.toString() + ".jar");
         } else {
-            artifactURL = new URL(repoBaseURL.toString() + "/" + this.getMavenGroupID().replace('.', '/') + "/"
-                    + this.getMavenArtifactID() + "/" + versionToDownload.getVersion() + "/" + this.getMavenArtifactID()
-                    + "-" + versionToDownload.toString() + "-" + this.getMavenClassifier() + ".jar");
+            artifactURL = new URL(repoBaseURL.toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
+                    + getMvnCoordinates().getArtifactId() + "/" + versionToDownload.getVersion() + "/" + getMvnCoordinates().getArtifactId()
+                    + "-" + versionToDownload.toString() + "-" + getMvnCoordinates().getClassifier() + ".jar");
         }
 
         // Construct file name of output file
-        if (this.getMavenClassifier().equals("")) {
+        if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
-            destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + ".jar";
+            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToDownload.toString() + ".jar";
         } else {
-            destFilename = this.getMavenArtifactID() + "-" + versionToDownload.toString() + "-"
-                    + this.getMavenClassifier() + ".jar";
+            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToDownload.toString() + "-"
+                    + getMvnCoordinates().getClassifier() + ".jar";
         }
 
         // Perform Cancel if requested
@@ -1511,11 +1499,11 @@ public class App {
 
         // Delete the file
         String appFileName;
-        if (this.getMavenClassifier().equals("")) {
+        if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
-            appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + ".jar";
+            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString() + ".jar";
         } else {
-            appFileName = this.getMavenArtifactID() + "-" + versionToDelete.toString() + "-" + this.getMavenClassifier()
+            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString() + "-" + getMvnCoordinates().getClassifier()
                     + ".jar";
         }
 
@@ -1599,11 +1587,11 @@ public class App {
         Properties props = new Properties();
 
         props.setProperty("name", this.getName());
-        props.setProperty("repoBaseURL", this.getMavenRepoBaseURL().toString());
-        props.setProperty("snapshotRepoBaseURL", this.getMavenSnapshotRepoBaseURL().toString());
-        props.setProperty("groupId", this.getMavenGroupID());
-        props.setProperty("artifactId", this.getMavenArtifactID());
-        props.setProperty("classifier", this.getMavenClassifier());
+        props.setProperty("repoBaseURL", getMvnCoordinates().getRepoBaseURL().toString());
+        props.setProperty("snapshotRepoBaseURL", getMvnCoordinates().getSnapshotRepoBaseURL().toString());
+        props.setProperty("groupId", getMvnCoordinates().getGroupId());
+        props.setProperty("artifactId", getMvnCoordinates().getArtifactId());
+        props.setProperty("classifier", getMvnCoordinates().getClassifier());
         if (this.getAdditionalInfoURL() != null) {
             props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
         }
@@ -1643,11 +1631,11 @@ public class App {
         }
 
         this.setName(props.getProperty("name"));
-        this.setMavenRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
-        this.setMavenSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
-        this.setMavenGroupID(props.getProperty("groupId"));
-        this.setMavenArtifactID(props.getProperty("artifactId"));
-        this.setMavenClassifier(props.getProperty("classifier"));
+        getMvnCoordinates().setRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
+        getMvnCoordinates().setSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
+        getMvnCoordinates().setGroupId(props.getProperty("groupId"));
+        getMvnCoordinates().setArtifactId(props.getProperty("artifactId"));
+        getMvnCoordinates().setClassifier(props.getProperty("classifier", null));
 
         if (!props.getProperty("additionalInfoURL", "").equals("")) {
             this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
@@ -1723,17 +1711,17 @@ public class App {
         if (SystemUtils.IS_OS_WINDOWS) {
             ShellLink sl = ShellLink.createLink(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString());
 
-            if (this.getMavenClassifier().equals("")) {
+            if (getMvnCoordinates().getClassifier() == null) {
                 // no classifier set
-                sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
-                        + " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
-                        + " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
-                        + this.getMavenArtifactID());
+                sl.setCMDArgs("launch autolaunchrepourl=" + getMvnCoordinates().getRepoBaseURL().toString()
+                        + " autolaunchsnapshotrepourl=" + getMvnCoordinates().getSnapshotRepoBaseURL().toString()
+                        + " autolaunchgroupid=" + getMvnCoordinates().getGroupId() + " autolaunchartifactid="
+                        + getMvnCoordinates().getArtifactId());
             } else {
-                sl.setCMDArgs("launch autolaunchrepourl=" + this.getMavenRepoBaseURL().toString()
-                        + " autolaunchsnapshotrepourl=" + this.getMavenSnapshotRepoBaseURL().toString()
-                        + " autolaunchgroupid=" + this.getMavenGroupID() + " autolaunchartifactid="
-                        + this.getMavenArtifactID() + " autolaunchclassifier=" + this.getMavenClassifier());
+                sl.setCMDArgs("launch autolaunchrepourl=" + getMvnCoordinates().getRepoBaseURL().toString()
+                        + " autolaunchsnapshotrepourl=" + getMvnCoordinates().getSnapshotRepoBaseURL().toString()
+                        + " autolaunchgroupid=" + getMvnCoordinates().getGroupId() + " autolaunchartifactid="
+                        + getMvnCoordinates().getArtifactId() + " autolaunchclassifier=" + getMvnCoordinates().getClassifier());
             }
 
             sl.setName(quickInfoText.replace("%s", this.getName()));
@@ -2026,13 +2014,13 @@ public class App {
     }
 
     private String getSubfolderToSaveApps() {
-        if (this.getMavenClassifier().equals("")) {
+        if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
             return AppConfig.subfolderToSaveApps
-                    .replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID());
+                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());
         } else {
             return AppConfig.subfolderToSaveApps
-                    .replace("{groupId}", this.getMavenGroupID()).replace("{artifactId}", this.getMavenArtifactID()).replace("{classifier}", this.getMavenClassifier());
+                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId()).replace("{classifier}", getMvnCoordinates().getArtifactId());
         }
     }
 }
