@@ -163,4 +163,13 @@ public class MVNCoordinates {
     public void setClassifier(String classifier) {
         this.classifier = classifier;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder res = new StringBuilder(getGroupId()).append(":").append(getArtifactId()).append(":<version>:").append(":jar");
+        if (getClassifier() != null) {
+            res.append(":").append(getClassifier());
+        }
+        return res.toString();
+    }
 }

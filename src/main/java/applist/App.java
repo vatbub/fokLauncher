@@ -52,7 +52,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -78,11 +77,6 @@ public class App {
      * The latest snapshot version of the app that is available online
      */
     Version latestOnlineSnapshotVersion;
-    /**
-     * Specifies if the info of this app was imported from a file or gathered
-     * from the remote server.
-     */
-    private boolean imported;
     /**
      * Specifies the file from which this app was imported from (if it was
      * imported)
@@ -214,55 +208,7 @@ public class App {
      *                       downloaded.
      */
     public static AppList getOnlineAppList() throws JDOMException, IOException {
-        Document doc;
-        String fileName = Common.getInstance().getAndCreateAppDataPath() + File.separator + AppConfig.appListCacheFileName;
-        try {
-            doc = new SAXBuilder().build(AppConfig.getAppListXMLURL());
-
-            (new XMLOutputter(Format.getPrettyFormat())).output(doc, new FileOutputStream(fileName));
-        } catch (UnknownHostException e) {
-            try {
-                doc = new SAXBuilder().build(new File(fileName));
-            } catch (FileNotFoundException e1) {
-                throw new UnknownHostException("Could not connect to " + AppConfig.getAppListXMLURL().toString()
-                        + " and app list cache not found. \nPlease ensure a stable internet connection.");
-            }
-        }
-        Element fokLauncherEl = doc.getRootElement();
-        String modelVersion = fokLauncherEl.getChild("modelVersion").getValue();
-
-        // Check for unsupported modelVersion
-        if (!AppConfig.getSupportedFOKConfigModelVersion().contains(modelVersion)) {
-            throw new IllegalStateException(
-                    "The modelVersion of the fokprojectsOnLauncher.xml file is not supported! (modelVersion is "
-                            + modelVersion + ")");
-        }
-
-        AppList res = new AppList();
-
-        for (Element app : fokLauncherEl.getChild("apps").getChildren("app")) {
-            MVNCoordinates mvnCoordinates = new MVNCoordinates(new URL(app.getChild("repoBaseURL").getValue()),
-                    new URL(app.getChild("snapshotRepoBaseURL").getValue()), app.getChild("groupId").getValue(),
-                    app.getChild("artifactId").getValue());
-            App newApp = new App(app.getChild("name").getValue(), mvnCoordinates);
-
-            // Add classifier only if one is defined
-            if (app.getChild("classifier") != null) {
-                newApp.getMvnCoordinates().setClassifier(app.getChild("classifier").getValue());
-            }
-
-            if (app.getChild("additionalInfoURL") != null) {
-                newApp.setAdditionalInfoURL(new URL(app.getChild("additionalInfoURL").getValue()));
-            }
-
-            if (app.getChild("changelogURL") != null) {
-                newApp.setChangelogURL(new URL(app.getChild("changelogURL").getValue()));
-            }
-
-            res.add(newApp);
-        }
-
-        return res;
+        return new AppListFile().getAppList();
     }
 
     /**
@@ -275,96 +221,14 @@ public class App {
      */
     @SuppressWarnings("unused")
     public static AppList getImportedAppList() throws JDOMException, IOException {
-        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
-
-        try {
-            AppList res = new AppList();
-
-            Document appsDoc = new SAXBuilder().build(fileName);
-            Element root = appsDoc.getRootElement();
-
-            Element modelVersion = root.getChild("modelVersion");
-            Element appsElement = root.getChild("importedApps");
-
-            for (Element app : appsElement.getChildren()) {
-                // import the info of every app
-                try {
-                    App a = new App(new File(app.getChild("fileName").getValue()));
-                    res.add(a);
-                } catch (IOException e) {
-                    // Exception is already logged by the constructor
-                }
-            }
-
-            return res;
-        } catch (FileNotFoundException e) {
-            return new AppList();
-        }
+        AppList res = new ImportedAppListFile().getAppList();
+        return res == null ? new AppList() : res;
     }
 
     public static void addImportedApp(File infoFile) throws IOException {
-        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
-
-        Element root;
-        Document appsDoc;
-        Element modelVersion;
-        Element appsElement;
-
-        try {
-            appsDoc = new SAXBuilder().build(fileName);
-            root = appsDoc.getRootElement();
-
-            modelVersion = root.getChild("modelVersion");
-            appsElement = root.getChild("importedApps");
-
-            // Check if one of those elements is not defined
-            if (modelVersion == null) {
-                throw new NullPointerException("modelVersion is null");
-            } else if (appsElement == null) {
-                throw new NullPointerException("appsElement is null");
-            }
-        } catch (JDOMException | IOException | NullPointerException e) {
-            // Could not read document for some reason so generate a new one
-            root = new Element("fokLauncher");
-            appsDoc = new Document(root);
-
-            modelVersion = new Element("modelVersion");
-            appsElement = new Element("importedApps");
-
-            root.addContent(modelVersion);
-            root.addContent(appsElement);
-        }
-
-        modelVersion.setText("0.0.1");
-
-        boolean fileFound = false;
-
-        for (Element app : appsElement.getChildren()) {
-            if (app.getChild("fileName").getValue().equals(infoFile.getAbsolutePath())) {
-                fileFound = true;
-                break;
-            }
-        }
-
-        // Check if the specified version is already present
-        if (!fileFound) {
-            Element app = new Element("app");
-            Element fileNameElement = new Element("fileName");
-
-            fileNameElement.setText(infoFile.getAbsolutePath());
-
-            app.addContent(fileNameElement);
-
-            appsElement.addContent(app);
-        }
-
-        // Write xml-File
-        // Create directories if necessary
-        File f = new File(fileName);
-        //noinspection ResultOfMethodCallIgnored
-        f.getParentFile().mkdirs();
-        // Create empty file on disk if necessary
-        (new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile();
+        importedAppListFile.getAppList().addAndCheckForDuplicateImports(new App(infoFile));
+        importedAppListFile.saveFile();
     }
 
     public URL getChangelogURL() {
@@ -399,6 +263,7 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public VersionList getAllOnlineVersions() throws JDOMException, IOException {
+        // TODO: Optimize
         if (onlineVersionList != null) {
             return onlineVersionList.clone();
         } else {
@@ -428,6 +293,7 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public Version getLatestOnlineVersion() throws JDOMException, IOException {
+        // TODO: Optimize
         if (latestOnlineVersion != null) {
             return latestOnlineVersion.clone();
         } else {
@@ -452,6 +318,7 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public Version getLatestOnlineSnapshotVersion() throws JDOMException, IOException {
+        // TODO: Optimize
         if (latestOnlineSnapshotVersion != null) {
             return latestOnlineSnapshotVersion.clone();
         } else {
@@ -519,6 +386,7 @@ public class App {
      * @return A list of currently installed versions
      */
     public VersionList getCurrentlyInstalledVersions() {
+        // TODO: Optimize
         VersionList res = new VersionList();
 
         // Load the metadata.xml file
@@ -678,7 +546,7 @@ public class App {
      * @return the imported
      */
     public boolean isImported() {
-        return imported;
+        return getImportFile() != null;
     }
 
     /**
@@ -750,6 +618,7 @@ public class App {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
+        // TODO: Optimize
         String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
@@ -804,6 +673,7 @@ public class App {
      */
     private void downloadVersionInfo(Version versionToGet, String destFolder)
             throws IOException {
+        // TODO: Optimize
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
 
         Element root;
@@ -896,22 +766,15 @@ public class App {
      */
     private Document getMavenMetadata(boolean snapshotsEnabled)
             throws JDOMException, IOException {
-
-        Document mavenMetadata;
-
+        String repoBaseURL;
         if (snapshotsEnabled) {
-            // Snapshots enabled
-            mavenMetadata = new SAXBuilder().build(new URL(
-                    getMvnCoordinates().getSnapshotRepoBaseURL().toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
-                            + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
+            repoBaseURL = getMvnCoordinates().getSnapshotRepoBaseURL().toString();
         } else {
-            // Snapshots disabled
-            mavenMetadata = new SAXBuilder().build(new URL(getMvnCoordinates().getRepoBaseURL().toString() + "/"
-                    + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
+            repoBaseURL = getMvnCoordinates().getRepoBaseURL().toString();
         }
 
-        return mavenMetadata;
-
+        return new SAXBuilder().build(new URL(repoBaseURL + "/"
+                + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
     }
 
     /**
@@ -1459,7 +1322,7 @@ public class App {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean delete(Version versionToDelete) {
-
+        // TODO: Optimize
         // Delete from metadata
         String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
         String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
@@ -1577,6 +1440,7 @@ public class App {
      * @throws IOException If something happens while saving the file
      */
     public void exportInfo(File fileToWrite) throws IOException {
+        // TODO: Optimize
         if (!fileToWrite.exists()) {
             // Create a new file
             //noinspection ResultOfMethodCallIgnored
@@ -1612,7 +1476,7 @@ public class App {
      *                     the launcher has no permission to read the file.
      */
     private void importInfo(File fileToImport) throws IOException {
-        this.imported = true;
+        // TODO: Optimize
         this.importFile = fileToImport;
         FileReader fileReader = null;
         if (!fileToImport.isFile()) {
@@ -1631,6 +1495,7 @@ public class App {
         }
 
         this.setName(props.getProperty("name"));
+        this.setMvnCoordinates(new MVNCoordinates());
         getMvnCoordinates().setRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
         getMvnCoordinates().setSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
         getMvnCoordinates().setGroupId(props.getProperty("groupId"));
@@ -1650,64 +1515,19 @@ public class App {
     }
 
     public void removeFromImportedAppList() throws IOException {
-        String fileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName;
-
-        Element root;
-        Document appsDoc;
-        Element modelVersion;
-        Element appsElement;
-
-        try {
-            appsDoc = new SAXBuilder().build(fileName);
-            root = appsDoc.getRootElement();
-
-            modelVersion = root.getChild("modelVersion");
-            appsElement = root.getChild("importedApps");
-
-            // Check if one of those elements is not defined
-            if (modelVersion == null) {
-                throw new NullPointerException("modelVersion is null");
-            } else if (appsElement == null) {
-                throw new NullPointerException("appsElement is null");
-            }
-        } catch (JDOMException | IOException | NullPointerException e) {
-            // Could not read document for some reason so generate a new one
-            root = new Element("fokLauncher");
-            appsDoc = new Document(root);
-
-            modelVersion = new Element("modelVersion");
-            appsElement = new Element("importedApps");
-
-            root.addContent(modelVersion);
-            root.addContent(appsElement);
-        }
-
-        modelVersion.setText("0.0.1");
-
-        List<Element> appsToDetach = new ArrayList<>();
-
-        for (Element app : appsElement.getChildren()) {
-            if (app.getChild("fileName").getValue().equals(this.getImportFile().getAbsolutePath())) {
-                // Collect elements to be detached
-                appsToDetach.add(app);
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile();
+        AppList finalList = new AppList(importedAppListFile.getAppList().size());
+        for (App app : importedAppListFile.getAppList()) {
+            if (!app.getImportFile().equals(getImportFile())) {
+                finalList.add(app);
             }
         }
-
-        // Detach them
-        for (Element app : appsToDetach) {
-            app.detach();
-        }
-
-        // Write xml-File
-        // Create directories if necessary
-        File f = new File(fileName);
-        //noinspection ResultOfMethodCallIgnored
-        f.getParentFile().mkdirs();
-        // Create empty file on disk if necessary
-        (new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+        importedAppListFile.setAppList(finalList);
+        importedAppListFile.saveFile();
     }
 
     public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
+        // TODO: Optimize
         if (SystemUtils.IS_OS_WINDOWS) {
             ShellLink sl = ShellLink.createLink(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString());
 
@@ -1749,8 +1569,10 @@ public class App {
     public String toString() {
         if (this.getName() != null) {
             return this.getName();
+        } else if (getMvnCoordinates() != null) {
+            return getMvnCoordinates().toString();
         } else {
-            return "";
+            return super.toString();
         }
     }
 
@@ -2020,7 +1842,7 @@ public class App {
                     .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());
         } else {
             return AppConfig.subfolderToSaveApps
-                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId()).replace("{classifier}", getMvnCoordinates().getArtifactId());
+                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId()).replace("{classifier}", getMvnCoordinates().getClassifier());
         }
     }
 }

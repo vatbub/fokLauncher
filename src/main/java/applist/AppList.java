@@ -114,4 +114,16 @@ public class AppList extends ArrayList<App> {
         // We only arrived here if no match was found
         return null;
     }
+
+    public boolean addAndCheckForDuplicateImports(App appToAdd) {
+        for (App app : this) {
+            if (app.getImportFile().equals(appToAdd.getImportFile())) {
+                return false;
+            }
+        }
+
+        // no duplicate found
+        this.add(appToAdd);
+        return true;
+    }
 }
