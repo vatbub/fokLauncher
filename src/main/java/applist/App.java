@@ -26,7 +26,7 @@ import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 import com.github.vatbub.common.updater.Version;
 import com.github.vatbub.common.updater.VersionList;
-import common.AppConfig;
+import config.AppConfig;
 import extended.VersionMenuItem;
 import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
@@ -54,6 +54,7 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -386,8 +387,8 @@ public class App {
         VersionList res = new VersionList();
 
         // Load the metadata.xml file
-        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
-        String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
+        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
+        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
         Document versionDoc;
 
         try {
@@ -612,8 +613,8 @@ public class App {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
         // TODO: Optimize
-        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
-        String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
+        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
+        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
 
         Element root;
         Document versionDoc;
@@ -667,7 +668,7 @@ public class App {
     private void downloadVersionInfo(Version versionToGet, String destFolder)
             throws IOException {
         // TODO: Optimize
-        String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
+        String fileName = destFolder + File.separator + AppConfig.getRemoteConfig().getValue("appMetadataFileName");
 
         Element root;
         Document versionDoc;
@@ -965,7 +966,7 @@ public class App {
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
                                              boolean disableDownload, String... startupArgs) throws IOException {
         cancelDownloadAndLaunch = false;
-        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
         String destFilename;
 
         if (!disableDownload) {
@@ -1016,7 +1017,7 @@ public class App {
             gui.launchStarted();
         }
 
-        String jarFileName = destFolder + File.separator + destFilename;
+        String jarFileName = destFolder.resolve(destFilename).toAbsolutePath().toString();
 
         // throw exception if the jar can't be found for some unlikely reason
         if (!(new File(jarFileName)).exists()) {
@@ -1149,7 +1150,7 @@ public class App {
             gui.preparePhaseStarted();
         }
 
-        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
+        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
         String destFilename;
         URL repoBaseURL;
         URL artifactURL;
@@ -1254,7 +1255,7 @@ public class App {
         in.close();
 
         // download version info
-        downloadVersionInfo(versionToDownload, destFolder);
+        downloadVersionInfo(versionToDownload, destFolder.toAbsolutePath().toString());
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
@@ -1306,8 +1307,8 @@ public class App {
     public boolean delete(Version versionToDelete) throws IOException {
         // TODO: Optimize
         // Delete from metadata
-        String destFolder = Common.getInstance().getAndCreateAppDataPath() + getSubfolderToSaveApps();
-        String fileName = destFolder + File.separator + AppConfig.appMetadataFileName;
+        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
+        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
         Document versionDoc;
         Element versions;
 
@@ -1808,13 +1809,13 @@ public class App {
     }
 
     private String getSubfolderToSaveApps() {
+        String res = AppConfig.getRemoteConfig().getValue("subfolderToSaveApps").replace("{FileSeparator}", File.separator)
+                .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());
         if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
-            return AppConfig.subfolderToSaveApps
-                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());
+            return res.replace("{classifier}", "");
         } else {
-            return AppConfig.subfolderToSaveApps
-                    .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId()).replace("{classifier}", getMvnCoordinates().getClassifier());
+            return res.replace("{classifier}", getMvnCoordinates().getClassifier());
         }
     }
 }

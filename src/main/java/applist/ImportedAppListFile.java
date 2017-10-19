@@ -23,7 +23,7 @@ package applist;
 
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
-import common.AppConfig;
+import config.AppConfig;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -41,7 +41,7 @@ public class ImportedAppListFile {
     private String fileName;
 
     public ImportedAppListFile() {
-        this(Common.getInstance().getAndCreateAppDataPath() + AppConfig.importedAppListFileName);
+        this(Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("importedAppListFileName"));
     }
 
     public ImportedAppListFile(String fileName) {

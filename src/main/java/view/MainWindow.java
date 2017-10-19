@@ -39,7 +39,7 @@ import com.github.vatbub.common.view.motd.MOTD;
 import com.github.vatbub.common.view.motd.MOTDDialog;
 import com.rometools.rome.io.FeedException;
 import com.sun.glass.ui.Robot;
-import common.AppConfig;
+import config.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Application;
@@ -91,14 +91,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     private static final String enableSnapshotsPrefKey = "enableSnapshots";
     private static final String showLauncherAgainPrefKey = "showLauncherAgain";
     private static final String guiLanguagePrefKey = "guiLanguage";
-    // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
-    // private static final MetricRegistry metricsRegistry = new MetricRegistry();
     /**
      * This reference always refers to the currently used instance of the
      * MainWidow. The purpose of this field that {@code this} can be accessed in
      * a convenient way in static methods.
      */
     public static MainWindow currentMainWindowInstance;
+
+    // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
+    // private static final MetricRegistry metricsRegistry = new MetricRegistry();
     public static ResourceBundle bundle;
     public static Stage stage;
     public static Thread downloadAndLaunchThread = new Thread();
@@ -571,10 +572,14 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     void updateLinkOnAction(ActionEvent event) {
         // Check for new version ignoring ignored updates
         Thread updateThread = new Thread(() -> {
-            UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(AppConfig.getUpdateRepoBaseURL(),
-                    AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
-                    Common.getInstance().getPackaging());
-            Platform.runLater(() -> new UpdateAvailableDialog(update));
+            try {
+                UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(new URL(AppConfig.getRemoteConfig().getValue("updateRepoBaseURL")),
+                        AppConfig.getRemoteConfig().getValue("groupID"), AppConfig.getRemoteConfig().getValue("artifactID"), AppConfig.getUpdateFileClassifier(),
+                        Common.getInstance().getPackaging());
+                Platform.runLater(() -> new UpdateAvailableDialog(update));
+            } catch (MalformedURLException e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            }
         });
         updateThread.setName("manualUpdateThread");
         updateThread.start();
@@ -706,11 +711,15 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         stage = primaryStage;
         try {
             Thread updateThread = new Thread(() -> {
-                UpdateInfo update = UpdateChecker.isUpdateAvailable(AppConfig.getUpdateRepoBaseURL(),
-                        AppConfig.groupID, AppConfig.artifactID, AppConfig.getUpdateFileClassifier(),
-                        Common.getInstance().getPackaging());
-                if (update.showAlert) {
-                    Platform.runLater(() -> new UpdateAvailableDialog(update));
+                try {
+                    UpdateInfo update = UpdateChecker.isUpdateAvailable(new URL(AppConfig.getRemoteConfig().getValue("updateRepoBaseURL")),
+                            AppConfig.getRemoteConfig().getValue("groupID"), AppConfig.getRemoteConfig().getValue("artifactID"), AppConfig.getUpdateFileClassifier(),
+                            Common.getInstance().getPackaging());
+                    if (update.showAlert) {
+                        Platform.runLater(() -> new UpdateAvailableDialog(update));
+                    }
+                } catch (MalformedURLException e) {
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 }
             });
             updateThread.setName("updateThread");
@@ -826,7 +835,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         Thread motdThread = new Thread(() -> {
             MOTD motd;
             try {
-                motd = MOTD.getLatestMOTD(AppConfig.getMotdFeedUrl());
+                motd = MOTD.getLatestMOTD(new URL(AppConfig.getRemoteConfig().getValue("motdFeedUrl")));
                 if (!motd.isMarkedAsRead()) {
                     Platform.runLater(() -> new MOTDDialog(motd, motd.getEntry().getTitle()));
                 }

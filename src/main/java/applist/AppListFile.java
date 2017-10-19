@@ -22,7 +22,7 @@ package applist;
 
 
 import com.github.vatbub.common.core.Common;
-import common.AppConfig;
+import config.AppConfig;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -42,7 +42,7 @@ public class AppListFile {
     private AppList appList;
 
     public AppListFile() throws JDOMException, IOException {
-        this(AppConfig.getAppListXMLURL(), Common.getInstance().getAndCreateAppDataPath() + AppConfig.appListCacheFileName);
+        this(new URL(AppConfig.getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName"));
     }
 
     public AppListFile(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
@@ -59,7 +59,7 @@ public class AppListFile {
             try {
                 onlineAppList = new SAXBuilder().build(new File(offlineCacheFileName));
             } catch (FileNotFoundException e1) {
-                throw new UnknownHostException("Could not connect to " + AppConfig.getAppListXMLURL().toString()
+                throw new UnknownHostException("Could not connect to " + AppConfig.getRemoteConfig().getValue("appListXMLURL")
                         + " and app list cache not found. \nPlease ensure a stable internet connection.");
             }
         }
