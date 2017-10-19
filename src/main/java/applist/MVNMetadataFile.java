@@ -40,7 +40,6 @@ public class MVNMetadataFile {
     private Version latestRelease;
     private VersionList versionList;
     private LocalDateTime lastUpdated;
-    private MVNSnapshotMetadataFile mvnSnapshotMetadataFile;
 
     public MVNMetadataFile(MVNCoordinates mvnCoordinates) {
         setMvnCoordinates(mvnCoordinates);
@@ -57,8 +56,14 @@ public class MVNMetadataFile {
         Element versioningElement = mavenMetadata.getRootElement().getChild(FileFormat.VERSIONING_TAG_NAME);
         if (versioningElement.getChild(FileFormat.LATEST_VERSION_TAG_NAME) != null) {
             setLatest(new Version(versioningElement.getChild(FileFormat.LATEST_VERSION_TAG_NAME).getValue()));
+            if (getLatest().isSnapshot()) {
+                updateVersionWithSnapshotInfo(getLatest());
+            }
         } else if (mavenMetadata.getRootElement().getChild(FileFormat.VERSION_TAG_NAME) != null) {
             setLatest(new Version(mavenMetadata.getRootElement().getChild(FileFormat.VERSION_TAG_NAME).getValue()));
+            if (getLatest().isSnapshot()) {
+                updateVersionWithSnapshotInfo(getLatest());
+            }
         }
         if (versioningElement.getChild(FileFormat.LATEST_RELEASE_TAG_NAME) != null) {
             setLatestRelease(new Version(versioningElement.getChild(FileFormat.LATEST_RELEASE_TAG_NAME).getValue()));
@@ -67,24 +72,31 @@ public class MVNMetadataFile {
         DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         setLastUpdated(LocalDateTime.from(f.parse(versioningElement.getChild(FileFormat.LAST_UPDATED_TAG_NAME).getValue())));
 
-        setVersionList(readVersionList(versioningElement));
-    }
-
-    VersionList readVersionList(Element versioningElement) {
         VersionList res = new VersionList();
         List<Element> versions = versioningElement.getChild(FileFormat.VERSIONS_TAG_NAME)
                 .getChildren(FileFormat.VERSION_TAG_NAME);
 
         for (Element versionElement : versions) {
             Version version = new Version(versionElement.getValue());
-
-            if (!version.isSnapshot()) {
-                // Version is not a snapshot so add it to the list
+            if (enableSnapshots == version.isSnapshot()) {
+                if (version.isSnapshot()) {
+                    updateVersionWithSnapshotInfo(version);
+                }
                 res.add(version);
             }
         }
 
-        return res;
+        setVersionList(res);
+    }
+
+    private void updateVersionWithSnapshotInfo(Version version) throws IOException, JDOMException {
+        Document snapshotMetadata = new SAXBuilder()
+                .build(new URL(this.getMvnCoordinates().getSnapshotRepoBaseURL().toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/')
+                        + "/" + getMvnCoordinates().getArtifactId() + "/" + version.getVersion() + "/maven-metadata.xml"));
+        Element snapshotVersioningElement = snapshotMetadata.getRootElement().getChild(SnapshotFileFormat.VERSIONING_TAG_NAME);
+        Element latestSnapshot = snapshotVersioningElement.getChild(SnapshotFileFormat.LATEST_SNAPSHOT_TAG_NAME);
+        version.setBuildNumber(latestSnapshot.getChild(SnapshotFileFormat.BUILD_NUMBER_TAG_NAME).getValue());
+        version.setTimestamp(latestSnapshot.getChild(SnapshotFileFormat.TIMESTAMP_TAG_NAME).getValue());
     }
 
     /**
@@ -107,13 +119,6 @@ public class MVNMetadataFile {
 
         return new SAXBuilder().build(new URL(repoBaseURL + "/"
                 + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
-    }
-
-    public MVNSnapshotMetadataFile getMvnSnapshotMetadataFile() throws JDOMException, IOException {
-        if (mvnSnapshotMetadataFile == null) {
-            mvnSnapshotMetadataFile = new MVNSnapshotMetadataFile(getMvnCoordinates(), getLatest());
-        }
-        return mvnSnapshotMetadataFile;
     }
 
     public MVNCoordinates getMvnCoordinates() {
@@ -167,5 +172,12 @@ public class MVNMetadataFile {
         private FileFormat() {
             throw new IllegalStateException("Class may not be instantiated");
         }
+    }
+
+    public class SnapshotFileFormat {
+        public static final String VERSIONING_TAG_NAME = "versioning";
+        public static final String LATEST_SNAPSHOT_TAG_NAME = "snapshot";
+        public static final String TIMESTAMP_TAG_NAME = "timestamp";
+        public static final String BUILD_NUMBER_TAG_NAME = "buildNumber";
     }
 }

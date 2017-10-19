@@ -46,7 +46,11 @@ public class MVNCoordinates {
     private String classifier;
 
     public MVNCoordinates() {
-        this(null, null, null, null);
+        this(null, null);
+    }
+
+    public MVNCoordinates(String groupId, String artifactId) {
+        this(null, null, groupId, artifactId);
     }
 
     /**

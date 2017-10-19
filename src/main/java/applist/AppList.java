@@ -57,6 +57,7 @@ public class AppList extends ArrayList<App> {
             app.latestOnlineSnapshotVersion = null;
             app.releaseRepoMetadataFile = null;
             app.snapshotRepoMetadataFile = null;
+            app.localMetadataFile = null;
         }
 
         reloadContextMenuEntriesOnShow();

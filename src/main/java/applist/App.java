@@ -73,7 +73,8 @@ public class App {
      */
     Version latestOnlineSnapshotVersion;
     MVNMetadataFile releaseRepoMetadataFile;
-    MVNSnapshotMetadataFile snapshotRepoMetadataFile;
+    MVNMetadataFile snapshotRepoMetadataFile;
+    LocalMetadataFile localMetadataFile;
     /**
      * Specifies the file from which this app was imported from (if it was
      * imported)
@@ -286,10 +287,9 @@ public class App {
      */
     public Version getLatestOnlineSnapshotVersion() throws JDOMException, IOException {
         if (snapshotRepoMetadataFile == null) {
-            snapshotRepoMetadataFile = new MVNMetadataFile(getMvnCoordinates(), true).getMvnSnapshotMetadataFile();
+            snapshotRepoMetadataFile = new MVNMetadataFile(getMvnCoordinates(), true);
         }
         return snapshotRepoMetadataFile.getLatest().clone();
-
     }
 
     /**
@@ -329,29 +329,29 @@ public class App {
      * @return A list of currently installed versions
      */
     public VersionList getCurrentlyInstalledVersions() {
-        // TODO: Optimize
-        VersionList res = new VersionList();
+        if (localMetadataFile == null) {
+            if (!loadLocalMetadataFile()) {
+                // something went wrong, exception already logged
+                return null;
+            }
+        }
+        return localMetadataFile.getVersionList().clone();
+    }
 
-        // Load the metadata.xml file
+    private File getLocationOfLocalMetadataFile() {
         Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
-        Document versionDoc;
+        return destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toFile();
+    }
 
+    private boolean loadLocalMetadataFile() {
         try {
-            versionDoc = new SAXBuilder().build(fileName);
+            localMetadataFile = new LocalMetadataFile(getLocationOfLocalMetadataFile());
+            return true;
         } catch (JDOMException | IOException e) {
             FOKLogger.log(App.class.getName(), Level.SEVERE, "Cannot retrieve currently installed version of app " + this.getName()
                     + ", probably because it is not installed.", e);
-            return null;
+            return false;
         }
-
-        for (Element versionEl : versionDoc.getRootElement().getChild("versions").getChildren()) {
-            Version tempVer = new Version(versionEl.getChild("version").getValue(),
-                    versionEl.getChild("buildNumber").getValue(), versionEl.getChild("timestamp").getValue());
-            res.add(tempVer);
-        }
-
-        return res;
     }
 
     /**
@@ -558,141 +558,46 @@ public class App {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
-        // TODO: Optimize
-        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
-
-        Element root;
-        Document versionDoc;
-        Element artifactId;
-        Element groupId;
-        Element versions;
-
-        try {
-            versionDoc = new SAXBuilder().build(fileName);
-
-            root = versionDoc.getRootElement();
-
-            artifactId = root.getChild("artifactId");
-            groupId = root.getChild("groupId");
-            versions = root.getChild("versions");
-
-            // Check if one of those elements is not defined
-            if (artifactId == null) {
-                throw new NullPointerException("artifactId is null");
-            } else if (groupId == null) {
-                throw new NullPointerException("groupId is null");
-            } else if (versions == null) {
-                throw new NullPointerException("versions is null");
+        if (localMetadataFile == null) {
+            if (!loadLocalMetadataFile()) {
+                // something went wrong, exception already logged
+                return false;
             }
-
-            // Go through all versions
-            for (Element version : versions.getChildren()) {
-                if (ver.equals(new Version(version.getChild("version").getValue(),
-                        version.getChild("buildNumber").getValue(), version.getChild("timestamp").getValue()))) {
-                    // Match found
-                    return true;
-                }
-            }
-
-            // No match found, return false
-            return false;
-
-        } catch (JDOMException | IOException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            return false;
         }
+        return localMetadataFile.getVersionList().contains(ver);
     }
 
     /**
      * Downloads the version info and saves it as a xml file in the app folder.
      *
      * @param versionToGet The version to get the info for
-     * @param destFolder   The folder where apps should be saved into
      * @throws IOException If the maven metadata file cannot be downloaded
      */
-    private void downloadVersionInfo(Version versionToGet, String destFolder)
+    private void downloadVersionInfo(Version versionToGet)
             throws IOException {
-        // TODO: Optimize
-        String fileName = destFolder + File.separator + AppConfig.getRemoteConfig().getValue("appMetadataFileName");
-
-        Element root;
-        Document versionDoc;
-        Element artifactId;
-        Element groupId;
-        Element versions;
-
-        try {
-            versionDoc = new SAXBuilder().build(fileName);
-            root = versionDoc.getRootElement();
-
-            artifactId = root.getChild("artifactId");
-            groupId = root.getChild("groupId");
-            versions = root.getChild("versions");
-
-            // Check if one of those elements is not defined
-            if (artifactId == null) {
-                throw new NullPointerException("artifactId is null");
-            } else if (groupId == null) {
-                throw new NullPointerException("groupId is null");
-            } else if (versions == null) {
-                throw new NullPointerException("versions is null");
+        if (localMetadataFile == null) {
+            if (!loadLocalMetadataFile()) {
+                // something went wrong, exception already logged
+                localMetadataFile = new LocalMetadataFile();
+                localMetadataFile.setVersionList(new VersionList());
             }
-        } catch (JDOMException | IOException | NullPointerException e) {
-            // Could not read document for some reason so generate a new one
-            root = new Element("artifactInfo");
-            versionDoc = new Document(root);
-
-            artifactId = new Element("artifactId");
-            groupId = new Element("groupId");
-            versions = new Element("versions");
-
-            root.addContent(artifactId);
-            root.addContent(groupId);
-            root.addContent(versions);
         }
-
-        artifactId.setText(getMvnCoordinates().getArtifactId());
-        groupId.setText(getMvnCoordinates().getGroupId());
+        localMetadataFile.setMvnCoordinates(getMvnCoordinates());
 
         boolean versionFound = false;
 
-        for (Element el : versions.getChildren()) {
-            Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
-                    el.getChild("timestamp").getValue());
+        for (Version ver : localMetadataFile.getVersionList()) {
             if (ver.equals(versionToGet)) {
                 versionFound = true;
+                break;
             }
         }
 
         // Check if the specified version is already present
         if (!versionFound) {
-            Element version = new Element("version");
-            Element versionNumber = new Element("version");
-            Element buildNumber = new Element("buildNumber");
-            Element timestamp = new Element("timestamp");
-            versionNumber.setText(versionToGet.getVersion());
-
-            if (versionToGet.isSnapshot()) {
-                buildNumber.setText(versionToGet.getBuildNumber());
-                timestamp.setText(versionToGet.getTimestamp());
-            }
-
-            version.addContent(versionNumber);
-            version.addContent(buildNumber);
-            version.addContent(timestamp);
-
-            versions.addContent(version);
+            localMetadataFile.getVersionList().add(versionToGet);
         }
-
-        // Write xml-File
-        // Create directories if necessary
-        File f = new File(fileName);
-        //noinspection ResultOfMethodCallIgnored
-        f.getParentFile().mkdirs();
-        // Create empty file on disk if necessary
-        (new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
-
+        localMetadataFile.saveFile(getLocationOfLocalMetadataFile());
     }
 
     /**
@@ -1179,7 +1084,7 @@ public class App {
         in.close();
 
         // download version info
-        downloadVersionInfo(versionToDownload, destFolder.toAbsolutePath().toString());
+        downloadVersionInfo(versionToDownload);
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
