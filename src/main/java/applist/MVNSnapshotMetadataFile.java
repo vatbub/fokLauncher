@@ -61,7 +61,7 @@ public class MVNSnapshotMetadataFile extends MVNMetadataFile {
 
     @Override
     Document getMavenMetadata(boolean snapshotsEnabled) throws JDOMException, IOException {
-        if (!snapshotsEnabled){
+        if (!snapshotsEnabled) {
             throw new IllegalArgumentException();
         }
 
