@@ -38,12 +38,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.jdom2.Document;
-import org.jdom2.Element;
 import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
-import org.jdom2.output.Format;
-import org.jdom2.output.XMLOutputter;
 import org.jetbrains.annotations.Nullable;
 import view.MainWindow;
 
@@ -338,9 +333,12 @@ public class App {
         return localMetadataFile.getVersionList().clone();
     }
 
+    private Path getAbsolutePathToSubfolderToSaveApps() {
+        return Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
+    }
+
     private File getLocationOfLocalMetadataFile() {
-        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        return destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toFile();
+        return getAbsolutePathToSubfolderToSaveApps().resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toFile();
     }
 
     private boolean loadLocalMetadataFile() {
@@ -1134,42 +1132,15 @@ public class App {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean delete(Version versionToDelete) throws IOException {
-        // TODO: Optimize
-        // Delete from metadata
-        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        String fileName = destFolder.resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toAbsolutePath().toString();
-        Document versionDoc;
-        Element versions;
-
-        try {
-            versionDoc = new SAXBuilder().build(fileName);
-            versions = versionDoc.getRootElement().getChild("versions");
-        } catch (JDOMException | IOException e) {
-            FOKLogger.log(App.class.getName(), Level.SEVERE, "Cannot retrieve currently installed version of app " + this.getName()
-                    + ", probably because it is not installed.", e);
-            return false;
-        }
-
-        Element elementToDelete = null;
-
-        // Find the version node to be deleted
-        for (Element el : versions.getChildren()) {
-            Version ver = new Version(el.getChild("version").getValue(), el.getChild("buildNumber").getValue(),
-                    el.getChild("timestamp").getValue());
-            if (ver.equals(versionToDelete)) {
-                elementToDelete = el;
+        if (localMetadataFile == null) {
+            if (!loadLocalMetadataFile()) {
+                // something went wrong, exception already logged
+                return false;
             }
         }
 
-        // Delete the node
-        if (elementToDelete != null) {
-            elementToDelete.detach();
-            try {
-                (new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
-            } catch (IOException e) {
-                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            }
-        }
+        localMetadataFile.getVersionList().remove(versionToDelete);
+        localMetadataFile.saveFile(getLocationOfLocalMetadataFile());
 
         // Delete the file
         String appFileName;
@@ -1181,10 +1152,8 @@ public class App {
                     + ".jar";
         }
 
-        File appFile = new File(destFolder + File.separator + appFileName);
-
-        Files.delete(appFile.toPath());
-        return false;
+        Files.delete(getAbsolutePathToSubfolderToSaveApps().resolve(appFileName));
+        return true;
     }
 
     /**
