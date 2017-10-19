@@ -44,7 +44,10 @@ import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -554,11 +557,8 @@ public class App {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
-        if (localMetadataFile == null && !loadLocalMetadataFile()) {
-            // something went wrong, exception already logged
-            return false;
-        }
-        return localMetadataFile.getVersionList().contains(ver);
+        // something went wrong, exception already logged
+        return (localMetadataFile != null || loadLocalMetadataFile()) && localMetadataFile.getVersionList().contains(ver);
     }
 
     /**
@@ -1213,29 +1213,22 @@ public class App {
      * @throws IOException If something happens while saving the file
      */
     public void exportInfo(File fileToWrite) throws IOException {
-        // TODO: Optimize
-        //noinspection ResultOfMethodCallIgnored
-        fileToWrite.createNewFile();
+        FoklauncherFile foklauncherFile = new FoklauncherFile(fileToWrite);
 
-        // We either have an empty file or a file that needs to be overwritten
-        Properties props = new Properties();
-
-        props.setProperty("name", this.getName());
-        props.setProperty("repoBaseURL", getMvnCoordinates().getRepoBaseURL().toString());
-        props.setProperty("snapshotRepoBaseURL", getMvnCoordinates().getSnapshotRepoBaseURL().toString());
-        props.setProperty("groupId", getMvnCoordinates().getGroupId());
-        props.setProperty("artifactId", getMvnCoordinates().getArtifactId());
-        props.setProperty("classifier", getMvnCoordinates().getClassifier());
+        foklauncherFile.setValue(FoklauncherFile.Property.NAME, this.getName());
+        foklauncherFile.setValue(FoklauncherFile.Property.REPO_BASE_URL, getMvnCoordinates().getRepoBaseURL().toString());
+        foklauncherFile.setValue(FoklauncherFile.Property.SNAPSHOT_BASE_URL, getMvnCoordinates().getSnapshotRepoBaseURL().toString());
+        foklauncherFile.setValue(FoklauncherFile.Property.GROUP_ID, getMvnCoordinates().getGroupId());
+        foklauncherFile.setValue(FoklauncherFile.Property.ARTIFACT_ID, getMvnCoordinates().getArtifactId());
+        foklauncherFile.setValue(FoklauncherFile.Property.CLASSIFIER, getMvnCoordinates().getClassifier());
         if (this.getAdditionalInfoURL() != null) {
-            props.setProperty("additionalInfoURL", this.getAdditionalInfoURL().toString());
+            foklauncherFile.setValue(FoklauncherFile.Property.ADDITIONAL_INFO_URL, this.getAdditionalInfoURL().toString());
         }
         if (this.getChangelogURL() != null) {
-            props.setProperty("changelogURL", this.getChangelogURL().toString());
+            foklauncherFile.setValue(FoklauncherFile.Property.CHANGELOG_URL, this.getChangelogURL().toString());
         }
 
-        FileOutputStream out = new FileOutputStream(fileToWrite);
-        props.store(out, "This file stores info about a java app. To open this file, get the foklauncher");
-        out.close();
+        foklauncherFile.save();
     }
 
     /**
@@ -1246,41 +1239,22 @@ public class App {
      *                     the launcher has no permission to read the file.
      */
     private void importInfo(File fileToImport) throws IOException {
-        // TODO: Optimize
         this.importFile = fileToImport;
-        FileReader fileReader = null;
-        if (!fileToImport.isFile()) {
-            // Not a file
-            throw new IOException("The specified file is not a file");
-        } else if (!fileToImport.canRead()) {
-            // Cannot write to file
-            throw new IOException("The specified file is read-only");
-        }
+        FoklauncherFile foklauncherFile = new FoklauncherFile(fileToImport);
 
-        Properties props = new Properties();
-        if (fileToImport.exists()) {
-            // Load the properties
-            fileReader = new FileReader(fileToImport);
-            props.load(fileReader);
-        }
-
-        this.setName(props.getProperty("name"));
+        this.setName(foklauncherFile.getValue(FoklauncherFile.Property.NAME));
         this.setMvnCoordinates(new MVNCoordinates());
-        getMvnCoordinates().setRepoBaseURL(new URL(props.getProperty("repoBaseURL")));
-        getMvnCoordinates().setSnapshotRepoBaseURL(new URL(props.getProperty("snapshotRepoBaseURL")));
-        getMvnCoordinates().setGroupId(props.getProperty("groupId"));
-        getMvnCoordinates().setArtifactId(props.getProperty("artifactId"));
-        getMvnCoordinates().setClassifier(props.getProperty("classifier", null));
+        getMvnCoordinates().setRepoBaseURL(new URL(foklauncherFile.getValue(FoklauncherFile.Property.REPO_BASE_URL)));
+        getMvnCoordinates().setSnapshotRepoBaseURL(new URL(foklauncherFile.getValue(FoklauncherFile.Property.SNAPSHOT_BASE_URL)));
+        getMvnCoordinates().setGroupId(foklauncherFile.getValue(FoklauncherFile.Property.GROUP_ID));
+        getMvnCoordinates().setArtifactId(foklauncherFile.getValue(FoklauncherFile.Property.ARTIFACT_ID));
+        getMvnCoordinates().setClassifier(foklauncherFile.getValue(FoklauncherFile.Property.CLASSIFIER, null));
 
-        if (!props.getProperty("additionalInfoURL", "").equals("")) {
-            this.setAdditionalInfoURL(new URL(props.getProperty("additionalInfoURL")));
+        if (!foklauncherFile.getValue(FoklauncherFile.Property.ADDITIONAL_INFO_URL, "").equals("")) {
+            this.setAdditionalInfoURL(new URL(foklauncherFile.getValue(FoklauncherFile.Property.ADDITIONAL_INFO_URL)));
         }
-        if (!props.getProperty("changelogURL", "").equals("")) {
-            this.setChangelogURL(new URL(props.getProperty("changelogURL")));
-        }
-
-        if (fileReader != null) {
-            fileReader.close();
+        if (!foklauncherFile.getValue(FoklauncherFile.Property.CHANGELOG_URL, "").equals("")) {
+            this.setChangelogURL(new URL(foklauncherFile.getValue(FoklauncherFile.Property.CHANGELOG_URL)));
         }
     }
 
