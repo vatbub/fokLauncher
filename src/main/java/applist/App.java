@@ -69,17 +69,11 @@ public class App {
      */
     private final List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<>();
     /**
-     * The latest version of the app that is available online
-     */
-    Version latestOnlineVersion;
-    /**
-     * A {@link List} of all available online Versions
-     */
-    VersionList onlineVersionList;
-    /**
      * The latest snapshot version of the app that is available online
      */
     Version latestOnlineSnapshotVersion;
+    MVNMetadataFile releaseRepoMetadataFile;
+    MVNSnapshotMetadataFile snapshotRepoMetadataFile;
     /**
      * Specifies the file from which this app was imported from (if it was
      * imported)
@@ -260,28 +254,10 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public VersionList getAllOnlineVersions() throws JDOMException, IOException {
-        // TODO: Optimize
-        if (onlineVersionList != null) {
-            return onlineVersionList.clone();
-        } else {
-            Document mavenMetadata = getMavenMetadata(false);
-
-            VersionList res = new VersionList();
-            List<Element> versions = mavenMetadata.getRootElement().getChild("versioning").getChild("versions")
-                    .getChildren("version");
-
-            for (Element versionElement : versions) {
-                Version version = new Version(versionElement.getValue());
-
-                if (!version.isSnapshot()) {
-                    // Version is not a snapshot so add it to the list
-                    res.add(version);
-                }
-            }
-
-            onlineVersionList = res.clone();
-            return res;
+        if (releaseRepoMetadataFile == null) {
+            releaseRepoMetadataFile = new MVNMetadataFile(getMvnCoordinates(), false);
         }
+        return releaseRepoMetadataFile.getVersionList().clone();
     }
 
     /**
@@ -290,23 +266,17 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public Version getLatestOnlineVersion() throws JDOMException, IOException {
-        // TODO: Optimize
-        if (latestOnlineVersion != null) {
-            return latestOnlineVersion.clone();
-        } else {
-            Document mavenMetadata = getMavenMetadata(false);
-
-            Version res = new Version(
-                    mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
-
-            if (res.isSnapshot()) {
-                throw new IllegalStateException(
-                        "Latest version in this repository is a snapshot and not a release. This might happen if you host snapshots and releases in the same repository (which is not recommended). If you still need this case to be covered, please submit an issue at https://github.com/vatbub/fokLauncher/issues");
-            }
-
-            latestOnlineVersion = res.clone();
-            return res;
+        if (releaseRepoMetadataFile == null) {
+            releaseRepoMetadataFile = new MVNMetadataFile(getMvnCoordinates(), false);
         }
+        Version res = releaseRepoMetadataFile.getLatest().clone();
+
+        if (res.isSnapshot()) {
+            throw new IllegalStateException(
+                    "Latest version in this repository is a snapshot and not a release. This might happen if you host snapshots and releases in the same repository (which is not recommended). If you still need this case to be covered, please submit an issue at https://github.com/vatbub/fokLauncher/issues");
+        }
+
+        return res;
     }
 
     /**
@@ -315,35 +285,11 @@ public class App {
      * @throws JDOMException If the maven metadata file is malformed
      */
     public Version getLatestOnlineSnapshotVersion() throws JDOMException, IOException {
-        // TODO: Optimize
-        if (latestOnlineSnapshotVersion != null) {
-            return latestOnlineSnapshotVersion.clone();
-        } else {
-            Document mavenMetadata = getMavenMetadata(true);
-
-            Version res = new Version(
-                    mavenMetadata.getRootElement().getChild("versioning").getChild("latest").getValue());
-
-            Document snapshotMetadata = new SAXBuilder()
-                    .build(new URL(this.getMvnCoordinates().getSnapshotRepoBaseURL().toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/')
-                            + "/" + getMvnCoordinates().getArtifactId() + "/" + res.getVersion() + "/maven-metadata.xml"));
-
-            if (!res.isSnapshot()) {
-                throw new IllegalStateException(
-                        "Latest version in this repository is a release and not a snapshot. This might happen if you host snapshots and releases in the same repository (which is not recommended). If you still need this case to be covered, please submit an issue at https://github.com/vatbub/fokLauncher/issues");
-            }
-
-            // get the buildnumber
-            res.setBuildNumber(snapshotMetadata.getRootElement().getChild("versioning").getChild("snapshot")
-                    .getChild("buildNumber").getValue());
-
-            // get the build timestamp
-            res.setTimestamp(snapshotMetadata.getRootElement().getChild("versioning").getChild("snapshot")
-                    .getChild("timestamp").getValue());
-
-            latestOnlineSnapshotVersion = res.clone();
-            return res;
+        if (snapshotRepoMetadataFile == null) {
+            snapshotRepoMetadataFile = new MVNMetadataFile(getMvnCoordinates(), true).getMvnSnapshotMetadataFile();
         }
+        return snapshotRepoMetadataFile.getLatest().clone();
+
     }
 
     /**
@@ -747,28 +693,6 @@ public class App {
         // Create empty file on disk if necessary
         (new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileName));
 
-    }
-
-    /**
-     * Gets the Maven Metadata file and converts it into a
-     * {@code JDOM-}{@link Document}
-     *
-     * @param snapshotsEnabled {@code true} if snapshots shall be taken into account.
-     * @return A {@link Document} representation of the maven Metadata file
-     * @throws JDOMException If the maven metadata file is malformed
-     * @throws IOException   If the maven metadata file cannot be downloaded
-     */
-    private Document getMavenMetadata(boolean snapshotsEnabled)
-            throws JDOMException, IOException {
-        String repoBaseURL;
-        if (snapshotsEnabled) {
-            repoBaseURL = getMvnCoordinates().getSnapshotRepoBaseURL().toString();
-        } else {
-            repoBaseURL = getMvnCoordinates().getRepoBaseURL().toString();
-        }
-
-        return new SAXBuilder().build(new URL(repoBaseURL + "/"
-                + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
     }
 
     /**

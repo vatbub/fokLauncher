@@ -55,8 +55,8 @@ public class AppList extends ArrayList<App> {
     public void clearVersionCache() {
         for (App app : this) {
             app.latestOnlineSnapshotVersion = null;
-            app.latestOnlineVersion = null;
-            app.onlineVersionList = null;
+            app.releaseRepoMetadataFile = null;
+            app.snapshotRepoMetadataFile = null;
         }
 
         reloadContextMenuEntriesOnShow();
