@@ -324,11 +324,9 @@ public class App {
      * @return A list of currently installed versions
      */
     public VersionList getCurrentlyInstalledVersions() {
-        if (localMetadataFile == null) {
-            if (!loadLocalMetadataFile()) {
-                // something went wrong, exception already logged
-                return null;
-            }
+        if (localMetadataFile == null && !loadLocalMetadataFile()) {
+            // something went wrong, exception already logged
+            return null;
         }
         return localMetadataFile.getVersionList().clone();
     }
@@ -556,11 +554,9 @@ public class App {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isPresentOnHarddrive(Version ver) {
-        if (localMetadataFile == null) {
-            if (!loadLocalMetadataFile()) {
-                // something went wrong, exception already logged
-                return false;
-            }
+        if (localMetadataFile == null && !loadLocalMetadataFile()) {
+            // something went wrong, exception already logged
+            return false;
         }
         return localMetadataFile.getVersionList().contains(ver);
     }
@@ -573,12 +569,10 @@ public class App {
      */
     private void downloadVersionInfo(Version versionToGet)
             throws IOException {
-        if (localMetadataFile == null) {
-            if (!loadLocalMetadataFile()) {
-                // something went wrong, exception already logged
-                localMetadataFile = new LocalMetadataFile();
-                localMetadataFile.setVersionList(new VersionList());
-            }
+        if (localMetadataFile == null && !loadLocalMetadataFile()) {
+            // something went wrong, exception already logged
+            localMetadataFile = new LocalMetadataFile();
+            localMetadataFile.setVersionList(new VersionList());
         }
         localMetadataFile.setMvnCoordinates(getMvnCoordinates());
 
@@ -1132,11 +1126,9 @@ public class App {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean delete(Version versionToDelete) throws IOException {
-        if (localMetadataFile == null) {
-            if (!loadLocalMetadataFile()) {
-                // something went wrong, exception already logged
-                return false;
-            }
+        if (localMetadataFile == null && !loadLocalMetadataFile()) {
+            // something went wrong, exception already logged
+            return false;
         }
 
         localMetadataFile.getVersionList().remove(versionToDelete);
