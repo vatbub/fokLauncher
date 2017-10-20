@@ -24,11 +24,11 @@
 
 **Fixed bugs:**
 
-- Remove the option from the installer to install the launcher to the AutoStart [\#33](https://github.com/vatbub/fokLauncher/issues/33)
+- Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
 
 **Closed issues:**
 
-- Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
+- Remove the option from the installer to install the launcher to the AutoStart [\#33](https://github.com/vatbub/fokLauncher/issues/33)
 
 ## [foklauncher-0.1.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.1) (2016-12-11)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.0...foklauncher-0.1.1)
@@ -36,7 +36,7 @@
 ## [foklauncher-0.1.0](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.0) (2016-12-11)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.0.9...foklauncher-0.1.0)
 
-**Closed issues:**
+**Fixed bugs:**
 
 - Two apps with the exact same maven coordinates but a different classifier cause the launcher to b eunable to launch any of them [\#28](https://github.com/vatbub/fokLauncher/issues/28)
 
@@ -51,13 +51,10 @@
 **Fixed bugs:**
 
 - Closing the launcher does not cancel app downloads [\#24](https://github.com/vatbub/fokLauncher/issues/24)
+- Call MainWindow.showErrorMessage\("some text", false\) still makes the app quit [\#23](https://github.com/vatbub/fokLauncher/issues/23)
 - launchButton disappears on internet failiure [\#22](https://github.com/vatbub/fokLauncher/issues/22)
 - When an update is downloaded, the log displays a confusing message [\#21](https://github.com/vatbub/fokLauncher/issues/21)
 - Weird launchButton when quickly changing the app selection [\#20](https://github.com/vatbub/fokLauncher/issues/20)
-
-**Closed issues:**
-
-- Call MainWindow.showErrorMessage\("some text", false\) still makes the app quit [\#23](https://github.com/vatbub/fokLauncher/issues/23)
 
 ## [foklauncher-0.0.8](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.8) (2016-10-21)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.0.7...foklauncher-0.0.8)
@@ -78,16 +75,13 @@
 **Implemented enhancements:**
 
 - Implement a message of the day [\#17](https://github.com/vatbub/fokLauncher/issues/17)
+- Add a "Show App info" button [\#16](https://github.com/vatbub/fokLauncher/issues/16)
 - Option "Show launcher again when app quits" [\#5](https://github.com/vatbub/fokLauncher/issues/5)
 
 **Fixed bugs:**
 
 - Custom GUI language is not applied to other dialogs [\#18](https://github.com/vatbub/fokLauncher/issues/18)
 - Fix Antivirus report of the WindowsExecutable [\#15](https://github.com/vatbub/fokLauncher/issues/15)
-
-**Closed issues:**
-
-- Add a "Show App info" button [\#16](https://github.com/vatbub/fokLauncher/issues/16)
 
 ## [foklauncher-0.0.4](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.4) (2016-09-18)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.0.3...foklauncher-0.0.4)
@@ -108,14 +102,11 @@
 **Fixed bugs:**
 
 - App would never exit in some cases [\#13](https://github.com/vatbub/fokLauncher/issues/13)
-- Infinite "Getting version info" when changing snapshot setting and no app is selected [\#9](https://github.com/vatbub/fokLauncher/issues/9)
-- Bug on first launch [\#4](https://github.com/vatbub/fokLauncher/issues/4)
-
-**Closed issues:**
-
 - If the jar of the app is deleted, no error message is displayed [\#10](https://github.com/vatbub/fokLauncher/issues/10)
+- Infinite "Getting version info" when changing snapshot setting and no app is selected [\#9](https://github.com/vatbub/fokLauncher/issues/9)
 - Open app first time and enable snapshots, launcher wants to "Update & launch" instead of "Download & launch" [\#8](https://github.com/vatbub/fokLauncher/issues/8)
 - Infinite "Getting version info" on first launch with snapshots enabled [\#7](https://github.com/vatbub/fokLauncher/issues/7)
+- Bug on first launch [\#4](https://github.com/vatbub/fokLauncher/issues/4)
 
 ## [foklauncher-0.0.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.1) (2016-08-05)
 
