@@ -175,6 +175,10 @@ public class MVNMetadataFile {
     }
 
     public class SnapshotFileFormat {
+        private SnapshotFileFormat() {
+            throw new IllegalStateException("Class may not be instantiated");
+        }
+
         public static final String VERSIONING_TAG_NAME = "versioning";
         public static final String LATEST_SNAPSHOT_TAG_NAME = "snapshot";
         public static final String TIMESTAMP_TAG_NAME = "timestamp";

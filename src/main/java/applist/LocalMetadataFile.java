@@ -119,6 +119,10 @@ public class LocalMetadataFile {
     }
 
     public class FileFormat {
+        private FileFormat() {
+            throw new IllegalStateException("Class may not be instantiated");
+        }
+
         public static final String ROOT_NODE_TAG_NAME = "artifactInfo";
         public static final String GROUP_ID_TAG_NAME = "groupId";
         public static final String ARTIFACT_ID_TAG_NAME = "artifactId";

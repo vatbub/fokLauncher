@@ -81,7 +81,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
-    private static final String showLauncherAgainPrefKey = "showLauncherAgain";
 
     public static Thread downloadAndLaunchThread = new Thread();
     public static boolean launchSpecificVersionMenuCanceled = false;
@@ -494,7 +493,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     // Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
     @FXML
     void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
-        EntryClass.getPrefs().setPreference(showLauncherAgainPrefKey,
+        EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.SHOW_LAUNCHER_AGAIN.toString(),
                 Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
     }
 
@@ -592,7 +591,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
         enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(EntryClass.getPrefs().getPreference(EntryClass.PrefKeys.ENABLE_SNAPSHOTS.toString(), "false")));
         launchLauncherAfterAppExitCheckbox
-                .setSelected(Boolean.parseBoolean(EntryClass.getPrefs().getPreference(showLauncherAgainPrefKey, "false")));
+                .setSelected(Boolean.parseBoolean(EntryClass.getPrefs().getPreference(EntryClass.PrefKeys.SHOW_LAUNCHER_AGAIN.toString(), "false")));
 
         try {
             versionLabel.setText(new Version(Common.getInstance().getAppVersion(), Common.getInstance().getBuildNumber()).toString(false));

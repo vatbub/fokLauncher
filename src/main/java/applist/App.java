@@ -354,126 +354,6 @@ public class App {
         }
     }
 
-    /**
-     * @return the mavenRepoBaseURL
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public URL getMavenRepoBaseURL() {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        return getMvnCoordinates().getRepoBaseURL();
-    }
-
-    /**
-     * @param mavenRepoBaseURL the mavenRepoBaseURL to set
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public void setMavenRepoBaseURL(URL mavenRepoBaseURL) {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        getMvnCoordinates().setRepoBaseURL(mavenRepoBaseURL);
-    }
-
-    /**
-     * @return the mavenSnapshotRepoBaseURL
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public URL getMavenSnapshotRepoBaseURL() {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        return getMvnCoordinates().getSnapshotRepoBaseURL();
-    }
-
-    /**
-     * @param mavenSnapshotRepoBaseURL the mavenSnapshotRepoBaseURL to set
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public void setMavenSnapshotRepoBaseURL(URL mavenSnapshotRepoBaseURL) {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        getMvnCoordinates().setSnapshotRepoBaseURL(mavenSnapshotRepoBaseURL);
-    }
-
-    /**
-     * @return the mavenGroupID
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public String getMavenGroupID() {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        return getMvnCoordinates().getGroupId();
-    }
-
-    /**
-     * @param mavenGroupID the mavenGroupID to set
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public void setMavenGroupID(String mavenGroupID) {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        getMvnCoordinates().setGroupId(mavenGroupID);
-    }
-
-    /**
-     * @return the mavenArtifactID
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public String getMavenArtifactID() {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        return getMvnCoordinates().getArtifactId();
-    }
-
-    /**
-     * @param mavenArtifactID the mavenArtifactID to set
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public void setMavenArtifactID(String mavenArtifactID) {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        getMvnCoordinates().setArtifactId(mavenArtifactID);
-    }
-
-    /**
-     * @return the mavenClassifier
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public String getMavenClassifier() {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        return getMvnCoordinates().getClassifier();
-    }
-
-    /**
-     * @param mavenClassifier the mavenClassifier to set
-     * @deprecated Use {@link #getMvnCoordinates()} instead
-     */
-    @Deprecated
-    public void setMavenClassifier(String mavenClassifier) {
-        if (getMvnCoordinates() == null) {
-            setMvnCoordinates(new MVNCoordinates());
-        }
-        getMvnCoordinates().setClassifier(mavenClassifier);
-    }
-
     public MVNCoordinates getMvnCoordinates() {
         return mvnCoordinates;
     }
@@ -1199,7 +1079,7 @@ public class App {
      * no event handler is attached.
      */
     public boolean eventHandlersWhenLaunchedAppExitsAttached() {
-        return eventHandlersWhenLaunchedAppExits.size() > 0;
+        return !eventHandlersWhenLaunchedAppExits.isEmpty();
     }
 
     /**
@@ -1306,7 +1186,6 @@ public class App {
                         .append(getMvnCoordinates().getClassifier());
             }
 
-            System.out.println(cmdArgs.toString());
             sl.setCMDArgs(cmdArgs.toString());
             sl.setName(quickInfoText.replace("%s", this.getName()));
 

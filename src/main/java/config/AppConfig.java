@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class AppConfig {
+    private AppConfig() {
+        throw new IllegalStateException("Class may not be instantiated");
+    }
+
     private static Config remoteConfig;
 
     static {

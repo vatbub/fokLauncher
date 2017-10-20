@@ -420,7 +420,8 @@ public class EntryClass extends Application {
 
     public enum PrefKeys {
         GUI_LANGUAGE("guiLanguage"),
-        ENABLE_SNAPSHOTS("enableSnapshots");
+        ENABLE_SNAPSHOTS("enableSnapshots"),
+        SHOW_LAUNCHER_AGAIN("showLauncherAgain");
 
         private final String text;
 
