@@ -23,9 +23,7 @@ package view;
 
 import applist.App;
 import applist.AppList;
-import applist.MVNCoordinates;
 import com.github.vatbub.common.core.Common;
-import com.github.vatbub.common.core.Prefs;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.internet.Internet;
 import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
@@ -42,17 +40,13 @@ import com.sun.glass.ui.Robot;
 import config.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -61,7 +55,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
 import org.apache.commons.io.FileUtils;
@@ -83,29 +76,29 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 
-public class MainWindow extends Application implements HidableUpdateProgressDialog {
+public class MainWindow implements HidableUpdateProgressDialog {
     private static final ImageView linkIconView = new ImageView(
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
-    private static final String enableSnapshotsPrefKey = "enableSnapshots";
     private static final String showLauncherAgainPrefKey = "showLauncherAgain";
-    private static final String guiLanguagePrefKey = "guiLanguage";
-    /**
-     * This reference always refers to the currently used instance of the
-     * MainWidow. The purpose of this field that {@code this} can be accessed in
-     * a convenient way in static methods.
-     */
-    public static MainWindow currentMainWindowInstance;
 
-    // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
-    // private static final MetricRegistry metricsRegistry = new MetricRegistry();
-    public static ResourceBundle bundle;
-    public static Stage stage;
     public static Thread downloadAndLaunchThread = new Thread();
     public static boolean launchSpecificVersionMenuCanceled = false;
-    private static boolean autoLaunchUseSnapshots;
-    private static App currentlySelectedApp = null;
+    // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
+    // private static final MetricRegistry metricsRegistry = new MetricRegistry();
+    private static ResourceBundle bundle;
+    public static final Runnable showLauncherAgain = () -> {
+        // reset the ui
+        try {
+            EntryClass.restart();
+        } catch (Exception e) {
+            FOKLogger.log(MainWindow.class.getName(), Level.INFO,
+                    "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
+                    e);
+        }
+        Platform.setImplicitExit(true);
+    };
     /**
      * {@code true }if this is the first launch after an update
      */
@@ -130,62 +123,41 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
             firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
         }
     };
-    private static Prefs prefs;
     private static AppList apps;
-    private static Locale systemDefaultLocale;
-    public static final Runnable showLauncherAgain = new Runnable() {
-        @Override
-        public void run() {
-
-            // reset the ui
-            try {
-                currentMainWindowInstance.start(stage);
-            } catch (Exception e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.INFO,
-                        "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
-                        e);
-            }
-            Platform.setImplicitExit(true);
-        }
-    };
-    private static App appForAutoLaunch = null;
-    private static List<String> autoLaunchAdditionalStartupArgs;
-    @SuppressWarnings("CanBeFinal")
-    @FXML // fx:id="launchLauncherAfterAppExitCheckbox"
-    public CheckBox launchLauncherAfterAppExitCheckbox; // Value injected by
+    @FXML
+    public CheckBox launchLauncherAfterAppExitCheckbox;
+    private App currentlySelectedApp = null;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     /**
      * The thread that gets the app list
      */
     private Thread getAppListThread;
-    @FXML // fx:id="appList"
-    private ListView<App> appList; // Value injected by FXMLLoader
-    @FXML // fx:id="searchField"
-    private TextField searchField; // Value injected by FXMLLoader
-    @FXML // fx:id="enableSnapshotsCheckbox"
-    private CheckBox enableSnapshotsCheckbox; // Value injected by FXMLLoader
-    @FXML // fx:id="launchButton"
-    private ProgressButton launchButton; // Value injected by FXMLLoader
+    @FXML
+    private ListView<App> appList;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private CheckBox enableSnapshotsCheckbox;
+    @FXML
+    private ProgressButton launchButton;
     @FXML
     private Button optionButton;
-    @FXML // fx:id="linkButton"
-    private Button linkButton; // Value injected by FXMLLoader
-    @FXML // fx:id="languageSelector"
-    private ComboBox<GuiLanguage> languageSelector; // Value injected by
-    @FXML // fx:id="progressBar"
-    private CustomProgressBar progressBar; // Value injected by FXMLLoader
-    // FXMLLoader
-    @FXML // fx:id="workOfflineCheckbox"
-    private CheckBox workOfflineCheckbox; // Value injected by FXMLLoader
-    // FXMLLoader
     @FXML
-    private Hyperlink updateLink; // Value injected by FXMLLoader
+    private Button linkButton;
     @FXML
-    private Label versionLabel; // Value injected by FXMLLoader
-    @FXML // fx:id="settingsGridView"
-    private GridPane settingsGridView; // Value injected by FXMLLoader
-    @FXML // fx:id="appInfoButton"
-    private Button appInfoButton; // Value injected by FXMLLoader
+    private ComboBox<GuiLanguage> languageSelector;
+    @FXML
+    private CustomProgressBar progressBar;
+    @FXML
+    private CheckBox workOfflineCheckbox;
+    @FXML
+    private Hyperlink updateLink;
+    @FXML
+    private Label versionLabel;
+    @FXML
+    private GridPane settingsGridView;
+    @FXML
+    private Button appInfoButton;
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -241,16 +213,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
             } catch (JDOMException | IOException e) {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                currentMainWindowInstance
+                EntryClass.getControllerInstance()
                         .showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
             }
         }
     };
 
-    /*public static MetricRegistry getMetricsRegistry()
-    {
-        return metricsRegistry;
-    }*/
+    public static ResourceBundle getBundle() {
+        return bundle;
+    }
+
+    public static void setBundle(ResourceBundle bundleToSet) {
+        bundle = bundleToSet;
+    }
 
     private static void initDataDogReporting(String apiKey) throws IOException {
         HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build();
@@ -262,156 +237,13 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         reporter.start(10, TimeUnit.SECONDS);*/
     }
 
-    public static void main(String[] args) {
-        Common.getInstance().setAppName("foklauncher");
-        FOKLogger.enableLoggingOfUncaughtExceptions();
-        prefs = new Prefs(MainWindow.class.getName());
+    /*public static MetricRegistry getMetricsRegistry()
+    {
+        return metricsRegistry;
+    }*/
 
-        /*try {
-            initDataDogReporting(APIKeyClient.getApiKey("35.157.23.171", "datadog"));
-        } catch (IOException | IllegalBlockSizeException | BadPaddingException | InternalServerException | BadRequestException | TimeoutException e) {
-            e.printStackTrace();
-        }*/
-
-        // metricsRegistry.histogram(String.join(".", "foklauncher", "users", "unique")).update(Common.getInstance().getUniqueDeviceIdentifierAsDecInt());
-
-        boolean autoLaunchApp = false;
-        URL autoLaunchRepoURL = null;
-        URL autoLaunchSnapshotRepoURL = null;
-        String autoLaunchGroupId = null;
-        String autoLaunchArtifactId = null;
-        String autoLaunchClassifier = null;
-        List<String> autoLaunchAdditionalStartupArgs = new ArrayList<>(Arrays.asList(args));
-
-        // Complete the update
-        UpdateChecker.completeUpdate(args, firstStartAfterUpdateRunnable);
-
-        for (String arg : args) {
-            if (arg.toLowerCase().matches("mockappversion=.*")) {
-                // Set the mock version
-                String version = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.getInstance().setMockAppVersion(version);
-                autoLaunchAdditionalStartupArgs.remove(arg);
-            } else if (arg.toLowerCase().matches("mockbuildnumber=.*")) {
-                // Set the mock build number
-                String buildnumber = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.getInstance().setMockBuildNumber(buildnumber);
-                autoLaunchAdditionalStartupArgs.remove(arg);
-            } else if (arg.toLowerCase().matches("mockpackaging=.*")) {
-                // Set the mock packaging
-                String packaging = arg.substring(arg.toLowerCase().indexOf('=') + 1);
-                Common.getInstance().setMockPackaging(packaging);
-                autoLaunchAdditionalStartupArgs.remove(arg);
-            } else if (arg.toLowerCase().matches(".*launch")) {
-                autoLaunchApp = true;
-                autoLaunchAdditionalStartupArgs.remove(arg);
-            } else if (arg.toLowerCase().matches("autolaunchrepourl=.*")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    try {
-                        autoLaunchRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
-                    } catch (MalformedURLException e) {
-                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
-                                "Ignoring argument autoLaunchRepoURL due to MalformedURLException", e);
-                    }
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autoLaunchRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            } else if (arg.toLowerCase().matches("autolaunchsnapshotrepourl=.*")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    try {
-                        autoLaunchSnapshotRepoURL = new URL(arg.substring(arg.indexOf('=') + 1));
-                    } catch (MalformedURLException e) {
-                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
-                                "Ignoring argument autoLaunchSnapshotRepoURL due to MalformedURLException", e);
-                    }
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autoLaunchSnapshotRepoURL argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            } else if (arg.toLowerCase().matches("autolaunchgroupid=.*")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    autoLaunchGroupId = arg.substring(arg.indexOf('=') + 1);
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autoLaunchGroupId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            } else if (arg.toLowerCase().matches("autolaunchartifactid=.*")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    autoLaunchArtifactId = arg.substring(arg.indexOf('=') + 1);
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autoLaunchArtifactId argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            } else if (arg.toLowerCase().matches("autolaunchclassifier=.*")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    autoLaunchClassifier = arg.substring(arg.indexOf('=') + 1);
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autoLaunchClassifier argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            } else if (arg.toLowerCase().matches("autolaunchenablesnapshots")) {
-                autoLaunchAdditionalStartupArgs.remove(arg);
-                if (autoLaunchApp) {
-                    autoLaunchUseSnapshots = true;
-                } else {
-                    FOKLogger.severe(MainWindow.class.getName(),
-                            "autolaunchenablesnapshots argument will be ignored as no preceding launch command was found in the arguments. Please specify the argument 'launch' BEFORE specifying any autoLaunch arguments.");
-                }
-            }
-        }
-
-        MainWindow.autoLaunchAdditionalStartupArgs = autoLaunchAdditionalStartupArgs;
-
-        if (autoLaunchApp) {
-            if (autoLaunchRepoURL == null || autoLaunchSnapshotRepoURL == null || autoLaunchGroupId == null
-                    || autoLaunchArtifactId == null) {
-                // not sufficient info specified
-                FOKLogger.severe(MainWindow.class.getName(), "Cannot auto-launch app as insufficient download info was specified.");
-            } else {
-                if (autoLaunchClassifier == null) {
-                    // No classifier specified
-                    appForAutoLaunch = new App("autoLaunchApp", new MVNCoordinates(autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
-                            autoLaunchGroupId, autoLaunchArtifactId));
-                } else {
-                    // Classifier specified
-                    appForAutoLaunch = new App("autoLaunchApp", new MVNCoordinates(autoLaunchRepoURL, autoLaunchSnapshotRepoURL,
-                            autoLaunchGroupId, autoLaunchArtifactId, autoLaunchClassifier));
-                }
-            }
-        }
-
-        try {
-            launch(args);
-        } catch (RuntimeException e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "Could not launch GUI", e);
-            // auto launch app if one was specified
-            if (appForAutoLaunch != null) {
-                currentlySelectedApp = appForAutoLaunch;
-
-                // Launch the download
-                downloadAndLaunchThread = new Thread(() -> {
-                    try {
-                        FOKLogger.info(MainWindow.class.getName(), "Auto-launching app without GUI...");
-                        appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")), null,
-                                !Internet.isConnected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
-                    } catch (Exception e2) {
-                        FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e2);
-                    } finally {
-                        // Clean up
-                        appForAutoLaunch = null;
-                    }
-                });
-
-                downloadAndLaunchThread.setName("downloadAndLaunchThread");
-                downloadAndLaunchThread.start();
-            }
-        }
+    public App getCurrentlySelectedApp() {
+        return currentlySelectedApp;
     }
 
     /**
@@ -433,7 +265,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     // Handler for AnchorPane[id="AnchorPane"] onDragDetected
-    @SuppressWarnings("unused")
     @FXML
     void appListOnDragDetected(MouseEvent event) {
         if (currentlySelectedApp != null) {
@@ -465,20 +296,17 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     // Handler for ProgressButton[id="linkButton"] onMousePressed
     @FXML
-    @SuppressWarnings("unused")
     void linkButtonOnMousePressed(MouseEvent event) {
         linkButton.setCursor(Cursor.CLOSED_HAND);
     }
 
     // Handler for ProgressButton[id="linkButton"] onMouseReleased
     @FXML
-    @SuppressWarnings("unused")
     void linkButtonOnMouseReleased(MouseEvent event) {
         linkButton.setCursor(Cursor.OPEN_HAND);
     }
 
     @FXML
-    @SuppressWarnings("unused")
     void optionButtonOnAction(ActionEvent event) {
         Robot robot = com.sun.glass.ui.Application.GetApplication().createRobot();
 
@@ -525,7 +353,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")) {
                     FOKLogger.info(MainWindow.class.getName(), "Importing app from " + f.getAbsolutePath() + "...");
                     App.addImportedApp(f);
-                    currentMainWindowInstance.loadAppList();
+                    EntryClass.getControllerInstance().loadAppList();
                 } else if ((FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString()))) {
                     FOKLogger.info(MainWindow.class.getName(), "Running link from lnk file " + f.getAbsolutePath());
                     ShellLink link = new ShellLink(f);
@@ -562,13 +390,12 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 }
             } catch (IOException | ShellLinkException e) {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                currentMainWindowInstance.showErrorMessage(e.toString(), false);
+                EntryClass.getControllerInstance().showErrorMessage(e.toString(), false);
             }
         }
     }
 
     @FXML
-    @SuppressWarnings("unused")
     void updateLinkOnAction(ActionEvent event) {
         // Check for new version ignoring ignored updates
         Thread updateThread = new Thread(() -> {
@@ -586,19 +413,18 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     @FXML
-    @SuppressWarnings("unused")
     void languageSelectorOnAction(ActionEvent event) {
         FOKLogger.info(MainWindow.class.getName(), "Switching gui language to: "
                 + languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
-        prefs.setPreference(guiLanguagePrefKey, languageSelector.getItems()
+        EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.GUI_LANGUAGE.toString(), languageSelector.getItems()
                 .get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
 
         // Restart gui
         boolean implicitExit = Platform.isImplicitExit();
         Platform.setImplicitExit(false);
-        stage.hide();
+        EntryClass.getStage().hide();
         try {
-            currentMainWindowInstance.start(stage);
+            EntryClass.restart();
         } catch (Exception e) {
             FOKLogger.log(MainWindow.class.getName(), Level.INFO, "An error occurred while setting a new gui language", e);
         }
@@ -607,7 +433,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     // Handler for Button[fx:id="launchButton"] onAction
     @FXML
-    @SuppressWarnings("unused")
     void launchButtonOnAction(ActionEvent event) {
         MainWindow gui = this;
 
@@ -623,7 +448,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     }
 
                     currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
+                            workOfflineCheckbox.isSelected());
                 } catch (IOException | JDOMException e) {
                     gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
@@ -638,7 +463,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     }
 
     @FXML
-    @SuppressWarnings("unused")
     void linkButtonOnAction(ActionEvent event) {
         FOKLogger.info(MainWindow.class.getName(), "Creating shortcut using linkButton...");
         File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath() + File.separator
@@ -648,7 +472,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                     + " at the following location: " + file.getAbsolutePath());
             currentlySelectedApp.createShortCut(file, bundle.getString("shortcutQuickInfo"));
 
-            currentMainWindowInstance.showMessage(Alert.AlertType.INFORMATION, bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()), false);
+            EntryClass.getControllerInstance().showMessage(Alert.AlertType.INFORMATION, bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()), false);
         } catch (Exception e) {
             // Add message about debugging environment
             String guiString = e.toString();
@@ -657,106 +481,29 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                         + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
             }
             FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            currentMainWindowInstance.showErrorMessage(guiString);
+            EntryClass.getControllerInstance().showErrorMessage(guiString);
         }
     }
 
     // Handler for CheckBox[fx:id="workOfflineCheckbox"] onAction
     @FXML
-    @SuppressWarnings("unused")
     void workOfflineCheckboxOnAction(ActionEvent event) {
         updateLaunchButton();
     }
 
     // Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
     @FXML
-    @SuppressWarnings("unused")
     void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
-        prefs.setPreference(showLauncherAgainPrefKey,
+        EntryClass.getPrefs().setPreference(showLauncherAgainPrefKey,
                 Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
     }
 
     @FXML
-    @SuppressWarnings("unused")
     void appInfoButtonOnAction(ActionEvent event) {
         try {
             Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
         } catch (IOException | URISyntaxException e) {
             FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-        }
-    }
-
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        // get the right resource bundle
-        String guiLanguageCode = prefs.getPreference(guiLanguagePrefKey, "");
-
-        if (guiLanguageCode.equals("")) {
-            if (systemDefaultLocale != null) {
-                Locale.setDefault(systemDefaultLocale);
-            }
-        } else {
-            // Get the specified bundle
-            if (systemDefaultLocale == null) {
-                systemDefaultLocale = Locale.getDefault();
-            }
-            FOKLogger.info(MainWindow.class.getName(), "Setting language: " + guiLanguageCode);
-            Locale.setDefault(new Locale(guiLanguageCode));
-        }
-
-        bundle = ResourceBundle.getBundle("view.MainWindow");
-
-        // appConfig = new Config();
-
-        stage = primaryStage;
-        try {
-            Thread updateThread = new Thread(() -> {
-                try {
-                    UpdateInfo update = UpdateChecker.isUpdateAvailable(new URL(AppConfig.getRemoteConfig().getValue("updateRepoBaseURL")),
-                            AppConfig.getRemoteConfig().getValue("groupID"), AppConfig.getRemoteConfig().getValue("artifactID"), AppConfig.getUpdateFileClassifier(),
-                            Common.getInstance().getPackaging());
-                    if (update.showAlert) {
-                        Platform.runLater(() -> new UpdateAvailableDialog(update));
-                    }
-                } catch (MalformedURLException e) {
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                }
-            });
-            updateThread.setName("updateThread");
-            updateThread.start();
-
-            Parent root = FXMLLoader.load(getClass().getResource("MainWindow.fxml"), bundle);
-
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("MainWindow.css").toExternalForm());
-
-            primaryStage.setTitle(bundle.getString("windowTitle"));
-
-            primaryStage.setMinWidth(scene.getRoot().minWidth(0) + 70);
-            primaryStage.setMinHeight(scene.getRoot().minHeight(0) + 70);
-
-            primaryStage.setScene(scene);
-
-            // Set Icon
-            primaryStage.getIcons().add(new Image(MainWindow.class.getResourceAsStream("icon.png")));
-
-            primaryStage.show();
-        } catch (Exception e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-        }
-    }
-
-    @Override
-    public void stop() {
-        try {
-            UpdateChecker.cancelUpdateCompletion();
-            if (currentlySelectedApp != null) {
-                currentlySelectedApp.cancelDownloadAndLaunch(this);
-            }
-        } catch (Exception e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE,
-                    "An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.",
-                    e);
         }
     }
 
@@ -778,9 +525,6 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert linkButton != null : "fx:id=\"linkButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
-
-        // Initialize your logic here: all @FXML variables will have been
-        // injected
 
         // add icon to linkButton and optionButton
         linkButton.setGraphic(linkIconView);
@@ -846,11 +590,9 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         motdThread.setName("motdThread");
         motdThread.start();
 
-        currentMainWindowInstance = this;
-
-        enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(prefs.getPreference(enableSnapshotsPrefKey, "false")));
+        enableSnapshotsCheckbox.setSelected(Boolean.parseBoolean(EntryClass.getPrefs().getPreference(EntryClass.PrefKeys.ENABLE_SNAPSHOTS.toString(), "false")));
         launchLauncherAfterAppExitCheckbox
-                .setSelected(Boolean.parseBoolean(prefs.getPreference(showLauncherAgainPrefKey, "false")));
+                .setSelected(Boolean.parseBoolean(EntryClass.getPrefs().getPreference(showLauncherAgainPrefKey, "false")));
 
         try {
             versionLabel.setText(new Version(Common.getInstance().getAppVersion(), Common.getInstance().getBuildNumber()).toString(false));
@@ -883,21 +625,19 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         loadAppList();
 
         // auto launch app if one was specified
-        if (appForAutoLaunch != null) {
+        if (EntryClass.getAutoLaunchMVNCoordinates() != null) {
             MainWindow gui = this;
+            final App appForAutoLaunch = new App("autoLaunchApp", EntryClass.getAutoLaunchMVNCoordinates());
             currentlySelectedApp = appForAutoLaunch;
 
             // Launch the download
             downloadAndLaunchThread = new Thread(() -> {
                 try {
-                    appForAutoLaunch.downloadIfNecessaryAndLaunch(autoLaunchUseSnapshots || enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected(), autoLaunchAdditionalStartupArgs.toArray(new String[0]));
+                    appForAutoLaunch.downloadIfNecessaryAndLaunch(EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), gui,
+                            workOfflineCheckbox.isSelected(), EntryClass.getAdditionalAutoLaunchStartupArgs());
                 } catch (Exception e) {
                     gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + " \n" + e.getClass().getName() + "\n" + e.getMessage());
                     FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                } finally {
-                    // Clean up
-                    appForAutoLaunch = null;
                 }
             });
 
@@ -928,7 +668,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
         ObservableList<GuiLanguage> items = FXCollections.observableArrayList(convertedList);
         languageSelector.setItems(items);
 
-        if (Locale.getDefault() != systemDefaultLocale) {
+        if (Locale.getDefault() != EntryClass.getSystemDefaultLocale()) {
             GuiLanguage langToSelect = null;
 
             for (GuiLanguage lang : convertedList) {
@@ -1013,7 +753,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
                 updateLaunchButton();
 
                 // Show error message
-                currentMainWindowInstance.showErrorMessage(
+                EntryClass.getControllerInstance().showErrorMessage(
                         bundle.getString("updateLaunchButtonException") + "\n\n" + ExceptionUtils.getStackTrace(e),
                         false);
             }
@@ -1054,7 +794,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
 
     @Override
     public void hide() {
-        Platform.runLater(() -> stage.hide());
+        Platform.runLater(() -> EntryClass.getStage().hide());
     }
 
     // Handler for CheckBox[fx:id="enableSnapshotsCheckbox"] onAction
@@ -1062,7 +802,7 @@ public class MainWindow extends Application implements HidableUpdateProgressDial
     @SuppressWarnings("unused")
     void enableSnapshotsCheckboxOnAction(ActionEvent event) {
         updateLaunchButton();
-        prefs.setPreference(enableSnapshotsPrefKey, Boolean.toString(enableSnapshotsCheckbox.isSelected()));
+        EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.ENABLE_SNAPSHOTS.toString(), Boolean.toString(enableSnapshotsCheckbox.isSelected()));
     }
 
     @Override

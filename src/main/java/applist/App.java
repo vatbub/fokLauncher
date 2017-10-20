@@ -40,6 +40,7 @@ import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
 import org.jetbrains.annotations.Nullable;
+import view.EntryClass;
 import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
@@ -848,13 +849,19 @@ public class App {
         // Set implicit exit = false if handlers are defined when the app exits
         Platform.setImplicitExit(!this.eventHandlersWhenLaunchedAppExitsAttached());
 
-        List<String> finalCommand = new ArrayList<>(startupArgs.length + 5);
+        int expectedLength = 5;
+        if (startupArgs != null) {
+            expectedLength += startupArgs.length;
+        }
+        List<String> finalCommand = new ArrayList<>(expectedLength);
         finalCommand.add("java");
         finalCommand.add("-jar");
         finalCommand.add(jarFileName);
         finalCommand.add("disableUpdateChecks");
         finalCommand.add("locale=" + Locale.getDefault().getLanguage());
-        finalCommand.addAll(Arrays.asList(startupArgs));
+        if (startupArgs != null) {
+            finalCommand.addAll(Arrays.asList(startupArgs));
+        }
 
         FOKLogger.info(App.class.getName(), "Launching app using the command: " + String.join(" ", finalCommand));
 
@@ -1271,23 +1278,36 @@ public class App {
     }
 
     public void createShortCut(File shortcutFile, String quickInfoText) throws IOException {
-        // TODO: Optimize
         if (SystemUtils.IS_OS_WINDOWS) {
             ShellLink sl = ShellLink.createLink(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString());
 
-            if (getMvnCoordinates().getClassifier() == null) {
-                // no classifier set
-                sl.setCMDArgs("launch autolaunchrepourl=" + getMvnCoordinates().getRepoBaseURL().toString()
-                        + " autolaunchsnapshotrepourl=" + getMvnCoordinates().getSnapshotRepoBaseURL().toString()
-                        + " autolaunchgroupid=" + getMvnCoordinates().getGroupId() + " autolaunchartifactid="
-                        + getMvnCoordinates().getArtifactId());
-            } else {
-                sl.setCMDArgs("launch autolaunchrepourl=" + getMvnCoordinates().getRepoBaseURL().toString()
-                        + " autolaunchsnapshotrepourl=" + getMvnCoordinates().getSnapshotRepoBaseURL().toString()
-                        + " autolaunchgroupid=" + getMvnCoordinates().getGroupId() + " autolaunchartifactid="
-                        + getMvnCoordinates().getArtifactId() + " autolaunchclassifier=" + getMvnCoordinates().getClassifier());
+            StringBuilder cmdArgs = new StringBuilder("-")
+                    .append(EntryClass.getAutoLaunchWindowModeOption().getOpt())
+                    .append(" -")
+                    .append(EntryClass.getAutoLaunchRepoUrlOption().getOpt())
+                    .append(" ")
+                    .append(getMvnCoordinates().getRepoBaseURL().toString())
+                    .append(" -")
+                    .append(EntryClass.getAutoLaunchSnapshotRepoUrlOption().getOpt())
+                    .append(" ")
+                    .append(getMvnCoordinates().getSnapshotRepoBaseURL().toString())
+                    .append(" -")
+                    .append(EntryClass.getGroupIdOption().getOpt())
+                    .append(" ")
+                    .append(getMvnCoordinates().getGroupId())
+                    .append(" -")
+                    .append(EntryClass.getArtifactIdOption().getOpt())
+                    .append(" ")
+                    .append(getMvnCoordinates().getArtifactId());
+            if (getMvnCoordinates().getClassifier() != null) {
+                cmdArgs.append(" -")
+                        .append(EntryClass.getClassifierOption().getOpt())
+                        .append(" ")
+                        .append(getMvnCoordinates().getClassifier());
             }
 
+            System.out.println(cmdArgs.toString());
+            sl.setCMDArgs(cmdArgs.toString());
             sl.setName(quickInfoText.replace("%s", this.getName()));
 
             if (Common.getInstance().getPackaging().equals("exe")) {
@@ -1330,10 +1350,10 @@ public class App {
         ContextMenu contextMenu = new ContextMenu();
 
         Menu launchSpecificVersionItem = new Menu();
-        launchSpecificVersionItem.setText(bundle.getString("launchSpecificVersion").replace("%s", this.toString()));
+        launchSpecificVersionItem.setText(MainWindow.getBundle().getString("launchSpecificVersion").replace("%s", this.toString()));
 
         MenuItem dummyVersion = new MenuItem();
-        dummyVersion.setText(bundle.getString("waitForVersionList"));
+        dummyVersion.setText(MainWindow.getBundle().getString("waitForVersionList"));
         launchSpecificVersionItem.getItems().add(dummyVersion);
         launchSpecificVersionItem.setOnHiding(event2 -> MainWindow.launchSpecificVersionMenuCanceled = true);
         App app = this;
@@ -1344,12 +1364,12 @@ public class App {
 
                 // Get available versions
                 VersionList verList;
-                if (!MainWindow.currentMainWindowInstance.workOffline()) {
+                if (!EntryClass.getControllerInstance().workOffline()) {
                     // Online mode enabled
                     try {
                         verList = app.getAllOnlineVersions();
                         VersionList additionalVersions = app.getCurrentlyInstalledVersions();
-                        if (MainWindow.currentMainWindowInstance.snapshotsEnabled()) {
+                        if (EntryClass.getControllerInstance().snapshotsEnabled()) {
                             additionalVersions.add(app.getLatestOnlineSnapshotVersion());
                         }
 
@@ -1386,17 +1406,17 @@ public class App {
                                 // Attach the on app
                                 // exit handler if
                                 // required
-                                if (MainWindow.currentMainWindowInstance.launchLauncherAfterAppExitCheckbox.isSelected()) {
+                                if (EntryClass.getControllerInstance().launchLauncherAfterAppExitCheckbox.isSelected()) {
                                     app.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
                                 } else {
                                     app.removeEventHandlerWhenLaunchedAppExits(
                                             showLauncherAgain);
                                 }
                                 app.downloadIfNecessaryAndLaunch(
-                                        currentMainWindowInstance, menuItem.getVersion(),
-                                        MainWindow.currentMainWindowInstance.workOffline());
+                                        EntryClass.getControllerInstance(), menuItem.getVersion(),
+                                        EntryClass.getControllerInstance().workOffline());
                             } catch (IOException e) {
-                                currentMainWindowInstance.showErrorMessage(
+                                EntryClass.getControllerInstance().showErrorMessage(
                                         "An error occurred: \n" + ExceptionUtils.getStackTrace(e));
                                 FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                             }
@@ -1423,9 +1443,9 @@ public class App {
         });
 
         Menu deleteItem = new Menu();
-        deleteItem.setText(bundle.getString("deleteVersion").replace("%s", this.toString()));
+        deleteItem.setText(MainWindow.getBundle().getString("deleteVersion").replace("%s", this.toString()));
         MenuItem dummyVersion2 = new MenuItem();
-        dummyVersion2.setText(bundle.getString("waitForVersionList"));
+        dummyVersion2.setText(MainWindow.getBundle().getString("waitForVersionList"));
         deleteItem.getItems().add(dummyVersion2);
 
         deleteItem.setOnShown(event -> {
@@ -1450,7 +1470,7 @@ public class App {
                         } catch (IOException e) {
                             FOKLogger.log(getClass().getName(), Level.SEVERE, "Unable to delete the app " + app.getName(), e);
                         } finally {
-                            MainWindow.currentMainWindowInstance.updateLaunchButton();
+                            EntryClass.getControllerInstance().updateLaunchButton();
                         }
                         // Update the list the next time the
                         // user opens it as it has changed
@@ -1466,14 +1486,14 @@ public class App {
             }
         });
 
-        MenuItem changelogMenuItem = new MenuItem(bundle.getString("openChangelog"));
+        MenuItem changelogMenuItem = new MenuItem(MainWindow.getBundle().getString("openChangelog"));
         changelogMenuItem.setOnAction(event -> {
             FOKLogger.info(App.class.getName(), "Opening the changelog...");
             try {
                 Desktop.getDesktop().browse(this.getChangelogURL().toURI());
             } catch (IOException | URISyntaxException e) {
                 FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                currentMainWindowInstance.showErrorMessage(e.toString());
+                EntryClass.getControllerInstance().showErrorMessage(e.toString());
             }
         });
 
@@ -1482,7 +1502,7 @@ public class App {
         }
 
         MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
-        createShortcutOnDesktopMenuItem.setText(bundle.getString("createShortcutOnDesktop"));
+        createShortcutOnDesktopMenuItem.setText(MainWindow.getBundle().getString("createShortcutOnDesktop"));
         createShortcutOnDesktopMenuItem.setOnAction(event3 -> {
             FOKLogger.info(App.class.getName(), "Creating shortcut...");
             File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
@@ -1490,44 +1510,44 @@ public class App {
             try {
                 FOKLogger.info(App.class.getName(), "Creating shortcut for app " + app.getName()
                         + " at the following location: " + file.getAbsolutePath());
-                app.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+                app.createShortCut(file, MainWindow.getBundle().getString("shortcutQuickInfo"));
             } catch (Exception e) {
                 FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                currentMainWindowInstance.showErrorMessage(e.toString());
+                EntryClass.getControllerInstance().showErrorMessage(e.toString());
             }
         });
 
         MenuItem createShortcutMenuItem = new MenuItem();
-        createShortcutMenuItem.setText(bundle.getString("createShortcut"));
+        createShortcutMenuItem.setText(MainWindow.getBundle().getString("createShortcut"));
         createShortcutMenuItem.setOnAction(event3 -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters()
-                    .addAll(new FileChooser.ExtensionFilter(bundle.getString("shortcut"), "*.lnk"));
-            fileChooser.setTitle(bundle.getString("saveShortcut"));
-            File file = fileChooser.showSaveDialog(stage);
+                    .addAll(new FileChooser.ExtensionFilter(MainWindow.getBundle().getString("shortcut"), "*.lnk"));
+            fileChooser.setTitle(MainWindow.getBundle().getString("saveShortcut"));
+            File file = fileChooser.showSaveDialog(EntryClass.getStage());
             if (file != null) {
                 FOKLogger.info(App.class.getName(), "Creating shortcut...");
 
                 try {
                     FOKLogger.info(App.class.getName(), "Creating shortcut for app " + this.getName()
                             + " at the following location: " + file.getAbsolutePath());
-                    this.createShortCut(file, bundle.getString("shortcutQuickInfo"));
+                    this.createShortCut(file, MainWindow.getBundle().getString("shortcutQuickInfo"));
                 } catch (Exception e) {
                     FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                    currentMainWindowInstance.showErrorMessage(e.toString());
+                    EntryClass.getControllerInstance().showErrorMessage(e.toString());
                 }
             }
         });
 
         MenuItem exportInfoItem = new MenuItem();
-        exportInfoItem.setText(bundle.getString("exportInfo"));
+        exportInfoItem.setText(MainWindow.getBundle().getString("exportInfo"));
         exportInfoItem.setOnAction(event2 -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters()
                     .addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
             fileChooser.setTitle("Save Image");
             // TODO Translation
-            File file = fileChooser.showSaveDialog(stage);
+            File file = fileChooser.showSaveDialog(EntryClass.getStage());
             if (file != null) {
                 FOKLogger.info(App.class.getName(), "Exporting info...");
                 try {
@@ -1536,7 +1556,7 @@ public class App {
                     app.exportInfo(file);
                 } catch (IOException e) {
                     FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                    currentMainWindowInstance.showErrorMessage(e.toString());
+                    EntryClass.getControllerInstance().showErrorMessage(e.toString());
                 }
             }
         });
@@ -1547,14 +1567,14 @@ public class App {
         MenuItem removeImportedApp = new MenuItem();
         contextMenu.setOnShowing(event5 -> {
             if (app.isImported()) {
-                removeImportedApp.setText(bundle.getString("deleteImportedApp"));
+                removeImportedApp.setText(MainWindow.getBundle().getString("deleteImportedApp"));
                 removeImportedApp.setOnAction(event3 -> {
                     try {
                         app.removeFromImportedAppList();
-                        currentMainWindowInstance.loadAppList();
+                        EntryClass.getControllerInstance().loadAppList();
                     } catch (IOException e) {
                         FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                        currentMainWindowInstance.showErrorMessage(e.toString());
+                        EntryClass.getControllerInstance().showErrorMessage(e.toString());
                     }
                 });
 
