@@ -6,7 +6,13 @@
 
 **Implemented enhancements:**
 
+- Leverage apache commons-cli to parse the command line args [\#39](https://github.com/vatbub/fokLauncher/issues/39)
+- Add the option for a CLI-only mode where no GUI pops up at all [\#38](https://github.com/vatbub/fokLauncher/issues/38)
 - Add possibility to supply custom startup args to the autolaunch application [\#37](https://github.com/vatbub/fokLauncher/issues/37)
+
+**Fixed bugs:**
+
+- Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
 
 ## [foklauncher-0.1.2](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.2) (2017-07-26)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...foklauncher-0.1.2)
