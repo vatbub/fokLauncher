@@ -45,10 +45,7 @@ import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -668,35 +665,20 @@ public class App {
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
                                              boolean disableDownload, String... startupArgs) throws IOException {
         cancelDownloadAndLaunch = false;
-        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        String destFilename;
 
-        if (!disableDownload) {
-            // Continue by default, only cancel, when user cancelled
-            boolean downloadPerformed = true;
-
-            // download if necessary
-            if (!this.isPresentOnHarddrive(versionToLaunch)) {
-                // app not downloaded at all or needs to be updated
-                if (!this.isPresentOnHarddrive()) {
-                    // App was never downloaded
-                    FOKLogger.info(App.class.getName(), "Downloading package because it was never downloaded before...");
-                } else {
-                    // App needs an update
-                    FOKLogger.info(App.class.getName(), "Downloading package because an update is available...");
-                }
-
-                downloadPerformed = this.download(versionToLaunch, gui);
-            }
-
-            if (!downloadPerformed) {
-                // Download was cancelled by the user so return
-                return;
-            }
+        // Continue by default, only cancel, when user cancelled
+        boolean downloadPerformed = true;
+        if (!disableDownload && !this.isPresentOnHarddrive(versionToLaunch)) {
+            // app not downloaded at all or needs to be updated
+            downloadPerformed = this.download(versionToLaunch, gui);
         } else if (!this.isPresentOnHarddrive(versionToLaunch)) {
             // Download is disabled and app needs to be downloaded
             throw new IllegalStateException(
                     "The artifact needs to be downloaded prior to launch but download is disabled.");
+        }
+        if (!downloadPerformed) {
+            // Download was cancelled by the user so return
+            return;
         }
 
         // Perform Cancel if requested
@@ -707,19 +689,11 @@ public class App {
             return;
         }
 
-        if (getMvnCoordinates().getClassifier() == null) {
-            // No classifier
-            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToLaunch.toString() + ".jar";
-        } else {
-            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToLaunch.toString() + "-"
-                    + getMvnCoordinates().getClassifier() + ".jar";
-        }
-
         if (gui != null) {
             gui.launchStarted();
         }
 
-        String jarFileName = destFolder.resolve(destFilename).toAbsolutePath().toString();
+        String jarFileName = getAbsolutePathToSubfolderToSaveApps().resolve(getMvnCoordinates().getJarFileName(versionToLaunch)).toAbsolutePath().toString();
 
         // throw exception if the jar can't be found for some unlikely reason
         if (!(new File(jarFileName)).exists()) {
@@ -746,22 +720,18 @@ public class App {
         FOKLogger.info(App.class.getName(), "Launching app using the command: " + String.join(" ", finalCommand));
 
         ProcessBuilder pb = new ProcessBuilder(finalCommand.toArray(new String[0])).inheritIO();
-        Process process;
         // MainWindow.getMetricsRegistry().counter("foklauncher.applaunches." + getMavenCoordinateString(versionToLaunch)).inc();
 
-        FOKLogger.info(App.class.getName(), "Launching application " + destFilename);
+        FOKLogger.info(App.class.getName(), "Launching application " + getMvnCoordinates().getJarFileName(versionToLaunch));
 
         FOKLogger.info(getClass().getName(), "------------------------------------------------------------------");
-        FOKLogger.info(getClass().getName(), "The following output is coming from " + destFilename);
+        FOKLogger.info(getClass().getName(), "The following output is coming from " + getMvnCoordinates().getJarFileName(versionToLaunch));
         FOKLogger.info(getClass().getName(), "------------------------------------------------------------------");
 
         if (gui != null) {
             gui.hide();
-
-            process = pb.start();
-        } else {
-            process = pb.start();
         }
+        Process process = pb.start();
 
         try {
             process.waitFor();
@@ -780,7 +750,6 @@ public class App {
         }
 
         fireLaunchedAppExits();
-
     }
 
     /**
@@ -859,7 +828,6 @@ public class App {
         }
 
         Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
-        String destFilename;
         URL repoBaseURL;
         URL artifactURL;
 
@@ -880,24 +848,24 @@ public class App {
         }
 
         // Construct the download url
-        if (getMvnCoordinates().getClassifier() == null) {
-            artifactURL = new URL(repoBaseURL.toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
-                    + getMvnCoordinates().getArtifactId() + "/" + versionToDownload.getVersion() + "/" + getMvnCoordinates().getArtifactId()
-                    + "-" + versionToDownload.toString() + ".jar");
-        } else {
-            artifactURL = new URL(repoBaseURL.toString() + "/" + getMvnCoordinates().getGroupId().replace('.', '/') + "/"
-                    + getMvnCoordinates().getArtifactId() + "/" + versionToDownload.getVersion() + "/" + getMvnCoordinates().getArtifactId()
-                    + "-" + versionToDownload.toString() + "-" + getMvnCoordinates().getClassifier() + ".jar");
+        StringBuilder artifactURLBuilder = new StringBuilder(repoBaseURL.toString())
+                .append("/")
+                .append(getMvnCoordinates().getGroupId().replace('.', '/'))
+                .append("/")
+                .append(getMvnCoordinates().getArtifactId())
+                .append("/")
+                .append(versionToDownload.getVersion())
+                .append("/")
+                .append(getMvnCoordinates().getArtifactId())
+                .append("-")
+                .append(versionToDownload.toString());
+        if (getMvnCoordinates().getClassifier() != null) {
+            artifactURLBuilder.append("-")
+                    .append(getMvnCoordinates().getClassifier());
         }
 
-        // Construct file name of output file
-        if (getMvnCoordinates().getClassifier() == null) {
-            // No classifier
-            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToDownload.toString() + ".jar";
-        } else {
-            destFilename = getMvnCoordinates().getArtifactId() + "-" + versionToDownload.toString() + "-"
-                    + getMvnCoordinates().getClassifier() + ".jar";
-        }
+        artifactURLBuilder.append(".jar");
+        artifactURL = new URL(artifactURLBuilder.toString());
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
@@ -908,7 +876,7 @@ public class App {
         }
 
         // Create empty file
-        File outputFile = new File(destFolder + File.separator + destFilename);
+        File outputFile = destFolder.resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
@@ -928,39 +896,40 @@ public class App {
 
         HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
         long completeFileSize = httpConnection.getContentLength();
-
-        java.io.BufferedInputStream in = new java.io.BufferedInputStream(httpConnection.getInputStream());
         //noinspection ResultOfMethodCallIgnored
         outputFile.getParentFile().mkdirs();
-        java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
-        java.io.BufferedOutputStream bout = new BufferedOutputStream(fos, 1024);
-        byte[] data = new byte[1024];
-        long downloadedFileSize = 0;
-        int x;
-        while ((x = in.read(data, 0, 1024)) >= 0) {
-            downloadedFileSize += x;
 
-            // update progress bar
-            if (gui != null) {
-                gui.downloadProgressChanged(downloadedFileSize / 1024.0,
-                        completeFileSize / 1024.0);
-            }
+        try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+                try (BufferedOutputStream bout = new BufferedOutputStream(fileOutputStream, 1024)) {
+                    byte[] data = new byte[1024];
+                    long downloadedFileSize = 0;
+                    int x;
+                    while ((x = in.read(data, 0, 1024)) >= 0) {
+                        downloadedFileSize += x;
 
-            bout.write(data, 0, x);
+                        // update progress bar
+                        if (gui != null) {
+                            gui.downloadProgressChanged(downloadedFileSize / 1024.0,
+                                    completeFileSize / 1024.0);
+                        }
 
-            // Perform Cancel if requested
-            if (cancelDownloadAndLaunch) {
-                bout.close();
-                in.close();
-                Files.delete(outputFile.toPath());
-                if (gui != null) {
-                    gui.operationCanceled();
+                        bout.write(data, 0, x);
+
+                        // Perform Cancel if requested
+                        if (cancelDownloadAndLaunch) {
+                            bout.close();
+                            in.close();
+                            Files.delete(outputFile.toPath());
+                            if (gui != null) {
+                                gui.operationCanceled();
+                            }
+                            return false;
+                        }
+                    }
                 }
-                return false;
             }
         }
-        bout.close();
-        in.close();
 
         // download version info
         downloadVersionInfo(versionToDownload);
@@ -1469,6 +1438,10 @@ public class App {
         });
 
         return contextMenu;
+    }
+
+    private Path getAbsoluteSubfolderToSaveApps() {
+        return Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
     }
 
     private String getSubfolderToSaveApps() {

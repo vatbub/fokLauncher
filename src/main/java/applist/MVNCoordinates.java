@@ -21,6 +21,8 @@ package applist;
  */
 
 
+import com.github.vatbub.common.updater.Version;
+
 import java.net.URL;
 
 public class MVNCoordinates {
@@ -166,6 +168,18 @@ public class MVNCoordinates {
      */
     public void setClassifier(String classifier) {
         this.classifier = classifier;
+    }
+
+    public String getJarFileName(Version version) {
+        // Construct file name of output file
+        StringBuilder destFilenameBuilder = new StringBuilder(getArtifactId())
+                .append("-")
+                .append(version.toString());
+        if (getClassifier() != null) {
+            destFilenameBuilder.append("-").append(getClassifier());
+        }
+        destFilenameBuilder.append(".jar");
+        return destFilenameBuilder.toString();
     }
 
     @Override
