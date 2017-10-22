@@ -62,6 +62,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.jdom2.JDOMException;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
@@ -81,9 +82,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
-
-    public static Thread downloadAndLaunchThread = new Thread();
-    public static boolean launchSpecificVersionMenuCanceled = false;
     // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
     // private static final MetricRegistry metricsRegistry = new MetricRegistry();
     private static ResourceBundle bundle;
@@ -125,6 +123,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private static AppList apps;
     @FXML
     public CheckBox launchLauncherAfterAppExitCheckbox;
+    private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     /**
@@ -234,6 +233,47 @@ public class MainWindow implements HidableUpdateProgressDialog {
                 .build();
 
         reporter.start(10, TimeUnit.SECONDS);*/
+    }
+
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled) {
+        launchAppFromGUI(appToLaunch, snapshotsEnabled, false);
+    }
+
+    public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch) {
+        launchAppFromGUI(appToLaunch, false, false, versionToLaunch);
+    }
+
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting) {
+        launchAppFromGUI(appToLaunch, snapshotsEnabled, ignoreShowLauncherWhenAppExitsSetting, null);
+    }
+
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, @Nullable Version versionToDownload) {
+        if (downloadAndLaunchThread != null && downloadAndLaunchThread.isAlive()) {
+            throw new IllegalStateException("A download is already in progress!");
+        }
+
+        downloadAndLaunchThread = new Thread(() -> {
+            try {
+                // Attach the on app exit handler if required
+                if (launchLauncherAfterAppExitCheckbox.isSelected() && !ignoreShowLauncherWhenAppExitsSetting) {
+                    appToLaunch.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+                } else {
+                    appToLaunch.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+                }
+
+                if (versionToDownload == null) {
+                    appToLaunch.downloadIfNecessaryAndLaunch(snapshotsEnabled, this, workOffline());
+                } else {
+                    appToLaunch.downloadIfNecessaryAndLaunch(this, versionToDownload, workOffline());
+                }
+            } catch (IOException | JDOMException e) {
+                this.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            }
+        });
+
+        downloadAndLaunchThread.setName("downloadAndLaunchThread");
+        downloadAndLaunchThread.start();
     }
 
     /*public static MetricRegistry getMetricsRegistry()
@@ -433,31 +473,10 @@ public class MainWindow implements HidableUpdateProgressDialog {
     // Handler for Button[fx:id="launchButton"] onAction
     @FXML
     void launchButtonOnAction(ActionEvent event) {
-        MainWindow gui = this;
-
         if (!downloadAndLaunchThread.isAlive()) {
-            // Launch the download
-            downloadAndLaunchThread = new Thread(() -> {
-                try {
-                    // Attach the on app exit handler if required
-                    if (launchLauncherAfterAppExitCheckbox.isSelected()) {
-                        currentlySelectedApp.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-                    } else {
-                        currentlySelectedApp.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-                    }
-
-                    currentlySelectedApp.downloadIfNecessaryAndLaunch(enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected());
-                } catch (IOException | JDOMException e) {
-                    gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                }
-            });
-
-            downloadAndLaunchThread.setName("downloadAndLaunchThread");
-            downloadAndLaunchThread.start();
+            launchAppFromGUI(currentlySelectedApp, enableSnapshotsCheckbox.isSelected());
         } else {
-            currentlySelectedApp.cancelDownloadAndLaunch(gui);
+            currentlySelectedApp.cancelDownloadAndLaunch(this);
         }
     }
 
@@ -627,21 +646,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
         if (EntryClass.getAutoLaunchMVNCoordinates() != null) {
             MainWindow gui = this;
             final App appForAutoLaunch = new App("autoLaunchApp", EntryClass.getAutoLaunchMVNCoordinates());
-            currentlySelectedApp = appForAutoLaunch;
-
-            // Launch the download
-            downloadAndLaunchThread = new Thread(() -> {
-                try {
-                    appForAutoLaunch.downloadIfNecessaryAndLaunch(EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), gui,
-                            workOfflineCheckbox.isSelected(), EntryClass.getAdditionalAutoLaunchStartupArgs());
-                } catch (Exception e) {
-                    gui.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + " \n" + e.getClass().getName() + "\n" + e.getMessage());
-                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                }
-            });
-
-            downloadAndLaunchThread.setName("downloadAndLaunchThread");
-            downloadAndLaunchThread.start();
+            launchAppFromGUI(appForAutoLaunch, EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), true);
         }
 
         // Show alert if this is the first launch after an update

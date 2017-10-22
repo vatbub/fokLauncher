@@ -37,7 +37,6 @@ import mslinks.ShellLink;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
 import org.jetbrains.annotations.Nullable;
 import view.EntryClass;
@@ -54,8 +53,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
-
-import static view.MainWindow.*;
 
 @SuppressWarnings("SameParameterValue")
 public class App {
@@ -97,7 +94,7 @@ public class App {
     private URL changelogURL;
     private boolean specificVersionListLoaded = false;
     private boolean deletableVersionListLoaded = false;
-    private ContextMenu contextMenu;
+    private ContextMenu contextMenuCache;
 
     /**
      * Creates a new App with the specified name.
@@ -827,7 +824,6 @@ public class App {
             gui.preparePhaseStarted();
         }
 
-        Path destFolder = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
         URL repoBaseURL;
         URL artifactURL;
 
@@ -876,7 +872,7 @@ public class App {
         }
 
         // Create empty file
-        File outputFile = destFolder.resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
+        File outputFile = getAbsolutePathToSubfolderToSaveApps().resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
@@ -1187,26 +1183,39 @@ public class App {
     }
 
     public ContextMenu getContextMenu() {
-        if (contextMenu == null) {
-            contextMenu = this.generateContextMenu();
+        if (contextMenuCache == null) {
+            contextMenuCache = this.generateContextMenu();
         }
 
-        return contextMenu;
+        return contextMenuCache;
     }
 
     private ContextMenu generateContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
+        if (getChangelogURL() != null) {
+            contextMenu.getItems().add(createChangelogMenuItem());
+        }
 
-        Menu launchSpecificVersionItem = new Menu();
+        contextMenu.getItems().addAll(createLaunchSpecificVersionItem(), createDeleteItem(),
+                createCreateShortcutOnDesktopMenuItem(), createCreateShortcutMenuItem(), createExportMenuItem());
+
+        if (isImported()) {
+            contextMenu.getItems().add(createRemoveImportedAppMenuItem());
+        }
+        return contextMenu;
+    }
+
+    private Menu createLaunchSpecificVersionItem() {
+        LaunchSpecificVersionMenu launchSpecificVersionItem = new LaunchSpecificVersionMenu();
         launchSpecificVersionItem.setText(MainWindow.getBundle().getString("launchSpecificVersion").replace("%s", this.toString()));
 
         MenuItem dummyVersion = new MenuItem();
         dummyVersion.setText(MainWindow.getBundle().getString("waitForVersionList"));
+        // show the dummy version while the actual version list is loading
         launchSpecificVersionItem.getItems().add(dummyVersion);
-        launchSpecificVersionItem.setOnHiding(event2 -> MainWindow.launchSpecificVersionMenuCanceled = true);
-        App app = this;
+        launchSpecificVersionItem.setOnHiding(event2 -> launchSpecificVersionItem.setCancelled(true));
         launchSpecificVersionItem.setOnShown(event -> {
-            MainWindow.launchSpecificVersionMenuCanceled = false;
+            launchSpecificVersionItem.setCancelled(false);
             Thread buildContextMenuThread = new Thread(() -> {
                 FOKLogger.info(App.class.getName(), "Getting available online versions...");
 
@@ -1215,26 +1224,21 @@ public class App {
                 if (!EntryClass.getControllerInstance().workOffline()) {
                     // Online mode enabled
                     try {
-                        verList = app.getAllOnlineVersions();
-                        VersionList additionalVersions = app.getCurrentlyInstalledVersions();
+                        verList = getAllOnlineVersions();
+                        verList.setEnsureNoDuplicates(true);
+                        verList.addAll(getCurrentlyInstalledVersions());
                         if (EntryClass.getControllerInstance().snapshotsEnabled()) {
-                            additionalVersions.add(app.getLatestOnlineSnapshotVersion());
-                        }
-
-                        for (Version additionalVersion : additionalVersions) {
-                            if (!verList.contains(additionalVersion)) {
-                                verList.add(additionalVersion);
-                            }
+                            verList.add(getLatestOnlineSnapshotVersion());
                         }
                     } catch (Exception e) {
                         // Something happened, pretend
                         // offline mode
-                        verList = app.getCurrentlyInstalledVersions();
+                        verList = getCurrentlyInstalledVersions();
                     }
 
                 } else {
                     // Offline mode enabled
-                    verList = app.getCurrentlyInstalledVersions();
+                    verList = getCurrentlyInstalledVersions();
                 }
 
                 // Sort the list
@@ -1247,36 +1251,11 @@ public class App {
                     VersionMenuItem menuItem = new VersionMenuItem();
                     menuItem.setVersion(ver);
                     menuItem.setText(ver.toString(false));
-                    menuItem.setOnAction(event2 -> {
-                        // Launch the download
-                        MainWindow.downloadAndLaunchThread = new Thread(() -> {
-                            try {
-                                // Attach the on app
-                                // exit handler if
-                                // required
-                                if (EntryClass.getControllerInstance().launchLauncherAfterAppExitCheckbox.isSelected()) {
-                                    app.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-                                } else {
-                                    app.removeEventHandlerWhenLaunchedAppExits(
-                                            showLauncherAgain);
-                                }
-                                app.downloadIfNecessaryAndLaunch(
-                                        EntryClass.getControllerInstance(), menuItem.getVersion(),
-                                        EntryClass.getControllerInstance().workOffline());
-                            } catch (IOException e) {
-                                EntryClass.getControllerInstance().showErrorMessage(
-                                        "An error occurred: \n" + ExceptionUtils.getStackTrace(e));
-                                FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                            }
-                        });
-
-                        downloadAndLaunchThread.setName("downloadAndLaunchThread");
-                        downloadAndLaunchThread.start();
-                    });
+                    menuItem.setOnAction(event2 -> EntryClass.getControllerInstance().launchAppFromGUI(this, menuItem.getVersion()));
                     Platform.runLater(() -> launchSpecificVersionItem.getItems().add(menuItem));
                 }
                 Platform.runLater(() -> {
-                    if (!launchSpecificVersionMenuCanceled) {
+                    if (!launchSpecificVersionItem.isCancelled()) {
                         launchSpecificVersionItem.hide();
                         launchSpecificVersionItem.show();
                     }
@@ -1289,7 +1268,10 @@ public class App {
                 this.setSpecificVersionListLoaded(true);
             }
         });
+        return launchSpecificVersionItem;
+    }
 
+    private Menu createDeleteItem() {
         Menu deleteItem = new Menu();
         deleteItem.setText(MainWindow.getBundle().getString("deleteVersion").replace("%s", this.toString()));
         MenuItem dummyVersion2 = new MenuItem();
@@ -1297,14 +1279,14 @@ public class App {
         deleteItem.getItems().add(dummyVersion2);
 
         deleteItem.setOnShown(event -> {
-            if (!app.isDeletableVersionListLoaded()) {
+            if (!isDeletableVersionListLoaded()) {
                 // Get deletable versions
-                app.setDeletableVersionListLoaded(true);
+                setDeletableVersionListLoaded(true);
                 FOKLogger.info(App.class.getName(), "Getting deletable versions...");
                 deleteItem.getItems().clear();
 
                 VersionList verList;
-                verList = app.getCurrentlyInstalledVersions();
+                verList = getCurrentlyInstalledVersions();
                 Collections.sort(verList);
 
                 for (Version ver : verList) {
@@ -1314,15 +1296,15 @@ public class App {
                     menuItem.setOnAction(event2 -> {
                         // Delete the file
                         try {
-                            app.delete(menuItem.getVersion());
+                            delete(menuItem.getVersion());
                         } catch (IOException e) {
-                            FOKLogger.log(getClass().getName(), Level.SEVERE, "Unable to delete the app " + app.getName(), e);
+                            FOKLogger.log(getClass().getName(), Level.SEVERE, "Unable to delete the app " + getName(), e);
                         } finally {
                             EntryClass.getControllerInstance().updateLaunchButton();
                         }
                         // Update the list the next time the
                         // user opens it as it has changed
-                        app.setDeletableVersionListLoaded(false);
+                        setDeletableVersionListLoaded(false);
 
                     });
                     Platform.runLater(() -> deleteItem.getItems().add(menuItem));
@@ -1333,7 +1315,10 @@ public class App {
                 });
             }
         });
+        return deleteItem;
+    }
 
+    private MenuItem createChangelogMenuItem() {
         MenuItem changelogMenuItem = new MenuItem(MainWindow.getBundle().getString("openChangelog"));
         changelogMenuItem.setOnAction(event -> {
             FOKLogger.info(App.class.getName(), "Opening the changelog...");
@@ -1344,27 +1329,29 @@ public class App {
                 EntryClass.getControllerInstance().showErrorMessage(e.toString());
             }
         });
+        return changelogMenuItem;
+    }
 
-        if (this.getChangelogURL() != null) {
-            contextMenu.getItems().add(changelogMenuItem);
-        }
-
+    public MenuItem createCreateShortcutOnDesktopMenuItem() {
         MenuItem createShortcutOnDesktopMenuItem = new MenuItem();
         createShortcutOnDesktopMenuItem.setText(MainWindow.getBundle().getString("createShortcutOnDesktop"));
         createShortcutOnDesktopMenuItem.setOnAction(event3 -> {
             FOKLogger.info(App.class.getName(), "Creating shortcut...");
             File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()
-                    + File.separator + app.getName() + ".lnk");
+                    + File.separator + getName() + ".lnk");
             try {
-                FOKLogger.info(App.class.getName(), "Creating shortcut for app " + app.getName()
+                FOKLogger.info(App.class.getName(), "Creating shortcut for app " + getName()
                         + " at the following location: " + file.getAbsolutePath());
-                app.createShortCut(file, MainWindow.getBundle().getString("shortcutQuickInfo"));
+                createShortCut(file, MainWindow.getBundle().getString("shortcutQuickInfo"));
             } catch (Exception e) {
                 FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 EntryClass.getControllerInstance().showErrorMessage(e.toString());
             }
         });
+        return createShortcutOnDesktopMenuItem;
+    }
 
+    public MenuItem createCreateShortcutMenuItem() {
         MenuItem createShortcutMenuItem = new MenuItem();
         createShortcutMenuItem.setText(MainWindow.getBundle().getString("createShortcut"));
         createShortcutMenuItem.setOnAction(event3 -> {
@@ -1386,7 +1373,10 @@ public class App {
                 }
             }
         });
+        return createShortcutMenuItem;
+    }
 
+    public MenuItem createExportMenuItem() {
         MenuItem exportInfoItem = new MenuItem();
         exportInfoItem.setText(MainWindow.getBundle().getString("exportInfo"));
         exportInfoItem.setOnAction(event2 -> {
@@ -1399,49 +1389,33 @@ public class App {
             if (file != null) {
                 FOKLogger.info(App.class.getName(), "Exporting info...");
                 try {
-                    FOKLogger.info(App.class.getName(), "Exporting app info of app " + app.getName() + " to file: "
+                    FOKLogger.info(App.class.getName(), "Exporting app info of app " + getName() + " to file: "
                             + file.getAbsolutePath());
-                    app.exportInfo(file);
+                    exportInfo(file);
                 } catch (IOException e) {
                     FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                     EntryClass.getControllerInstance().showErrorMessage(e.toString());
                 }
             }
         });
-
-        contextMenu.getItems().addAll(launchSpecificVersionItem, deleteItem,
-                createShortcutOnDesktopMenuItem, createShortcutMenuItem, exportInfoItem);
-
-        MenuItem removeImportedApp = new MenuItem();
-        contextMenu.setOnShowing(event5 -> {
-            if (app.isImported()) {
-                removeImportedApp.setText(MainWindow.getBundle().getString("deleteImportedApp"));
-                removeImportedApp.setOnAction(event3 -> {
-                    try {
-                        app.removeFromImportedAppList();
-                        EntryClass.getControllerInstance().loadAppList();
-                    } catch (IOException e) {
-                        FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                        EntryClass.getControllerInstance().showErrorMessage(e.toString());
-                    }
-                });
-
-                contextMenu.getItems().add(removeImportedApp);
-            }
-        });
-
-        contextMenu.setOnHidden(event5 -> {
-            // Remove the removeImportedApp-Item again if it exists
-            if (contextMenu.getItems().contains(removeImportedApp)) {
-                contextMenu.getItems().remove(removeImportedApp);
-            }
-        });
-
-        return contextMenu;
+        return exportInfoItem;
     }
 
-    private Path getAbsoluteSubfolderToSaveApps() {
-        return Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
+    public MenuItem createRemoveImportedAppMenuItem() {
+        MenuItem removeImportedApp = new MenuItem();
+        if (isImported()) {
+            removeImportedApp.setText(MainWindow.getBundle().getString("deleteImportedApp"));
+            removeImportedApp.setOnAction(event3 -> {
+                try {
+                    removeFromImportedAppList();
+                    EntryClass.getControllerInstance().loadAppList();
+                } catch (IOException e) {
+                    FOKLogger.log(App.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+                    EntryClass.getControllerInstance().showErrorMessage(e.toString());
+                }
+            });
+        }
+        return removeImportedApp;
     }
 
     private String getSubfolderToSaveApps() {
