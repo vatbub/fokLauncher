@@ -163,7 +163,7 @@ public class EntryClass extends Application {
                         }
                     }
                 case CLI:
-                    App autoLaunchApp = new App("autoLaunchApp", getAutoLaunchMVNCoordinates());
+                    App autoLaunchApp = new App(getAutoLaunchMVNCoordinates().getArtifactId(), getAutoLaunchMVNCoordinates());
                     // app won't exit if we don't do this
                     autoLaunchApp.addEventHandlerWhenLaunchedAppExits(() -> System.exit(0));
                     autoLaunchApp.downloadIfNecessaryAndLaunch(isAutoLaunchSnapshotsEnabled() || Boolean.parseBoolean(EntryClass.getPrefs().getPreference(PrefKeys.ENABLE_SNAPSHOTS.toString(), "false")), new CLIProgressUpdateDialog(),

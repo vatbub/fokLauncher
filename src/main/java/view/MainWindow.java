@@ -210,12 +210,12 @@ public class MainWindow implements HidableUpdateProgressDialog {
         reporter.start(10, TimeUnit.SECONDS);*/
     }
 
-    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled) {
-        launchAppFromGUI(appToLaunch, snapshotsEnabled, false);
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, String... startupArgs) {
+        launchAppFromGUI(appToLaunch, snapshotsEnabled, false, startupArgs);
     }
 
-    public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch) {
-        launchAppFromGUI(appToLaunch, false, false, versionToLaunch);
+    public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch, String... startupArgs) {
+        launchAppFromGUI(appToLaunch, false, false, versionToLaunch, startupArgs);
     }
 
     /*public static MetricRegistry getMetricsRegistry()
@@ -223,11 +223,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
         return metricsRegistry;
     }*/
 
-    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting) {
-        launchAppFromGUI(appToLaunch, snapshotsEnabled, ignoreShowLauncherWhenAppExitsSetting, null);
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, String... startupArgs) {
+        launchAppFromGUI(appToLaunch, snapshotsEnabled, ignoreShowLauncherWhenAppExitsSetting, null, startupArgs);
     }
 
-    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, @Nullable Version versionToDownload) {
+    public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, @Nullable Version versionToDownload, String... startupArgs) {
         if (downloadAndLaunchThread != null && downloadAndLaunchThread.isAlive()) {
             throw new IllegalStateException("A download is already in progress!");
         }
@@ -242,9 +242,9 @@ public class MainWindow implements HidableUpdateProgressDialog {
                 }
 
                 if (versionToDownload == null) {
-                    appToLaunch.downloadIfNecessaryAndLaunch(snapshotsEnabled, this, workOffline());
+                    appToLaunch.downloadIfNecessaryAndLaunch(snapshotsEnabled, this, workOffline(), startupArgs);
                 } else {
-                    appToLaunch.downloadIfNecessaryAndLaunch(this, versionToDownload, workOffline());
+                    appToLaunch.downloadIfNecessaryAndLaunch(this, versionToDownload, workOffline(), startupArgs);
                 }
             } catch (IOException | JDOMException e) {
                 this.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
@@ -612,8 +612,8 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
         // auto launch app if one was specified
         if (EntryClass.getAutoLaunchMVNCoordinates() != null) {
-            final App appForAutoLaunch = new App("autoLaunchApp", EntryClass.getAutoLaunchMVNCoordinates());
-            launchAppFromGUI(appForAutoLaunch, EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), true);
+            final App appForAutoLaunch = new App(EntryClass.getAutoLaunchMVNCoordinates().getArtifactId(), EntryClass.getAutoLaunchMVNCoordinates());
+            launchAppFromGUI(appForAutoLaunch, EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), true, EntryClass.getAdditionalAutoLaunchStartupArgs());
         }
 
         // Show alert if this is the first launch after an update
