@@ -57,7 +57,6 @@ import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.coursera.metrics.datadog.transport.HttpTransport;
@@ -96,33 +95,14 @@ public class MainWindow implements HidableUpdateProgressDialog {
         }
         Platform.setImplicitExit(true);
     };
+    @FXML
+    public CheckBox launchLauncherAfterAppExitCheckbox;
     /**
      * {@code true }if this is the first launch after an update
      */
-    private static boolean isFirstLaunchAfterUpdate = false;
-    private static String firstUpdateMessageTextKey;
-    private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
-        isFirstLaunchAfterUpdate = true;
-
-        if (oldVersion == null) {
-            // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
-
-            // use the old alert message
-            firstUpdateMessageTextKey = "firstLaunchAfterUpdateDeletedApps";
-            try {
-                // delete apps folder
-                FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
-                FileUtils.deleteDirectory(new File(Common.getInstance().getAndCreateAppDataPath() + "apps"));
-            } catch (Exception e) {
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            }
-        } else {
-            firstUpdateMessageTextKey = "firstLaunchAfterUpdate";
-        }
-    };
-    private static AppList apps;
-    @FXML
-    public CheckBox launchLauncherAfterAppExitCheckbox;
+    private boolean isFirstLaunchAfterUpdate;
+    private String firstUpdateMessageTextKey;
+    private AppList apps;
     private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
@@ -486,15 +466,13 @@ public class MainWindow implements HidableUpdateProgressDialog {
             currentlySelectedApp.createShortCut(file, bundle.getString("shortcutQuickInfo"));
 
             EntryClass.getControllerInstance().showMessage(Alert.AlertType.INFORMATION, bundle.getString("shortcutCreatedMessage").replace("%s", currentlySelectedApp.getName()), false);
+        } catch (NullPointerException e) {
+            String errorText = "You are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
+            FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, errorText, e);
+            EntryClass.getControllerInstance().showErrorMessage(e.toString() + "\n\n" + errorText);
         } catch (Exception e) {
-            // Add message about debugging environment
-            String guiString = e.toString();
-            if (e instanceof NullPointerException) {
-                guiString = guiString
-                        + "\n\nYou are probably in a development environment where linking does not work (where shall I link to? Package the source code into a jar file using the command \n\nmvn package\n\nand then retry.";
-            }
             FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            EntryClass.getControllerInstance().showErrorMessage(guiString);
+            EntryClass.getControllerInstance().showErrorMessage(e.toString());
         }
     }
 
@@ -925,5 +903,21 @@ public class MainWindow implements HidableUpdateProgressDialog {
                         + totalString + ")");
             });
         }
+    }
+
+    public boolean isFirstLaunchAfterUpdate() {
+        return isFirstLaunchAfterUpdate;
+    }
+
+    public void setFirstLaunchAfterUpdate(boolean firstLaunchAfterUpdate) {
+        isFirstLaunchAfterUpdate = firstLaunchAfterUpdate;
+    }
+
+    public String getFirstUpdateMessageTextKey() {
+        return firstUpdateMessageTextKey;
+    }
+
+    public void setFirstUpdateMessageTextKey(String firstUpdateMessageTextKey) {
+        this.firstUpdateMessageTextKey = firstUpdateMessageTextKey;
     }
 }

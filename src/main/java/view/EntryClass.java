@@ -39,7 +39,9 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
@@ -65,6 +67,25 @@ public class EntryClass extends Application {
     private static Prefs prefs;
     private static Locale systemDefaultLocale;
     private static MainWindow controllerInstance;
+    private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
+        getControllerInstance().setFirstLaunchAfterUpdate(true);
+
+        if (oldVersion == null) {
+            // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
+
+            // use the old alert message
+            getControllerInstance().setFirstUpdateMessageTextKey("firstLaunchAfterUpdateDeletedApps");
+            try {
+                // delete apps folder
+                FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
+                FileUtils.deleteDirectory(new File(Common.getInstance().getAndCreateAppDataPath() + "apps"));
+            } catch (Exception e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            }
+        } else {
+            getControllerInstance().setFirstUpdateMessageTextKey("firstLaunchAfterUpdate");
+        }
+    };
     private static LaunchMode launchMode;
     private static MVNCoordinates autoLaunchMVNCoordinates;
     private static String[] additionalAutoLaunchStartupArgs;
@@ -76,6 +97,8 @@ public class EntryClass extends Application {
         FOKLogger.enableLoggingOfUncaughtExceptions();
         prefs = new Prefs(MainWindow.class.getName());
         systemDefaultLocale = Locale.getDefault();
+
+        UpdateChecker.completeUpdate(args, firstStartAfterUpdateRunnable);
 
         CommandLineParser parser = new DefaultParser();
         try {

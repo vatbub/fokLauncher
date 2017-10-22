@@ -897,7 +897,7 @@ public class App {
 
         try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
             try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
-                try (BufferedOutputStream bout = new BufferedOutputStream(fileOutputStream, 1024)) {
+                try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 1024)) {
                     byte[] data = new byte[1024];
                     long downloadedFileSize = 0;
                     int x;
@@ -910,12 +910,10 @@ public class App {
                                     completeFileSize / 1024.0);
                         }
 
-                        bout.write(data, 0, x);
+                        bufferedOutputStream.write(data, 0, x);
 
                         // Perform Cancel if requested
                         if (cancelDownloadAndLaunch) {
-                            bout.close();
-                            in.close();
                             Files.delete(outputFile.toPath());
                             if (gui != null) {
                                 gui.operationCanceled();
