@@ -32,18 +32,18 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class AppConfig {
-    private AppConfig() {
-        throw new IllegalStateException("Class may not be instantiated");
-    }
-
     private static Config remoteConfig;
 
     static {
         try {
-            remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), "foklauncherConfigCache.properties");
+            remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), true, "foklauncherConfigCache.properties", true);
         } catch (IOException e) {
             FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
+    }
+
+    private AppConfig() {
+        throw new IllegalStateException("Class may not be instantiated");
     }
 
     public static String getUpdateFileClassifier() {
