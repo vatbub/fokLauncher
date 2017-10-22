@@ -617,15 +617,14 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
         // auto launch app if one was specified
         if (EntryClass.getAutoLaunchMVNCoordinates() != null) {
-            MainWindow gui = this;
             final App appForAutoLaunch = new App("autoLaunchApp", EntryClass.getAutoLaunchMVNCoordinates());
             launchAppFromGUI(appForAutoLaunch, EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), true);
         }
 
         // Show alert if this is the first launch after an update
-        if (isFirstLaunchAfterUpdate) {
+        if (isFirstLaunchAfterUpdate()) {
             // first start consumed
-            isFirstLaunchAfterUpdate = false;
+            setFirstLaunchAfterUpdate(false);
             try {
                 FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
                 this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getInstance().getAppVersion()), false);
