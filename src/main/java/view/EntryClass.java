@@ -67,14 +67,16 @@ public class EntryClass extends Application {
     private static Prefs prefs;
     private static Locale systemDefaultLocale;
     private static MainWindow controllerInstance;
+    private static boolean isFirstLaunchAfterUpdate;
+    private static String firstUpdateMessageTextKey;
     private static final UpdateChecker.CompleteUpdateRunnable firstStartAfterUpdateRunnable = (oldVersion, oldFile) -> {
-        getControllerInstance().setFirstLaunchAfterUpdate(true);
+        setFirstLaunchAfterUpdate(true);
 
         if (oldVersion == null) {
             // Version was so old that we cannot determine its actual version number so we need to make sure that we can use the current storage model
 
             // use the old alert message
-            getControllerInstance().setFirstUpdateMessageTextKey("firstLaunchAfterUpdateDeletedApps");
+            setFirstUpdateMessageTextKey("firstLaunchAfterUpdateDeletedApps");
             try {
                 // delete apps folder
                 FOKLogger.info(MainWindow.class.getName(), "Deleting the apps folder after update...");
@@ -83,7 +85,7 @@ public class EntryClass extends Application {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         } else {
-            getControllerInstance().setFirstUpdateMessageTextKey("firstLaunchAfterUpdate");
+            setFirstUpdateMessageTextKey("firstLaunchAfterUpdate");
         }
     };
     private static LaunchMode launchMode;
@@ -354,6 +356,22 @@ public class EntryClass extends Application {
         }
 
         return entryClassInstance.stage;
+    }
+
+    public static boolean isFirstLaunchAfterUpdate() {
+        return isFirstLaunchAfterUpdate;
+    }
+
+    public static void setFirstLaunchAfterUpdate(boolean firstLaunchAfterUpdate) {
+        isFirstLaunchAfterUpdate = firstLaunchAfterUpdate;
+    }
+
+    public static String getFirstUpdateMessageTextKey() {
+        return firstUpdateMessageTextKey;
+    }
+
+    public static void setFirstUpdateMessageTextKey(String firstUpdateMessageTextKey) {
+        EntryClass.firstUpdateMessageTextKey = firstUpdateMessageTextKey;
     }
 
     /**

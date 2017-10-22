@@ -97,11 +97,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
     };
     @FXML
     public CheckBox launchLauncherAfterAppExitCheckbox;
-    /**
-     * {@code true }if this is the first launch after an update
-     */
-    private boolean isFirstLaunchAfterUpdate;
-    private String firstUpdateMessageTextKey;
     private AppList apps;
     private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
@@ -622,12 +617,12 @@ public class MainWindow implements HidableUpdateProgressDialog {
         }
 
         // Show alert if this is the first launch after an update
-        if (isFirstLaunchAfterUpdate()) {
+        if (EntryClass.isFirstLaunchAfterUpdate()) {
             // first start consumed
-            setFirstLaunchAfterUpdate(false);
+            EntryClass.setFirstLaunchAfterUpdate(false);
             try {
                 FOKLogger.fine(MainWindow.class.getName(), "Showing message after update...");
-                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(firstUpdateMessageTextKey).replace("%v", Common.getInstance().getAppVersion()), false);
+                this.showMessage(Alert.AlertType.INFORMATION, bundle.getString(EntryClass.getFirstUpdateMessageTextKey()).replace("%v", Common.getInstance().getAppVersion()), false);
             } catch (Exception e) {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
@@ -902,21 +897,5 @@ public class MainWindow implements HidableUpdateProgressDialog {
                         + totalString + ")");
             });
         }
-    }
-
-    public boolean isFirstLaunchAfterUpdate() {
-        return isFirstLaunchAfterUpdate;
-    }
-
-    public void setFirstLaunchAfterUpdate(boolean firstLaunchAfterUpdate) {
-        isFirstLaunchAfterUpdate = firstLaunchAfterUpdate;
-    }
-
-    public String getFirstUpdateMessageTextKey() {
-        return firstUpdateMessageTextKey;
-    }
-
-    public void setFirstUpdateMessageTextKey(String firstUpdateMessageTextKey) {
-        this.firstUpdateMessageTextKey = firstUpdateMessageTextKey;
     }
 }
