@@ -24,6 +24,7 @@ package view;
 import applist.App;
 import applist.AppList;
 import com.github.vatbub.common.core.Common;
+import com.github.vatbub.common.core.StringCommon;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.internet.Internet;
 import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
@@ -36,7 +37,6 @@ import com.github.vatbub.common.view.core.ProgressButton;
 import com.github.vatbub.common.view.motd.MOTD;
 import com.github.vatbub.common.view.motd.MOTDDialog;
 import com.rometools.rome.io.FeedException;
-import com.sun.glass.ui.Robot;
 import config.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
@@ -134,28 +134,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private ListView<App> appList;
     @FXML
     private TextField searchField;
-    @FXML
-    private CheckBox enableSnapshotsCheckbox;
-    @FXML
-    private ProgressButton launchButton;
-    @FXML
-    private Button optionButton;
-    @FXML
-    private Button linkButton;
-    @FXML
-    private ComboBox<GuiLanguage> languageSelector;
-    @FXML
-    private CustomProgressBar progressBar;
-    @FXML
-    private CheckBox workOfflineCheckbox;
-    @FXML
-    private Hyperlink updateLink;
-    @FXML
-    private Label versionLabel;
-    @FXML
-    private GridPane settingsGridView;
-    @FXML
-    private Button appInfoButton;
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -216,6 +194,28 @@ public class MainWindow implements HidableUpdateProgressDialog {
             }
         }
     };
+    @FXML
+    private CheckBox enableSnapshotsCheckbox;
+    @FXML
+    private ProgressButton launchButton;
+    @FXML
+    private Button optionButton;
+    @FXML
+    private Button linkButton;
+    @FXML
+    private ComboBox<GuiLanguage> languageSelector;
+    @FXML
+    private CustomProgressBar progressBar;
+    @FXML
+    private CheckBox workOfflineCheckbox;
+    @FXML
+    private Hyperlink updateLink;
+    @FXML
+    private Label versionLabel;
+    @FXML
+    private GridPane settingsGridView;
+    @FXML
+    private Button appInfoButton;
 
     public static ResourceBundle getBundle() {
         return bundle;
@@ -242,6 +242,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
     public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch) {
         launchAppFromGUI(appToLaunch, false, false, versionToLaunch);
     }
+
+    /*public static MetricRegistry getMetricsRegistry()
+    {
+        return metricsRegistry;
+    }*/
 
     public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting) {
         launchAppFromGUI(appToLaunch, snapshotsEnabled, ignoreShowLauncherWhenAppExitsSetting, null);
@@ -275,11 +280,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
         downloadAndLaunchThread.setName("downloadAndLaunchThread");
         downloadAndLaunchThread.start();
     }
-
-    /*public static MetricRegistry getMetricsRegistry()
-    {
-        return metricsRegistry;
-    }*/
 
     public App getCurrentlySelectedApp() {
         return currentlySelectedApp;
@@ -346,13 +346,8 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
-    void optionButtonOnAction(ActionEvent event) {
-        Robot robot = com.sun.glass.ui.Application.GetApplication().createRobot();
-
-        double x = robot.getMouseX();
-        double y = robot.getMouseY();
-
-        currentlySelectedApp.getContextMenu().show(optionButton, x, y);
+    void optionButtonOnMouseClicked(MouseEvent event) {
+        currentlySelectedApp.getContextMenu().show(optionButton, event.getScreenX(), event.getScreenY());
     }
 
     // Handler for ListView[fx:id="appList"] onDragOver
@@ -922,44 +917,13 @@ public class MainWindow implements HidableUpdateProgressDialog {
             Platform.runLater(() -> {
                 progressBar.setProgressAnimated(kilobytesDownloaded / totalFileSizeInKB);
 
-                String downloadedString;
+                String downloadedString = StringCommon.convertFileSizeToReadableString(kilobytesDownloaded);
 
-                if (kilobytesDownloaded < 1024) {
-                    downloadedString = Double.toString(Math.round(kilobytesDownloaded * 100.0) / 100.0) + " "
-                            + bundle.getString("kilobyte");
-                } else if ((kilobytesDownloaded / 1024) < 1024) {
-                    downloadedString = Double.toString(Math.round((kilobytesDownloaded * 100.0) / 1024) / 100.0)
-                            + " " + bundle.getString("megabyte");
-                } else if (((kilobytesDownloaded / 1024) / 1024) < 1024) {
-                    downloadedString = Double
-                            .toString(Math.round(((kilobytesDownloaded * 100.0) / 1024) / 1024) / 100.0) + " "
-                            + bundle.getString("gigabyte");
-                } else {
-                    downloadedString = Double
-                            .toString(Math.round((((kilobytesDownloaded * 100.0) / 1024) / 1024) / 1024) / 100.0)
-                            + " " + bundle.getString("terabyte");
-                }
-
-                String totalString;
-                if (totalFileSizeInKB < 1024) {
-                    totalString = Double.toString(Math.round(totalFileSizeInKB * 100.0) / 100.0) + " "
-                            + bundle.getString("kilobyte");
-                } else if ((totalFileSizeInKB / 1024) < 1024) {
-                    totalString = Double.toString(Math.round((totalFileSizeInKB * 100.0) / 1024) / 100.0) + " "
-                            + bundle.getString("megabyte");
-                } else if (((totalFileSizeInKB / 1024) / 1024) < 1024) {
-                    totalString = Double.toString(Math.round(((totalFileSizeInKB * 100.0) / 1024) / 1024) / 100.0)
-                            + " " + bundle.getString("gigabyte");
-                } else {
-                    totalString = Double
-                            .toString(Math.round((((totalFileSizeInKB * 100.0) / 1024) / 1024) / 1024) / 100.0)
-                            + " " + bundle.getString("terabyte");
-                }
+                String totalString = StringCommon.convertFileSizeToReadableString(totalFileSizeInKB);
 
                 launchButton.setProgressText(bundle.getString("progress.downloading") + "(" + downloadedString + "/"
                         + totalString + ")");
             });
         }
     }
-
 }
