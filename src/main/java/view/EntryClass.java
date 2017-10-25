@@ -97,7 +97,6 @@ public class EntryClass extends Application {
     public static void main(String[] args) {
         Common.getInstance().setAppName("foklauncher");
         FOKLogger.enableLoggingOfUncaughtExceptions();
-        prefs = new Prefs(MainWindow.class.getName());
         systemDefaultLocale = Locale.getDefault();
 
         UpdateChecker.completeUpdate(args, firstStartAfterUpdateRunnable);
@@ -315,6 +314,9 @@ public class EntryClass extends Application {
     }
 
     public static Prefs getPrefs() {
+        if (prefs == null) {
+            prefs = new Prefs(MainWindow.class.getName());
+        }
         return prefs;
     }
 
@@ -346,7 +348,8 @@ public class EntryClass extends Application {
         if (entryClassInstance == null) {
             throw new IllegalStateException("No GUI started");
         }
-
+        // reload preferences
+        prefs = null;
         entryClassInstance.start(entryClassInstance.stage);
     }
 
@@ -400,6 +403,9 @@ public class EntryClass extends Application {
             // Get the specified bundle
             FOKLogger.info(MainWindow.class.getName(), "Setting language: " + guiLanguageCode);
             Locale.setDefault(new Locale(guiLanguageCode));
+        } else {
+            // reset to default language
+            Locale.setDefault(getSystemDefaultLocale());
         }
 
         MainWindow.setBundle(ResourceBundle.getBundle("view.MainWindow"));
