@@ -86,6 +86,7 @@ public class ImportedAppListFile {
                 getAppList().add(new App(new File(app.getChild(FileFormat.FILE_NAME_TAG_NAME).getValue())));
             }
         } catch (JDOMException | IOException | NullPointerException e) {
+            setAppList(new AppList());
             FOKLogger.log(getClass().getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
         }
     }
