@@ -31,6 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * Contains a wrapper for the launcher's remote config and additional config parameters.
+ */
 public class AppConfig {
     private static Config remoteConfig;
 
@@ -46,6 +49,11 @@ public class AppConfig {
         throw new IllegalStateException("Class may not be instantiated");
     }
 
+    /**
+     * The classifier to use for updates.
+     *
+     * @return The classifier to use for updates.
+     */
     public static String getUpdateFileClassifier() {
         String packaging = Common.getInstance().getPackaging();
         if (packaging != null) {
@@ -60,6 +68,11 @@ public class AppConfig {
         }
     }
 
+    /**
+     * Returns the list of supported model versions of foklauncher files
+     *
+     * @return The list of supported model versions of foklauncher files
+     */
     public static List<String> getSupportedFOKConfigModelVersion() {
         List<String> res = new ArrayList<>();
 
@@ -68,6 +81,11 @@ public class AppConfig {
         return res;
     }
 
+    /**
+     * Returns the remote config.
+     *
+     * @return The remote config.
+     */
     public static Config getRemoteConfig() {
         return remoteConfig;
     }

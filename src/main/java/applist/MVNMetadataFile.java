@@ -48,9 +48,9 @@ public class MVNMetadataFile {
      * Downloads the metadata for the given app.
      *
      * @param mvnCoordinates  The coordinates of the app to download the metadata for.
-     * @param enableSnapshots If {@code true}, the corresponding snapshot metadata file will be downloaded, too.
-     * @throws JDOMException If the metadata file of the snapshot metadata file cannot be parsed.
-     * @throws IOException   If the metadata file or the snapshot metadata file cannot be downloaded for any reason.
+     * @param enableSnapshots If {@code true}, the corresponding snapshot metadata file will be downloaded instead of the main metadata file.
+     * @throws JDOMException If the metadata file cannot be parsed.
+     * @throws IOException   If the metadata file cannot be downloaded for any reason.
      */
     public MVNMetadataFile(MVNCoordinates mvnCoordinates, boolean enableSnapshots) throws JDOMException, IOException {
         setMvnCoordinates(mvnCoordinates);
@@ -115,7 +115,7 @@ public class MVNMetadataFile {
      * @throws JDOMException If the maven metadata file is malformed
      * @throws IOException   If the maven metadata file cannot be downloaded
      */
-    public Document getMavenMetadata(boolean snapshotsEnabled)
+    private Document getMavenMetadata(boolean snapshotsEnabled)
             throws JDOMException, IOException {
         String repoBaseURL;
         if (snapshotsEnabled) {
@@ -128,46 +128,95 @@ public class MVNMetadataFile {
                 + getMvnCoordinates().getGroupId().replace('.', '/') + "/" + getMvnCoordinates().getArtifactId() + "/maven-metadata.xml"));
     }
 
+    /**
+     * Returns the maven coordinates of this app.
+     *
+     * @return The maven coordinates of this app.
+     */
     public MVNCoordinates getMvnCoordinates() {
         return mvnCoordinates;
     }
 
+    /**
+     * Sets the maven coordinates of this app.
+     *
+     * @param mvnCoordinates The maven coordinates to set
+     */
     public void setMvnCoordinates(MVNCoordinates mvnCoordinates) {
         this.mvnCoordinates = mvnCoordinates;
     }
 
+    /**
+     * Returns the list of available online versions for this app.
+     *
+     * @return The list of available online versions for this app.
+     */
     public VersionList getVersionList() {
         return versionList;
     }
 
+    /**
+     * Sets the list of available online versions for this app.
+     *
+     * @param versionList The list of available online versions to set
+     */
     public void setVersionList(VersionList versionList) {
         this.versionList = versionList;
     }
 
+    /**
+     * Returns the latest available online version.
+     *
+     * @return The latest available online version.
+     */
     public Version getLatest() {
         return latest;
     }
 
+    /**
+     * Sets the latest available online version.
+     *
+     * @param latest The latest available online version to set
+     */
     public void setLatest(Version latest) {
         this.latest = latest;
     }
 
+    /**
+     * Returns the latest available online release version.
+     * @return The latest available online release version.
+     */
     public Version getLatestRelease() {
         return latestRelease;
     }
 
+    /**
+     * Sets the latest available online release version.
+     * @param latestRelease The latest available online release version to set
+     */
     public void setLatestRelease(Version latestRelease) {
         this.latestRelease = latestRelease;
     }
 
+    /**
+     * Returns the timestamp of the last app update
+     * @return The timestamp of the last app update
+     */
     public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
+    /**
+     * Sets the timestamp of the last app update
+     * @param lastUpdated The timestamp to set
+     */
     public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 
+    /**
+     * Describes the file format of a metadata file
+     */
     public class FileFormat {
         public static final String VERSION_TAG_NAME = "version";
         public static final String VERSIONING_TAG_NAME = "versioning";
@@ -181,6 +230,9 @@ public class MVNMetadataFile {
         }
     }
 
+    /**
+     * Describes the file format of a snapshot metadata file
+     */
     public class SnapshotFileFormat {
         public static final String VERSIONING_TAG_NAME = "versioning";
         public static final String LATEST_SNAPSHOT_TAG_NAME = "snapshot";
