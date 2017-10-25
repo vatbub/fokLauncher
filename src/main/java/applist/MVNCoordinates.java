@@ -174,7 +174,7 @@ public class MVNCoordinates {
         // Construct file name of output file
         StringBuilder destFilenameBuilder = new StringBuilder(getArtifactId())
                 .append("-")
-                .append(version.toString());
+                .append(version.toString(false));
         if (getClassifier() != null) {
             destFilenameBuilder.append("-").append(getClassifier());
         }
@@ -184,7 +184,15 @@ public class MVNCoordinates {
 
     @Override
     public String toString() {
-        StringBuilder res = new StringBuilder(getGroupId()).append(":").append(getArtifactId()).append(":<version>:").append(":jar");
+        return toString(null);
+    }
+
+    public String toString(Version version) {
+        String versionText = "<version>";
+        if (version != null) {
+            versionText = version.toString(false);
+        }
+        StringBuilder res = new StringBuilder(getGroupId()).append(":").append(getArtifactId()).append(":").append(versionText).append(":").append(":jar");
         if (getClassifier() != null) {
             res.append(":").append(getClassifier());
         }
