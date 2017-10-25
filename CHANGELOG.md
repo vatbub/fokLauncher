@@ -12,6 +12,7 @@
 
 **Fixed bugs:**
 
+- Exporting app info results in IOException [\#40](https://github.com/vatbub/fokLauncher/issues/40)
 - Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
 
 ## [foklauncher-0.1.2](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.2) (2017-07-26)
