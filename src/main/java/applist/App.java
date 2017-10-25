@@ -1468,7 +1468,7 @@ public class App {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters()
                     .addAll(new FileChooser.ExtensionFilter("FOK-Launcher-File", "*.foklauncher"));
-            fileChooser.setTitle("Save Image");
+            fileChooser.setTitle("Save app info");
             // TODO Translation
             File file = fileChooser.showSaveDialog(EntryClass.getStage());
             if (file != null) {

@@ -47,16 +47,15 @@ public class FoklauncherFile {
     }
 
     private void readFile() throws IOException {
-        if (!getSourceFile().isFile()) {
-            // Not a file
-            throw new IOException("The specified file is not a file");
-        } else if (!getSourceFile().canRead()) {
-            // Cannot write to file
-            throw new IOException("The specified file is read-only");
-        }
-
         properties = new Properties();
         if (getSourceFile().exists()) {
+            if (!getSourceFile().isFile()) {
+                // Not a file
+                throw new IOException("The specified file is not a file");
+            } else if (!getSourceFile().canRead()) {
+                // Cannot write to file
+                throw new IOException("The specified file is read-only");
+            }
             try (FileReader fileReader = new FileReader(getSourceFile())) {
                 properties.load(fileReader);
             }
@@ -107,6 +106,7 @@ public class FoklauncherFile {
 
     /**
      * Saves the file at the location specified by {@link #getSourceFile()}. If a file is already present at this location, it will be overwritten.
+     *
      * @throws IOException If the file cannot be written for any reason
      */
     public void save() throws IOException {
