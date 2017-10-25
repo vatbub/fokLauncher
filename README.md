@@ -6,7 +6,7 @@ Though the list of projects that currently use the launcher is small, it can be 
 ## Get the launcher
 We currently don't use GitHub releases and release instead on Bintray. [Click here to get the latest version of the launcher.](https://bintray.com/vatbub/fokprojectsReleases/foklauncher#downloads)
 
-###Upgrading from older versions
+### Upgrading from older versions
 The FOKLauncher has an integrated update checker that does the entire job for you, even if you've used the installer to install the FOKLauncher.
  
 Once a new version is available, the FOKLauncher will inform you at startup. If you don't wish to upgrade right now, you can ignore the update and repeat the update at any time using the *"Check for updates"*-link.
@@ -80,9 +80,6 @@ If you have any problems, don't hesitate to write an email and we will be happy 
 ## Customize the launcher in your way
 If you wish to have a completely customized launcher, you can fork the repository and modify it as you wish. Just make sure to respect the [License](../master/LICENSE.txt).
 There are plans to make complete customization easier than forking, you can see the progress in [#12](/../../issues/12)
-
-##Docs
-[Maven Site](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/), [JavaDoc](http://vatbubmvnsites.s3-website-us-west-2.amazonaws.com/fokLauncher/0.1.0-SNAPSHOT/site/fokLauncher/apidocs/index.html)
 
 ## Contributing
 Contributions of any kind are very welcome. Just fork and submit a Pull Request and we will be happy to merge. Just keep in mind that we use [Issue driven development](https://github.com/vatbub/defaultRepo/wiki/Issue-driven-development).
