@@ -12,6 +12,7 @@
 
 **Fixed bugs:**
 
+- GUILanguage cannot be resetted [\#41](https://github.com/vatbub/fokLauncher/issues/41)
 - Exporting app info results in IOException [\#40](https://github.com/vatbub/fokLauncher/issues/40)
 - Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
 
