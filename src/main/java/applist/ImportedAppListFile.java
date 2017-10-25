@@ -36,14 +36,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 
+/**
+ * In-memory representation of the list of imported apps
+ */
 public class ImportedAppListFile {
     private AppList appList;
     private String fileName;
 
+    /**
+     * Creates a new in-memory representation of the list of imported apps. The location of the file to read is taken from the app config.
+     */
     public ImportedAppListFile() {
         this(Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("importedAppListFileName"));
     }
 
+    /**
+     * n-memory representation of the list of imported apps.
+     *
+     * @param fileName The path to the file to read the list from relative to the launcher's app data path
+     */
     public ImportedAppListFile(String fileName) {
         tryReadFile(fileName);
     }
@@ -79,10 +90,18 @@ public class ImportedAppListFile {
         }
     }
 
+    /**
+     * The path to the file where this app list is saved at relative to the launcher's app data path.
+     * @return The path to the file where this app list is saved at relative to the launcher's app data path.
+     */
     public String getFileName() {
         return fileName;
     }
 
+    /**
+     * Saves this file at the location specified by {@link #getFileName()}
+     * @throws IOException If the file cannot be written for any reason
+     */
     public void saveFile() throws IOException {
         Element root = new Element(FileFormat.ROOT_NODE_NAME);
         Document appsDoc = new Document(root);
@@ -107,17 +126,28 @@ public class ImportedAppListFile {
         //noinspection ResultOfMethodCallIgnored
         f.getParentFile().mkdirs();
         // Create empty file on disk if necessary
-        (new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(fileName));
+        (new XMLOutputter(Format.getPrettyFormat())).output(appsDoc, new FileOutputStream(getFileName()));
     }
 
+    /**
+     * Returns the list of imported apps from this file
+     * @return The list of imported apps from this file
+     */
     public AppList getAppList() {
         return appList;
     }
 
+    /**
+     * Sets the list of imported apps from this file
+     * @param appList The list of imported apps to set
+     */
     public void setAppList(AppList appList) {
         this.appList = appList;
     }
 
+    /**
+     * Describes the file format of a saved app list file
+     */
     public class FileFormat {
         public static final String ROOT_NODE_NAME = "fokLauncher";
         public static final String MODEL_VERSION_TAG_NAME = "modelVersion";

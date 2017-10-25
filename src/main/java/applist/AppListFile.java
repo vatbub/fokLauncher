@@ -37,18 +37,41 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+/**
+ * Represents the list of apps found on the server.
+ */
 public class AppListFile {
     private String modelVersion;
     private AppList appList;
 
+    /**
+     * Downloads the app list from the server configured in the app config.
+     *
+     * @throws JDOMException If the app list xml cannot be parsed
+     * @throws IOException   If the app list cannot be downloaded for any reason
+     */
     public AppListFile() throws JDOMException, IOException {
         this(new URL(AppConfig.getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName"));
     }
 
+    /**
+     * Downloads the app list from the specified URL.
+     * @param onlineListURL The URL to download the list from
+     * @param offlineCacheFileName The name of the offline cache file name
+     * @throws JDOMException If the app list xml cannot be parsed
+     * @throws IOException If the app list cannot be downloaded for any reason
+     */
     public AppListFile(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
         readFile(onlineListURL, offlineCacheFileName);
     }
 
+    /**
+     * Reads the specified app list file
+     * @param onlineListURL The URL to download the list from
+     * @param offlineCacheFileName The name of the offline cache file name
+     * @throws JDOMException If the app list xml cannot be parsed
+     * @throws IOException If the app list cannot be downloaded for any reason
+     */
     private void readFile(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
         Document onlineAppList;
         try {
@@ -98,18 +121,34 @@ public class AppListFile {
         }
     }
 
+    /**
+     * Returns the model version of this file.
+     * @return The model version of this file.
+     */
     public String getModelVersion() {
         return modelVersion;
     }
 
+    /**
+     * Sets the model version of this file.
+     * @param modelVersion The model version to set
+     */
     public void setModelVersion(String modelVersion) {
         this.modelVersion = modelVersion;
     }
 
+    /**
+     * Gets the list of apps defined in this app list file.
+     * @return The list of apps defined in this app list file.
+     */
     public AppList getAppList() {
         return appList;
     }
 
+    /**
+     * Sets the list of apps defined in this app list file.
+     * @param appList The list of apps to set
+     */
     public void setAppList(AppList appList) {
         this.appList = appList;
     }

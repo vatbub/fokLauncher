@@ -669,7 +669,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     public void updateLaunchButton() {
-        apps.reloadContextMenuEntriesOnShow();
+        apps.clearVersionCache();
 
         Thread getAppStatus = new Thread(() -> {
             App checkedApp = currentlySelectedApp;

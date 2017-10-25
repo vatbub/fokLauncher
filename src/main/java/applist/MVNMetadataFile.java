@@ -34,6 +34,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * In-memory representation of the metadata file of an app retrieved from the app's maven repository.
+ */
 public class MVNMetadataFile {
     private MVNCoordinates mvnCoordinates;
     private Version latest;
@@ -41,16 +44,20 @@ public class MVNMetadataFile {
     private VersionList versionList;
     private LocalDateTime lastUpdated;
 
-    public MVNMetadataFile(MVNCoordinates mvnCoordinates) {
-        setMvnCoordinates(mvnCoordinates);
-    }
-
+    /**
+     * Downloads the metadata for the given app.
+     *
+     * @param mvnCoordinates  The coordinates of the app to download the metadata for.
+     * @param enableSnapshots If {@code true}, the corresponding snapshot metadata file will be downloaded, too.
+     * @throws JDOMException If the metadata file of the snapshot metadata file cannot be parsed.
+     * @throws IOException   If the metadata file or the snapshot metadata file cannot be downloaded for any reason.
+     */
     public MVNMetadataFile(MVNCoordinates mvnCoordinates, boolean enableSnapshots) throws JDOMException, IOException {
         setMvnCoordinates(mvnCoordinates);
         getFile(enableSnapshots);
     }
 
-    void getFile(boolean enableSnapshots) throws JDOMException, IOException {
+    private void getFile(boolean enableSnapshots) throws JDOMException, IOException {
         Document mavenMetadata = getMavenMetadata(enableSnapshots);
 
         Element versioningElement = mavenMetadata.getRootElement().getChild(FileFormat.VERSIONING_TAG_NAME);
@@ -108,7 +115,7 @@ public class MVNMetadataFile {
      * @throws JDOMException If the maven metadata file is malformed
      * @throws IOException   If the maven metadata file cannot be downloaded
      */
-    Document getMavenMetadata(boolean snapshotsEnabled)
+    public Document getMavenMetadata(boolean snapshotsEnabled)
             throws JDOMException, IOException {
         String repoBaseURL;
         if (snapshotsEnabled) {
@@ -175,13 +182,13 @@ public class MVNMetadataFile {
     }
 
     public class SnapshotFileFormat {
-        private SnapshotFileFormat() {
-            throw new IllegalStateException("Class may not be instantiated");
-        }
-
         public static final String VERSIONING_TAG_NAME = "versioning";
         public static final String LATEST_SNAPSHOT_TAG_NAME = "snapshot";
         public static final String TIMESTAMP_TAG_NAME = "timestamp";
         public static final String BUILD_NUMBER_TAG_NAME = "buildNumber";
+
+        private SnapshotFileFormat() {
+            throw new IllegalStateException("Class may not be instantiated");
+        }
     }
 }

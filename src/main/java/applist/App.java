@@ -54,43 +54,19 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 
-@SuppressWarnings("SameParameterValue")
+/**
+ * Represents an app that is deployed to a maven repository.
+ */
 public class App {
-    /**
-     * A list of event handlers that handle the event that this app was launched
-     * and exited then
-     */
     private final List<Runnable> eventHandlersWhenLaunchedAppExits = new ArrayList<>();
-    /**
-     * The latest snapshot version of the app that is available online
-     */
-    Version latestOnlineSnapshotVersion;
-    MVNMetadataFile releaseRepoMetadataFile;
-    MVNMetadataFile snapshotRepoMetadataFile;
-    LocalMetadataFile localMetadataFile;
-    /**
-     * Specifies the file from which this app was imported from (if it was
-     * imported)
-     */
+    private MVNMetadataFile releaseRepoMetadataFile;
+    private MVNMetadataFile snapshotRepoMetadataFile;
+    private LocalMetadataFile localMetadataFile;
     private File importFile;
-    /**
-     * The name of the app
-     */
     private String name;
-    /**
-     * {@code true} if the user requested to cancel the current action.
-     */
     private boolean cancelDownloadAndLaunch;
-
     private MVNCoordinates mvnCoordinates;
-
-    /**
-     * A webpage where the user finds additional info for this app.
-     */
     private URL additionalInfoURL;
-    /**
-     * A webpage where the user finds a changelog for this app.
-     */
     private URL changelogURL;
     private boolean specificVersionListLoaded = false;
     private boolean deletableVersionListLoaded = false;
@@ -106,7 +82,7 @@ public class App {
     }
 
     /**
-     * Creates a new App with the specified coordinates.
+     * Creates a new App with the specified maven coordinates.
      *
      * @param name           The name of the app
      * @param mvnCoordinates The maven coordinates of the app
@@ -116,7 +92,7 @@ public class App {
     }
 
     /**
-     * Creates a new App with the specified coordinates.
+     * Creates a new App with the specified maven coordinates.
      *
      * @param name              The name of the app
      * @param mvnCoordinates    The maven coordinates of the app
@@ -128,7 +104,7 @@ public class App {
     }
 
     /**
-     * Creates a new App with the specified coordinates.
+     * Creates a new App with the specified maven coordinates.
      *
      * @param name              The name of the app
      * @param mvnCoordinates    The maven coordinates of the app
@@ -210,29 +186,70 @@ public class App {
         return res == null ? new AppList() : res;
     }
 
+    /**
+     * Adds the app specified in the metadata file to the list of imported apps.
+     *
+     * @param infoFile The metadata file that contains the info about the app. The file should be in the {@code *.foklauncher} format.
+     * @throws IOException If the file cannot be read for any reason
+     */
     public static void addImportedApp(File infoFile) throws IOException {
         ImportedAppListFile importedAppListFile = new ImportedAppListFile();
         importedAppListFile.getAppList().addAndCheckForDuplicateImports(new App(infoFile));
         importedAppListFile.saveFile();
     }
 
+    /**
+     * Clears all cached data about the app and forces it to be reloaded.
+     * Subsequent calls to the data will take longer as the data has to be reloaded.
+     * The cache is created on a lazy basis, meaning that data is only cached once a call is made to it.
+     * Cached data includes:
+     * <ul>
+     * <li>Release metadata from the release maven repo</li>
+     * <li>Snapshot metadata from the snapshot maven repo</li>
+     * <li>Metadata about the locally installed versions of the app</li>
+     * <li>The JavaFX context menu of this application</li>
+     * </ul>
+     */
+    public void clearCache() {
+        releaseRepoMetadataFile = null;
+        snapshotRepoMetadataFile = null;
+        localMetadataFile = null;
+        contextMenuCache = null;
+        deletableVersionListLoaded = false;
+        specificVersionListLoaded = false;
+    }
+
+    /**
+     * Returns the changelog URL of this app
+     *
+     * @return The changelog URL of this app
+     */
     public URL getChangelogURL() {
         return changelogURL;
     }
 
+    /**
+     * Sets the changelog URL of this app
+     *
+     * @param changelogURL The changelog URL to set
+     */
     public void setChangelogURL(URL changelogURL) {
         this.changelogURL = changelogURL;
     }
 
     /**
-     * @return the name
+     * returns the name of this app
+     *
+     * @return The name of this app
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @param name the name to set
+     * Sets the name of this app
+     *
+     * @param name The name to set
      */
     public void setName(String name) {
         this.name = name;
@@ -329,14 +346,29 @@ public class App {
         return localMetadataFile.getVersionList().clone();
     }
 
+    /**
+     * Returns the absolute path object for the folder that contains this app's jar files and metadata
+     *
+     * @return The absolute path object for the folder that contains this app's jar files and metadata
+     */
     private Path getAbsolutePathToSubfolderToSaveApps() {
         return Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(getSubfolderToSaveApps());
     }
 
+    /**
+     * Returns the location of this app's metadata file on disk
+     *
+     * @return The location of this app's metadata file on disk
+     */
     private File getLocationOfLocalMetadataFile() {
         return getAbsolutePathToSubfolderToSaveApps().resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toFile();
     }
 
+    /**
+     * Loads this app's local metadata file from disk
+     *
+     * @return {@code true} if the file was loaded successfully, {@code false} otherwise. Exceptions are logged to the log
+     */
     private boolean loadLocalMetadataFile() {
         try {
             localMetadataFile = new LocalMetadataFile(getLocationOfLocalMetadataFile());
@@ -348,65 +380,95 @@ public class App {
         }
     }
 
+    /**
+     * Returns the maven coordinates of this app
+     *
+     * @return The maven coordinates of this app
+     */
     public MVNCoordinates getMvnCoordinates() {
         return mvnCoordinates;
     }
 
+    /**
+     * Sets the maven coordinates of this app
+     *
+     * @param mvnCoordinates The maven coordinates to set
+     */
     public void setMvnCoordinates(MVNCoordinates mvnCoordinates) {
         this.mvnCoordinates = mvnCoordinates;
     }
 
     /**
-     * @return the imported
+     * Returns {@code true} if this app was imported from a {@code *.foklauncher} file, {@code false} if not
+     *
+     * @return {@code true} if this app was imported from a {@code *.foklauncher} file, {@code false} if not
      */
     public boolean isImported() {
         return getImportFile() != null;
     }
 
     /**
-     * @return the importFile
+     * Returns the file this app was imported from or {@code null} if {@link #isImported()} {@code  == false}.
+     *
+     * @return The file this app was imported from or {@code null} if {@link #isImported()} {@code  == false}.
      */
     public File getImportFile() {
         return importFile;
     }
 
     /**
-     * @return the specificVersionListLoaded
+     * During context menu creation, a list of all available release and snapshot versions (if enabled) is created and cached.
+     * Returns {@code true} if this list was already created and cached and {@code false} if not.
+     *
+     * @return {@code true} if the specific list was already created and cached and {@code false} if not.
      */
     public boolean isSpecificVersionListLoaded() {
         return specificVersionListLoaded;
     }
 
     /**
-     * @param specificVersionListLoaded the specificVersionListLoaded to set
+     * During context menu creation, a list of all available release and snapshot versions (if enabled) is created and cached.
+     * This method sets the value if the list was loaded and cached or not.
+     *
+     * @param specificVersionListLoaded {@code true} if the specific list was already created and cached and {@code false} if not.
      */
     public void setSpecificVersionListLoaded(boolean specificVersionListLoaded) {
         this.specificVersionListLoaded = specificVersionListLoaded;
     }
 
     /**
-     * @return the deletableVersionListLoaded
+     * During context menu creation, a list of all locally installed versions is created and cached.
+     * Returns {@code true} if this list was already created and cached and {@code false} if not.
+     *
+     * @return Returns {@code true} if the deletable version list was already created and cached and {@code false} if not.
      */
     public boolean isDeletableVersionListLoaded() {
         return deletableVersionListLoaded;
     }
 
     /**
-     * @param deletableVersionListLoaded the deletableVersionListLoaded to set
+     * During context menu creation, a list of all locally installed versions is created and cached.
+     * This method sets the value if the list was loaded and cached or not.
+     *
+     * @param deletableVersionListLoaded {@code true} if the deletable version list was already created and cached and {@code false} if not.
      */
     public void setDeletableVersionListLoaded(boolean deletableVersionListLoaded) {
         this.deletableVersionListLoaded = deletableVersionListLoaded;
     }
 
     /**
-     * @return the additionalInfoURL
+     * Returns the additional info URL
+     *
+     * @return The additional info URL
      */
     public URL getAdditionalInfoURL() {
         return additionalInfoURL;
     }
 
     /**
-     * @param additionalInfoURL the additionalInfoURL to set
+     * Sets the additional info URL
+     *
+     * @param additionalInfoURL The additionalInfoURL to set
      */
     public void setAdditionalInfoURL(URL additionalInfoURL) {
         this.additionalInfoURL = additionalInfoURL;
@@ -1108,6 +1170,12 @@ public class App {
         }
     }
 
+    /**
+     * Removes this app from the imported apps list
+     *
+     * @throws IOException If the imported apps list cannot be read or written
+     * @see #addImportedApp(File)
+     */
     public void removeFromImportedAppList() throws IOException {
         ImportedAppListFile importedAppListFile = new ImportedAppListFile();
         AppList finalList = new AppList(importedAppListFile.getAppList().size());
@@ -1169,6 +1237,11 @@ public class App {
         }
     }
 
+    /**
+     * Returns {@link MVNCoordinates#toString()} if maven coordinates have been specified or the name of the app otherwise
+     *
+     * @return {@link MVNCoordinates#toString()} if maven coordinates have been specified or the name of the app otherwise
+     */
     @Override
     public String toString() {
         if (this.getName() != null) {
@@ -1180,6 +1253,13 @@ public class App {
         }
     }
 
+    /**
+     * Returns a JavaFX context menu that gives the user more detailed possibilities to interact with the app.
+     * The context menu is only created once and then cached (much like a singleton).
+     * Use {@link #clearCache()} if you wish to create a new instance of the context menu.
+     *
+     * @return A JavaFX context menu that gives the user more detailed possibilities to interact with the app.
+     */
     public ContextMenu getContextMenu() {
         if (contextMenuCache == null) {
             contextMenuCache = this.generateContextMenu();
@@ -1188,6 +1268,13 @@ public class App {
         return contextMenuCache;
     }
 
+    /**
+     * Generates a new JavaFX context menu for this app (ignores the cached context menu instance). <b>FOR INTERNAL USE ONLY</b>
+     * Use {@link #getContextMenu()} instead.
+     *
+     * @return A new JavaFX context menu for this app
+     * @see #getContextMenu()
+     */
     private ContextMenu generateContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
         if (getChangelogURL() != null) {
@@ -1416,6 +1503,11 @@ public class App {
         return removeImportedApp;
     }
 
+    /**
+     * Returns the string with the folder path to the folder where this app's jars and metadata shall be saved. The returned path is relative to the launcher's app data path.
+     *
+     * @return The string with the folder path to the folder where this app's jars and metadata shall be saved.
+     */
     private String getSubfolderToSaveApps() {
         String res = AppConfig.getRemoteConfig().getValue("subfolderToSaveApps").replace("{FileSeparator}", File.separator)
                 .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());

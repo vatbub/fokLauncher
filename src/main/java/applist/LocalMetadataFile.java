@@ -34,14 +34,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * In-memory representation of a local metadata file of an app.
+ */
 public class LocalMetadataFile {
     private MVNCoordinates mvnCoordinates;
     private VersionList versionList;
 
+    /**
+     * Creates a new empty instance.
+     */
     public LocalMetadataFile() {
 
     }
 
+    /**
+     * Reads the local metadata file from the specified location.
+     *
+     * @param fileToRead The file to read.
+     * @throws JDOMException If the xml in the file cannot be parsed for any reason.
+     * @throws IOException   If the file cannot be read for any reason
+     */
     public LocalMetadataFile(File fileToRead) throws JDOMException, IOException {
         readFile(fileToRead);
     }
@@ -60,22 +73,43 @@ public class LocalMetadataFile {
         setVersionList(res);
     }
 
+    /**
+     * Returns the maven coordinates of the app specified in this file
+     * @return The maven coordinates of the app specified in this file
+     */
     public MVNCoordinates getMvnCoordinates() {
         return mvnCoordinates;
     }
 
+    /**
+     * Sets the maven coordinates of the app specified in this file
+     * @param mvnCoordinates The maven coordinates to set
+     */
     public void setMvnCoordinates(MVNCoordinates mvnCoordinates) {
         this.mvnCoordinates = mvnCoordinates;
     }
 
+    /**
+     * Returns the list of installed versions specified in this file.
+     * @return The list of installed versions specified in this file.
+     */
     public VersionList getVersionList() {
         return versionList;
     }
 
+    /**
+     * Sets the list of installed versions specified in this file.
+     * @param versionList The list to set
+     */
     public void setVersionList(VersionList versionList) {
         this.versionList = versionList;
     }
 
+    /**
+     * Saves this file at the specified location.
+     * @param fileToSaveTo The location to save the file to.
+     * @throws IOException If the file cannot be written for any reason
+     */
     public void saveFile(File fileToSaveTo) throws IOException {
         Element artifactInfo = new Element(FileFormat.ROOT_NODE_TAG_NAME);
         Document versionDoc = new Document(artifactInfo);
@@ -118,6 +152,9 @@ public class LocalMetadataFile {
         (new XMLOutputter(Format.getPrettyFormat())).output(versionDoc, new FileOutputStream(fileToSaveTo));
     }
 
+    /**
+     * Descries the file format of a local metadata file
+     */
     public class FileFormat {
         private FileFormat() {
             throw new IllegalStateException("Class may not be instantiated");

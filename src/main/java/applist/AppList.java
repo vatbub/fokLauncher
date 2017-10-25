@@ -32,20 +32,29 @@ import java.util.Collection;
  */
 public class AppList extends ArrayList<App> {
 
-    private static final long serialVersionUID = -1460089544427389007L;
-
+    /**
+     * Creates a new app list
+     */
     public AppList() {
         super();
     }
 
-    @SuppressWarnings("unused")
-    public AppList(int arg0) {
-        super(arg0);
+    /**
+     * Creates a new app list and provisions enough memory to store the specified capacity
+     *
+     * @param capacity The capacity to provision
+     */
+    public AppList(int capacity) {
+        super(capacity);
     }
 
-    @SuppressWarnings("unused")
-    public AppList(Collection<? extends App> arg0) {
-        super(arg0);
+    /**
+     * Creates a new app list from the specified collection
+     *
+     * @param collection The collection whose elements are to be placed into this list
+     */
+    public AppList(Collection<? extends App> collection) {
+        super(collection);
     }
 
     /**
@@ -54,61 +63,31 @@ public class AppList extends ArrayList<App> {
     @SuppressWarnings("unused")
     public void clearVersionCache() {
         for (App app : this) {
-            app.latestOnlineSnapshotVersion = null;
-            app.releaseRepoMetadataFile = null;
-            app.snapshotRepoMetadataFile = null;
-            app.localMetadataFile = null;
+            app.clearCache();
         }
-
-        reloadContextMenuEntriesOnShow();
     }
 
     /**
      * Tells the context menu off all apps to reload its version lists
+     *
+     * @deprecated Use {@link #clearVersionCache()} instead
      */
+    @Deprecated
     public void reloadContextMenuEntriesOnShow() {
-        for (App app : this) {
-            app.setDeletableVersionListLoaded(false);
-            app.setSpecificVersionListLoaded(false);
-        }
+        clearVersionCache();
     }
 
     /**
      * Searches this {@link AppList} for the specified app.
      *
-     * @param mavenGroupId    The maven groupId of the app to find
-     * @param mavenArtifactId The maven artifactId of the app to find
+     * @param mvnCoordinates The coordinates of the app to find
      * @return The first matching {@link App} or {@code null} if no app matches.
      */
     @SuppressWarnings("unused")
-    public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId) {
-        return getAppByMavenCoordinates(mavenGroupId, mavenArtifactId, null);
-    }
-
-    /**
-     * Searches this {@link AppList} for the specified app.
-     *
-     * @param mavenGroupId    The maven groupId of the app to find
-     * @param mavenArtifactId The maven artifactId of the app to find
-     * @param mavenClassifier The maven artifactId of the app to find
-     * @return The first matching {@link App} or {@code null} if no app matches.
-     */
-    @SuppressWarnings("unused")
-    public App getAppByMavenCoordinates(String mavenGroupId, String mavenArtifactId, String mavenClassifier) {
+    public App getAppByMavenCoordinates(MVNCoordinates mvnCoordinates) {
         for (App app : this) {
-            if (app.getMvnCoordinates().getGroupId().equals(mavenGroupId) && app.getMvnCoordinates().getArtifactId().equals(mavenArtifactId)) {
-                // ArtifactId and groupId match, check if classifier matches too
-                // if required
-                if (mavenClassifier != null) {
-                    // We need to check the classifier too
-                    if (app.getMvnCoordinates().getClassifier().equals(mavenClassifier)) {
-                        // Everything matches
-                        return app;
-                    }
-                } else {
-                    // Only artifactId and groupId are required to match
-                    return app;
-                }
+            if (app.getMvnCoordinates().equals(mvnCoordinates)) {
+                return app;
             }
         }
 
@@ -116,6 +95,13 @@ public class AppList extends ArrayList<App> {
         return null;
     }
 
+    /**
+     * Adds the specified app only if the app has not been added before already.
+     *
+     * @param appToAdd The app to add.
+     * @return {@code true} if the app has been added successfully, {@code false} otherwise
+     */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean addAndCheckForDuplicateImports(App appToAdd) {
         for (App app : this) {
             if (app.getImportFile().equals(appToAdd.getImportFile())) {

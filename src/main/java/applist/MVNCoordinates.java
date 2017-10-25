@@ -25,6 +25,10 @@ import com.github.vatbub.common.updater.Version;
 
 import java.net.URL;
 
+/**
+ * Represents the coordinates of a maven artifact (groupId, artifactId, classifier).
+ * The artifacts version is not held in this class as it will be determined as required in the {@link App} class.
+ */
 public class MVNCoordinates {
     /**
      * Base URL of the maven repo where the artifact can be downloaded from.
@@ -47,6 +51,9 @@ public class MVNCoordinates {
      */
     private String classifier;
 
+    /**
+     * Creates an empty instance.
+     */
     public MVNCoordinates() {
         this(null, null);
     }
@@ -170,6 +177,13 @@ public class MVNCoordinates {
         this.classifier = classifier;
     }
 
+    /**
+     * Returns the name of the jar file for this artifact according to the standard maven naming convention.
+     * If the artifact uses a different naming scheme (defined in the artifact's pom under {@code build -> finalName}, this method will not return the correct jar file name.
+     *
+     * @param version The version of the artifact to generate the name for.
+     * @return The name of the jar file for this artifact according to the standard maven naming convention.
+     */
     public String getJarFileName(Version version) {
         // Construct file name of output file
         StringBuilder destFilenameBuilder = new StringBuilder(getArtifactId())
@@ -197,5 +211,19 @@ public class MVNCoordinates {
             res.append(":").append(getClassifier());
         }
         return res.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof MVNCoordinates)) {
+            return false;
+        }
+
+        MVNCoordinates that = (MVNCoordinates) obj;
+        return this.getGroupId().equals(that.getGroupId()) &&
+                this.getArtifactId().equals(that.getArtifactId()) &&
+                this.getClassifier().equals(that.getClassifier()) &&
+                this.getRepoBaseURL().equals(that.getRepoBaseURL()) &&
+                this.getSnapshotRepoBaseURL().equals(that.getSnapshotRepoBaseURL());
     }
 }
