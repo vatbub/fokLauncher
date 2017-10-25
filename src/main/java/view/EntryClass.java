@@ -48,6 +48,11 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
+/**
+ * Class that contains the main method, handles the command line args and launches the JavaFX toolkit if required.
+ * The decision to divide {@link MainWindow} into two parts ({@link MainWindow} and this class) was taken as
+ * commadn line processing and framework resource management became too big tasks overtime and having them all together in one class just created a big mess.
+ */
 public class EntryClass extends Application {
     private static EntryClass entryClassInstance;
     private static Options options;
@@ -178,6 +183,13 @@ public class EntryClass extends Application {
         }
     }
 
+    /**
+     * Checks if all commandline arguments were supplied that are required for asn auto-launch
+     *
+     * @param commandLine The {@code CommandLine}-object to check.
+     * @return {@code true} if all required command line args are supplied.
+     * @see #hasAtLeastAutoLaunchArgs(CommandLine)
+     */
     private static boolean hasRequiredAutoLaunchArgs(CommandLine commandLine) {
         return commandLine.hasOption(getAutoLaunchRepoUrlOption().getOpt()) &&
                 commandLine.hasOption(getAutoLaunchSnapshotRepoUrlOption().getOpt()) &&
@@ -185,6 +197,13 @@ public class EntryClass extends Application {
                 commandLine.hasOption(getArtifactIdOption().getOpt());
     }
 
+    /**
+     * Checks if at least one auto-launch command line argument was passed.
+     *
+     * @param commandLine The {@code CommandLine}-object to check.
+     * @return {@code true} if at least one auto-launch command line argument was passed.
+     * @see #hasRequiredAutoLaunchArgs(CommandLine)
+     */
     private static boolean hasAtLeastAutoLaunchArgs(CommandLine commandLine) {
         return commandLine.hasOption(getAutoLaunchRepoUrlOption().getOpt()) &&
                 commandLine.hasOption(getAutoLaunchSnapshotRepoUrlOption().getOpt()) &&
@@ -195,10 +214,19 @@ public class EntryClass extends Application {
                 commandLine.hasOption(getAdditionalArgsOption().getOpt());
     }
 
+    /**
+     * Prints the help message to standard out that explains the command line args
+     */
     private static void printHelpMessage() {
         new HelpFormatter().printHelp(Common.getInstance().getPathAndNameOfCurrentJar(), getCliOptions());
     }
 
+    /**
+     * Creates the object that describes available command line parameters.
+     * The returned instance is cached and multiple calls to this method will return the same instance (much like a singleton).
+     *
+     * @return The object that describes available command line parameters.
+     */
     public static Options getCliOptions() {
         if (options == null) {
             options = new Options();
@@ -313,6 +341,11 @@ public class EntryClass extends Application {
         return additionalArgs;
     }
 
+    /**
+     * Gets the user preferences
+     *
+     * @return The user preferences
+     */
     public static Prefs getPrefs() {
         if (prefs == null) {
             prefs = new Prefs(MainWindow.class.getName());
@@ -320,30 +353,67 @@ public class EntryClass extends Application {
         return prefs;
     }
 
+    /**
+     * The system default locale detected at startup
+     *
+     * @return The system default locale detected at startup
+     */
     public static Locale getSystemDefaultLocale() {
         return systemDefaultLocale;
     }
 
+    /**
+     * Returns the current instance of the view controller.
+     *
+     * @return The current instance of the view controller.
+     */
     public static MainWindow getControllerInstance() {
         return controllerInstance;
     }
 
+    /**
+     * Returns the mode the launcher was launched in.
+     *
+     * @return The mode the launcher was launched in.
+     */
     public static LaunchMode getLaunchMode() {
         return launchMode;
     }
 
+    /**
+     * Returns the maven coordinates of the app that was specified for auto-launch.
+     *
+     * @return The maven coordinates of the app that was specified for auto-launch or {@code null} if {@link #launchMode} {@code == MANUAL_WINDOW}.
+     */
     public static MVNCoordinates getAutoLaunchMVNCoordinates() {
         return autoLaunchMVNCoordinates;
     }
 
+    /**
+     * The command line arguments to be passed to the auto-launch app.
+     * @return The command line arguments to be passed to the auto-launch app or {@code null} if {@link #launchMode} {@code == MANUAL_WINDOW}.
+     */
     public static String[] getAdditionalAutoLaunchStartupArgs() {
         return additionalAutoLaunchStartupArgs;
     }
 
+    /**
+     * Checks whether the --enableSnapshots option was supplied
+     * @return whether the --enableSnapshots option was supplied
+     */
     public static boolean isAutoLaunchSnapshotsEnabled() {
         return autoLaunchSnapshotsEnabled;
     }
 
+    /**
+     * Restarts the launcher gui. This means:
+     * <ul>
+     *     <li>The FXML is reloaded</li>
+     *     <li>The controller is reinstantiated</li>
+     *     <li>user preferences are re-read</li>
+     * </ul>
+     * @throws Exception If something happens during the relaunch
+     */
     public static void restart() throws Exception {
         if (entryClassInstance == null) {
             throw new IllegalStateException("No GUI started");
@@ -353,6 +423,10 @@ public class EntryClass extends Application {
         entryClassInstance.start(entryClassInstance.stage);
     }
 
+    /**
+     * The stage of the current main window
+     * @return The stage of the current main window
+     */
     public static Stage getStage() {
         if (entryClassInstance == null) {
             throw new IllegalStateException("No GUI started");
@@ -361,6 +435,10 @@ public class EntryClass extends Application {
         return entryClassInstance.stage;
     }
 
+    /**
+     * Returns {@code true} if this is the first launch after a launcher update.
+     * @return {@code true} if this is the first launch after a launcher update.
+     */
     public static boolean isFirstLaunchAfterUpdate() {
         return isFirstLaunchAfterUpdate;
     }
@@ -369,6 +447,10 @@ public class EntryClass extends Application {
         isFirstLaunchAfterUpdate = firstLaunchAfterUpdate;
     }
 
+    /**
+     * Returns the key of the first launch message to be used .
+     * @return The key of the first launch message to be used .
+     */
     public static String getFirstUpdateMessageTextKey() {
         return firstUpdateMessageTextKey;
     }

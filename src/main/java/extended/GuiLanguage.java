@@ -23,24 +23,34 @@ package extended;
 
 import java.util.Locale;
 
+/**
+ * A simple class that represents GUI languages
+ */
 public class GuiLanguage {
 
     private Locale locale;
     private String defaultLocaleText;
 
+    /**
+     * CReates a new instance.
+     * @param locale The java {@code Locale}-object that represents the desired language
+     * @param defaultLocale The text that should be used when no default gui language was defined by the user.
+     */
     public GuiLanguage(Locale locale, String defaultLocale) {
         setLocale(locale);
         setDefaultLocale(defaultLocale);
     }
 
     /**
-     * @return the locale
+     * Returns the java locale of this GUILanguage
+     * @return The java locale of this GUILanguage
      */
     public Locale getLocale() {
         return locale;
     }
 
     /**
+     * Sets the java locale of this GUILanguage
      * @param locale the locale to set
      */
     public void setLocale(Locale locale) {
@@ -48,17 +58,17 @@ public class GuiLanguage {
     }
 
     /**
-     * @return the defaultLocaleText
+     * Returns the text that should be used when no default gui language was defined by the user.
+     * @return The text that should be used when no default gui language was defined by the user.
      */
-    @SuppressWarnings("unused")
     public String getDefaultLocaleText() {
         return defaultLocaleText;
     }
 
     /**
-     * @param defaultLocaleText the defaultLocaleText to set
+     * Sets the text that should be used when no default gui language was defined by the user.
+     * @param defaultLocaleText The text that should be used when no default gui language was defined by the user.
      */
-    @SuppressWarnings("unused")
     public void setDefaultLocale(String defaultLocaleText) {
         this.defaultLocaleText = defaultLocaleText;
     }
@@ -66,7 +76,7 @@ public class GuiLanguage {
     @Override
     public String toString() {
         if (locale.toLanguageTag().equals("und")) {
-            return defaultLocaleText;
+            return getDefaultLocaleText();
         } else {
             return this.getLocale().getDisplayLanguage(Locale.getDefault()) + " (" + this.getLocale().getDisplayLanguage(Locale.ENGLISH)
                     + ")";

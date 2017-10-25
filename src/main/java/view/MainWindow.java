@@ -101,9 +101,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
-    /**
-     * The thread that gets the app list
-     */
     private Thread getAppListThread;
     @FXML
     private ListView<App> appList;
@@ -210,10 +207,24 @@ public class MainWindow implements HidableUpdateProgressDialog {
         reporter.start(10, TimeUnit.SECONDS);*/
     }
 
+    /**
+     * Initiates the download and launch of the latest version of the specified app.
+     *
+     * @param appToLaunch      The app to launch.
+     * @param snapshotsEnabled Specifies if snapshots are enabled.
+     * @param startupArgs      Additional startup args to be passed to the app's main method
+     */
     public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, String... startupArgs) {
         launchAppFromGUI(appToLaunch, snapshotsEnabled, false, startupArgs);
     }
 
+    /**
+     * Initiates the download and launch of the specified version of the specified app.
+     *
+     * @param appToLaunch     The app to launch.
+     * @param versionToLaunch The version to launch.
+     * @param startupArgs     Additional startup args to be passed to the app's main method
+     */
     public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch, String... startupArgs) {
         launchAppFromGUI(appToLaunch, false, false, versionToLaunch, startupArgs);
     }
@@ -223,10 +234,27 @@ public class MainWindow implements HidableUpdateProgressDialog {
         return metricsRegistry;
     }*/
 
+    /**
+     * Initiates the download and launch of the latest version of the specified app.
+     *
+     * @param appToLaunch                           The app to launch.
+     * @param snapshotsEnabled                      Specifies if snapshots are enabled.
+     * @param ignoreShowLauncherWhenAppExitsSetting If set to {@code true}, the value of the 'Show launcher after app exits'-checkbox is ignored (will act as if not checked)
+     * @param startupArgs                           Additional startup args to be passed to the app's main method
+     */
     public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, String... startupArgs) {
         launchAppFromGUI(appToLaunch, snapshotsEnabled, ignoreShowLauncherWhenAppExitsSetting, null, startupArgs);
     }
 
+    /**
+     * Initiates the download and launch of the latest version of the specified app.
+     *
+     * @param appToLaunch                           The app to launch.
+     * @param snapshotsEnabled                      Specifies if snapshots are enabled.
+     * @param ignoreShowLauncherWhenAppExitsSetting If set to {@code true}, the value of the 'Show launcher after app exits'-checkbox is ignored (will act as if not checked)
+     * @param versionToDownload                     The version to download and launch.
+     * @param startupArgs                           Additional startup args to be passed to the app's main method
+     */
     public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, @Nullable Version versionToDownload, String... startupArgs) {
         if (downloadAndLaunchThread != null && downloadAndLaunchThread.isAlive()) {
             throw new IllegalStateException("A download is already in progress!");
@@ -256,6 +284,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
         downloadAndLaunchThread.start();
     }
 
+    /**
+     * Returns the currently selected app.
+     * @return The currently selected app.
+     * @see #updateLaunchButton()
+     */
     public App getCurrentlySelectedApp() {
         return currentlySelectedApp;
     }
@@ -629,6 +662,9 @@ public class MainWindow implements HidableUpdateProgressDialog {
         }
     }
 
+    /**
+     * Loads the available GUI languages to the appropriate selector
+     */
     private void loadAvailableGuiLanguages() {
         List<Locale> supportedGuiLocales = Common.getInstance().getLanguagesSupportedByResourceBundle(bundle);
         List<GuiLanguage> convertedList = new ArrayList<>(supportedGuiLocales.size());
@@ -668,6 +704,10 @@ public class MainWindow implements HidableUpdateProgressDialog {
         getAppListThread.start();
     }
 
+    /**
+     * Updates the text on the launch button according to the status of the currently selected app
+     * @see #getCurrentlySelectedApp()
+     */
     public void updateLaunchButton() {
         apps.clearVersionCache();
 
