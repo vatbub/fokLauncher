@@ -133,13 +133,13 @@ public class EntryClass extends Application {
                 launchMode = LaunchMode.MANUAL_WINDOW;
             }
 
-            if (launchMode != LaunchMode.MANUAL_WINDOW && !hasRequiredAutoLaunchArgs(commandLine)) {
+            if (getLaunchMode() != LaunchMode.MANUAL_WINDOW && !hasRequiredAutoLaunchArgs(commandLine)) {
                 throw new IllegalArgumentException("Launcher is set to auto-launch mode but at least one required auto-launch parameter was not specified.");
-            } else if (launchMode == LaunchMode.MANUAL_WINDOW && hasAtLeastAutoLaunchArgs(commandLine)) {
+            } else if (getLaunchMode() == LaunchMode.MANUAL_WINDOW && hasAtLeastAutoLaunchArgs(commandLine)) {
                 FOKLogger.info(EntryClass.class.getName(), "Ignoring auto-launch args as the launcher was not put in auto-launch mode. Use either -cli or -w to put the launcher in auto-launch mode.");
             }
 
-            if (launchMode != LaunchMode.MANUAL_WINDOW) {
+            if (getLaunchMode() != LaunchMode.MANUAL_WINDOW) {
                 autoLaunchMVNCoordinates = new MVNCoordinates(new URL(commandLine.getOptionValue(getAutoLaunchRepoUrlOption().getOpt())), new URL(commandLine.getOptionValue(getAutoLaunchSnapshotRepoUrlOption().getOpt())), commandLine.getOptionValue(getGroupIdOption().getOpt()), commandLine.getOptionValue(getArtifactIdOption().getOpt()));
                 if (commandLine.hasOption(getClassifierOption().getOpt())) {
                     autoLaunchMVNCoordinates.setClassifier(commandLine.getOptionValue(getClassifierOption().getOpt()));
@@ -152,14 +152,14 @@ public class EntryClass extends Application {
                 }
             }
 
-            switch (launchMode) {
+            switch (getLaunchMode()) {
                 case MANUAL_WINDOW:
                 case AUTO_WINDOW:
                     try {
                         launch(args);
                         break;
                     } catch (Exception e) {
-                        if (launchMode == LaunchMode.AUTO_WINDOW) {
+                        if (getLaunchMode() == LaunchMode.AUTO_WINDOW) {
                             FOKLogger.log(EntryClass.class.getName(), Level.SEVERE, "Unable to launch the gui, falling back to CLI mode...", e);
                         } else {
                             FOKLogger.log(EntryClass.class.getName(), Level.SEVERE, "Unable to launch the gui", e);
