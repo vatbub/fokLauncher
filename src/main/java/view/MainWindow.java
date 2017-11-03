@@ -79,6 +79,8 @@ import java.util.logging.Level;
 public class MainWindow implements HidableUpdateProgressDialog {
     private static final ImageView linkIconView = new ImageView(
             new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
+    private static final ImageView downloadQueueIconView = new ImageView(
+            new Image(MainWindow.class.getResourceAsStream("down-arrow.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
     // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
@@ -106,6 +108,10 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private ListView<App> appList;
     @FXML
     private TextField searchField;
+    @FXML
+    private Button showDownloadQueueButton;
+    @FXML
+    private Label downloadQueueCountLabel;
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -313,7 +319,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     // Handler for AnchorPane[id="AnchorPane"] onDragDetected
     @FXML
-    void appListOnDragDetected(MouseEvent event) {
+    void appListOnDragDetected(@SuppressWarnings("unused") MouseEvent event) {
         if (currentlySelectedApp != null) {
             File tempFile = new File(Common.getInstance().getAndCreateAppDataPath() + currentlySelectedApp.getName() + ".lnk");
             try {
@@ -343,13 +349,13 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     // Handler for ProgressButton[id="linkButton"] onMousePressed
     @FXML
-    void linkButtonOnMousePressed(MouseEvent event) {
+    void linkButtonOnMousePressed(@SuppressWarnings("unused") MouseEvent event) {
         linkButton.setCursor(Cursor.CLOSED_HAND);
     }
 
     // Handler for ProgressButton[id="linkButton"] onMouseReleased
     @FXML
-    void linkButtonOnMouseReleased(MouseEvent event) {
+    void linkButtonOnMouseReleased(@SuppressWarnings("unused") MouseEvent event) {
         linkButton.setCursor(Cursor.OPEN_HAND);
     }
 
@@ -438,7 +444,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
-    void updateLinkOnAction(ActionEvent event) {
+    void updateLinkOnAction(@SuppressWarnings("unused") ActionEvent event) {
         // Check for new version ignoring ignored updates
         Thread updateThread = new Thread(() -> {
             try {
@@ -455,7 +461,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
-    void languageSelectorOnAction(ActionEvent event) {
+    void languageSelectorOnAction(@SuppressWarnings("unused") ActionEvent event) {
         FOKLogger.info(MainWindow.class.getName(), "Switching gui language to: "
                 + languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
         EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.GUI_LANGUAGE.toString(), languageSelector.getItems()
@@ -475,7 +481,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     // Handler for Button[fx:id="launchButton"] onAction
     @FXML
-    void launchButtonOnAction(ActionEvent event) {
+    void launchButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         if (!downloadAndLaunchThread.isAlive()) {
             launchAppFromGUI(currentlySelectedApp, enableSnapshotsCheckbox.isSelected());
         } else {
@@ -484,7 +490,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
-    void linkButtonOnAction(ActionEvent event) {
+    void linkButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         FOKLogger.info(MainWindow.class.getName(), "Creating shortcut using linkButton...");
         File file = new File(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath() + File.separator
                 + currentlySelectedApp.getName() + ".lnk");
@@ -504,21 +510,19 @@ public class MainWindow implements HidableUpdateProgressDialog {
         }
     }
 
-    // Handler for CheckBox[fx:id="workOfflineCheckbox"] onAction
     @FXML
-    void workOfflineCheckboxOnAction(ActionEvent event) {
+    void workOfflineCheckboxOnAction(@SuppressWarnings("unused") ActionEvent event) {
         updateLaunchButton();
     }
 
-    // Handler for CheckBox[fx:id="launchLauncherAfterAppExitCheckbox"] onAction
     @FXML
-    void launchLauncherAfterAppExitCheckboxOnAction(ActionEvent event) {
+    void launchLauncherAfterAppExitCheckboxOnAction(@SuppressWarnings("unused") ActionEvent event) {
         EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.SHOW_LAUNCHER_AGAIN.toString(),
                 Boolean.toString(launchLauncherAfterAppExitCheckbox.isSelected()));
     }
 
     @FXML
-    void appInfoButtonOnAction(ActionEvent event) {
+    void appInfoButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         try {
             Desktop.getDesktop().browse(new URI(currentlySelectedApp.getAdditionalInfoURL().toString()));
         } catch (IOException | URISyntaxException e) {
@@ -529,7 +533,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
     @FXML
     // This method is called by the FXMLLoader when initialization is
     // complete
-    @SuppressWarnings("unused")
     void initialize() {
         assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
@@ -545,10 +548,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
         assert linkButton != null : "fx:id=\"linkButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
-        // add icon to linkButton and optionButton
+        // add icons to buttons
         linkButton.setGraphic(linkIconView);
         optionButton.setGraphic(optionIconView);
         appInfoButton.setGraphic(infoIconView);
+        showDownloadQueueButton.setGraphic(downloadQueueIconView);
 
         // Bind the disabled property of the launchButton to the linkButton
         linkButton.disableProperty().bind(launchButton.disableProperty());

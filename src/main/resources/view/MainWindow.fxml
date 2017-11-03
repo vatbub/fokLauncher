@@ -18,6 +18,7 @@
       <GridPane layoutX="14.0" layoutY="65.0" vgap="5.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
          <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
@@ -27,8 +28,8 @@
             <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-          <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" GridPane.rowIndex="1" />
-            <AnchorPane>
+          <ListView fx:id="appList" onDragDetected="#appListOnDragDetected" prefHeight="304.0" prefWidth="572.0" AnchorPane.bottomAnchor="239.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="65.0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+            <AnchorPane GridPane.columnSpan="2">
                <children>
                   <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
@@ -43,7 +44,7 @@
                   </VBox>
                </children>
             </AnchorPane>
-            <HBox spacing="4.0" GridPane.rowIndex="2">
+            <HBox spacing="4.0" GridPane.columnSpan="2" GridPane.rowIndex="2">
                <children>
                   <AnchorPane layoutX="14.0" layoutY="382.0" prefHeight="31.0" HBox.hgrow="ALWAYS">
                      <children>
@@ -64,7 +65,7 @@
                   </AnchorPane>
                </children>
             </HBox>
-          <GridPane fx:id="settingsGridView" GridPane.rowIndex="3">
+          <GridPane fx:id="settingsGridView" GridPane.columnSpan="2" GridPane.rowIndex="3">
             <children>
               <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
               <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="2" />
@@ -98,6 +99,12 @@
               <Hyperlink fx:id="updateLink" onAction="#updateLinkOnAction" text="%updateLink" textFill="#0066ff" HBox.hgrow="ALWAYS" />
             </children>
           </HBox>
+            <HBox alignment="CENTER_RIGHT" spacing="5.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+               <children>
+                  <Label fx:id="downloadQueueCountLabel" />
+                  <Button fx:id="showDownloadQueueButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" styleClass="transparentButton" />
+               </children>
+            </HBox>
          </children>
       </GridPane>
   </children>

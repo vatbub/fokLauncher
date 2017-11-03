@@ -35,6 +35,7 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import mslinks.ShellLink;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.SystemUtils;
 import org.jdom2.JDOMException;
@@ -71,6 +72,7 @@ public class App {
     private boolean specificVersionListLoaded = false;
     private boolean deletableVersionListLoaded = false;
     private ContextMenu contextMenuCache;
+    private boolean downloadPaused;
 
     /**
      * Creates a new App with the specified name.
@@ -957,30 +959,40 @@ public class App {
         //noinspection ResultOfMethodCallIgnored
         outputFile.getParentFile().mkdirs();
 
-        try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
-            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
-                try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 1024)) {
-                    byte[] data = new byte[1024];
-                    long downloadedFileSize = 0;
-                    int x;
-                    while ((x = in.read(data, 0, 1024)) >= 0) {
-                        downloadedFileSize += x;
+        try (NullOutputStream nullOutputStream = new NullOutputStream()) {
+            try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
+                try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+                    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 1024)) {
+                        byte[] data = new byte[1024];
+                        long downloadedFileSize = 0;
+                        int x;
+                        while ((x = in.read(data, 0, 1024)) >= 0) {
+                            downloadedFileSize += x;
 
-                        // update progress bar
-                        if (gui != null) {
-                            gui.downloadProgressChanged(downloadedFileSize / 1024.0,
-                                    completeFileSize / 1024.0);
-                        }
-
-                        bufferedOutputStream.write(data, 0, x);
-
-                        // Perform Cancel if requested
-                        if (cancelDownloadAndLaunch) {
-                            Files.delete(outputFile.toPath());
+                            // update progress bar
                             if (gui != null) {
-                                gui.operationCanceled();
+                                gui.downloadProgressChanged(downloadedFileSize / 1024.0,
+                                        completeFileSize / 1024.0);
                             }
-                            return false;
+
+                            bufferedOutputStream.write(data, 0, x);
+
+                            while (isDownloadPaused()) {
+                                // pause
+                                nullOutputStream.write(0);
+                            }
+
+                            // Perform Cancel if requested
+                            if (cancelDownloadAndLaunch) {
+                                bufferedOutputStream.close();
+                                fileOutputStream.close();
+                                in.close();
+                                Files.delete(outputFile.toPath());
+                                if (gui != null) {
+                                    gui.operationCanceled();
+                                }
+                                return false;
+                            }
                         }
                     }
                 }
@@ -1008,10 +1020,17 @@ public class App {
 
     }
 
+    public void pauseDownload() {
+        setDownloadPaused(true);
+    }
+
+    public void resumeDownload() {
+        setDownloadPaused(false);
+    }
+
     /**
      * Cancels the download and launch process.
      */
-    @SuppressWarnings("unused")
     public void cancelDownloadAndLaunch() {
         cancelDownloadAndLaunch(null);
     }
@@ -1517,5 +1536,18 @@ public class App {
         } else {
             return res.replace("{classifier}", getMvnCoordinates().getClassifier());
         }
+    }
+
+    public boolean isDownloadPaused() {
+        return downloadPaused;
+    }
+
+    public void setDownloadPaused(boolean downloadPaused) {
+        if (downloadPaused) {
+            FOKLogger.info(App.class.getName(), "Pausing the download...");
+        } else {
+            FOKLogger.info(App.class.getName(), "Resuming the download...");
+        }
+        this.downloadPaused = downloadPaused;
     }
 }
