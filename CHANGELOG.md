@@ -12,6 +12,7 @@
 
 **Fixed bugs:**
 
+- Improve the launch time of the launcher when the internet connection is poor [\#44](https://github.com/vatbub/fokLauncher/issues/44)
 - Meta-Buttons not centered when user uses a custom screen scaling [\#43](https://github.com/vatbub/fokLauncher/issues/43)
 - Exception when importing the very first app [\#42](https://github.com/vatbub/fokLauncher/issues/42)
 - GUILanguage cannot be resetted [\#41](https://github.com/vatbub/fokLauncher/issues/41)
