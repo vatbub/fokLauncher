@@ -149,17 +149,18 @@ public class App {
     /**
      * Returns a combined list of imported apps and apps from the server.
      *
+     * @param offlineMode If set to {@code true}, the cached app list will be returned
      * @return A combined list of imported apps and apps from the server.
      * @throws JDOMException If the xml-app list on the server or the xml file containing
      *                       info about the imported apps is malformed
      * @throws IOException   If the app list or metadata of some apps cannot be downloaded
      *                       or if the xml file containing the info about the imported
      *                       apps cannot be read.
-     * @see App#getOnlineAppList()
+     * @see App#getOnlineAppList(boolean)
      * @see App#getImportedAppList()
      */
-    public static AppList getAppList() throws JDOMException, IOException {
-        AppList res = getOnlineAppList();
+    public static AppList getAppList(boolean offlineMode) throws JDOMException, IOException {
+        AppList res = getOnlineAppList(offlineMode);
         res.addAll(getImportedAppList());
         return res;
     }
@@ -167,13 +168,14 @@ public class App {
     /**
      * Get a {@link List} of available apps from the server.
      *
+     * @param offlineMode If set to {@code true}, the cached app list will be returned
      * @return A {@link List} of available apps from the server.
      * @throws JDOMException If the xml-app list on the server is malformed
      * @throws IOException   If the app list or metadata of some apps cannot be
      *                       downloaded.
      */
-    public static AppList getOnlineAppList() throws JDOMException, IOException {
-        return new AppListFile().getAppList();
+    public static AppList getOnlineAppList(boolean offlineMode) throws JDOMException, IOException {
+        return new AppListFile(offlineMode).getAppList();
     }
 
     /**

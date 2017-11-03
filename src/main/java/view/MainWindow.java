@@ -66,6 +66,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -74,6 +75,9 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class MainWindow implements HidableUpdateProgressDialog {
@@ -99,9 +103,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
     };
     @FXML
     public CheckBox launchLauncherAfterAppExitCheckbox;
+    private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private AppList apps;
     private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
+    private int currentlySelectedIndex = -1;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     private Thread getAppListThread;
     @FXML
@@ -112,18 +118,36 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private Button showDownloadQueueButton;
     @FXML
     private Label downloadQueueCountLabel;
+    @FXML
+    private CheckBox enableSnapshotsCheckbox;
+    @FXML
+    private ProgressButton launchButton;
+    @FXML
+    private Button optionButton;
+    @FXML
+    private Button linkButton;
+    @FXML
+    private ComboBox<GuiLanguage> languageSelector;
+    @FXML
+    private CustomProgressBar progressBar;
+    @FXML
+    private CheckBox workOfflineCheckbox;
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
             try {
+                int previouslySelectedIndex = getCurrentlySelectedIndex();
 
-                Platform.runLater(() -> {
-                    appList.setItems(FXCollections.observableArrayList());
-                    appList.setDisable(true);
-                    appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
-                });
+                // skip the loading screen if it already contains a list
+                if (apps == null) {
+                    Platform.runLater(() -> {
+                        appList.setItems(FXCollections.observableArrayList());
+                        appList.setDisable(true);
+                        appList.setPlaceholder(new Label(bundle.getString("WaitForAppList")));
+                    });
+                }
 
-                apps = App.getAppList();
+                apps = App.getAppList(workOffline());
 
                 ObservableList<App> items = FXCollections.observableArrayList();
                 FilteredList<App> filteredData = new FilteredList<>(items, s -> true);
@@ -159,12 +183,18 @@ public class MainWindow implements HidableUpdateProgressDialog {
                     appList.setItems(filteredData);
                     appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 
+                    if (previouslySelectedIndex>=0){
+                        appList.getSelectionModel().select(previouslySelectedIndex);
+                    }
+
                     // Only enable if no download is running
                     if (downloadAndLaunchThread == null || !downloadAndLaunchThread.isAlive()) {
                         appList.setDisable(false);
                     }
                 });
 
+            } catch (FileNotFoundException e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "Unable to load the cached app list", e);
             } catch (JDOMException | IOException e) {
                 FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 EntryClass.getControllerInstance()
@@ -172,20 +202,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
             }
         }
     };
-    @FXML
-    private CheckBox enableSnapshotsCheckbox;
-    @FXML
-    private ProgressButton launchButton;
-    @FXML
-    private Button optionButton;
-    @FXML
-    private Button linkButton;
-    @FXML
-    private ComboBox<GuiLanguage> languageSelector;
-    @FXML
-    private CustomProgressBar progressBar;
-    @FXML
-    private CheckBox workOfflineCheckbox;
     @FXML
     private Hyperlink updateLink;
     @FXML
@@ -211,6 +227,16 @@ public class MainWindow implements HidableUpdateProgressDialog {
                 .build();
 
         reporter.start(10, TimeUnit.SECONDS);*/
+    }
+
+    /**
+     * Performs cleanup tasks. This method is expected to be called when the controlled stage is hidden.
+     */
+    public void cleanup() {
+        if (getCurrentlySelectedApp() != null) {
+            getCurrentlySelectedApp().cancelDownloadAndLaunch(this);
+        }
+        scheduledExecutorService.shutdownNow();
     }
 
     /**
@@ -292,11 +318,16 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     /**
      * Returns the currently selected app.
+     *
      * @return The currently selected app.
      * @see #updateLaunchButton()
      */
     public App getCurrentlySelectedApp() {
         return currentlySelectedApp;
+    }
+
+    public int getCurrentlySelectedIndex() {
+        return currentlySelectedIndex;
     }
 
     /**
@@ -401,7 +432,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
                 if (FilenameUtils.getExtension(f.getAbsolutePath()).equals("foklauncher")) {
                     FOKLogger.info(MainWindow.class.getName(), "Importing app from " + f.getAbsolutePath() + "...");
                     App.addImportedApp(f);
-                    EntryClass.getControllerInstance().loadAppList();
+                    loadAppList();
                 } else if ((FilenameUtils.getExtension(f.getAbsolutePath()).equals("lnk") && (new ShellLink(f)).resolveTarget().startsWith(new File(Common.getInstance().getPathAndNameOfCurrentJar()).toPath().toString()))) {
                     FOKLogger.info(MainWindow.class.getName(), "Running link from lnk file " + f.getAbsolutePath());
                     ShellLink link = new ShellLink(f);
@@ -531,8 +562,8 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
-    // This method is called by the FXMLLoader when initialization is
-    // complete
+        // This method is called by the FXMLLoader when initialization is
+        // complete
     void initialize() {
         assert launchLauncherAfterAppExitCheckbox != null : "fx:id=\"launchLauncherAfterAppExitCheckbox\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert languageSelector != null : "fx:id=\"languageSelector\" was not injected: check your FXML file 'MainWindow.fxml'.";
@@ -633,17 +664,38 @@ public class MainWindow implements HidableUpdateProgressDialog {
         // Selection change listener
         appList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             try {
+                currentlySelectedIndex = appList.getSelectionModel().getSelectedIndex();
                 currentlySelectedApp = appList.getSelectionModel().getSelectedItem();
             } catch (ArrayIndexOutOfBoundsException e) {
                 currentlySelectedApp = null;
+                currentlySelectedIndex = -1;
             }
             updateLaunchButton();
         });
 
-        if (!Internet.isConnected()) {
-            workOfflineCheckbox.setSelected(true);
-            workOfflineCheckbox.setDisable(true);
-        }
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            boolean previousSelectionState = workOfflineCheckbox.isSelected();
+            if (Internet.isConnected()) {
+                // we don't want to deselect the checkbox if the offline mode was activated manually
+                if (workOfflineCheckbox.isDisable()) {
+                    // computer was offline before and now went online (offline mode was automatic)
+                    workOfflineCheckbox.setSelected(false);
+                }
+                workOfflineCheckbox.setDisable(false);
+            } else {
+                workOfflineCheckbox.setSelected(true);
+                workOfflineCheckbox.setDisable(true);
+            }
+
+            // update the list only if the offline mode was DISabled
+            if (!workOfflineCheckbox.isSelected() && previousSelectionState) {
+                loadAppList();
+            }
+            // update the launch button if offlinemode as enabled or disabled
+            if (previousSelectionState != workOfflineCheckbox.isSelected()) {
+                updateLaunchButton();
+            }
+        }, 0, 30, TimeUnit.SECONDS);
 
         loadAppList();
 
@@ -695,7 +747,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     /**
-     * Loads the app list using the {@link App#getAppList()}-method
+     * Loads the app list using the {@link App#getAppList(boolean)}-method
      */
     public void loadAppList() {
         if (getAppListThread != null && getAppListThread.isAlive()) {
@@ -710,6 +762,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     /**
      * Updates the text on the launch button according to the status of the currently selected app
+     *
      * @see #getCurrentlySelectedApp()
      */
     public void updateLaunchButton() {

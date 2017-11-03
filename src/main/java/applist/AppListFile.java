@@ -47,43 +47,60 @@ public class AppListFile {
     /**
      * Downloads the app list from the server configured in the app config.
      *
+     * @param offlineMode If set to {@code true}, the cached app list will be returned
      * @throws JDOMException If the app list xml cannot be parsed
-     * @throws IOException   If the app list cannot be downloaded for any reason
+     * @throws IOException   If the app list cannot be downloaded for any reason or the computer is offline (or {@code offlineMode == true}) and no cached app list exists
      */
-    public AppListFile() throws JDOMException, IOException {
-        this(new URL(AppConfig.getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName"));
+    public AppListFile(boolean offlineMode) throws JDOMException, IOException {
+        this(new URL(AppConfig.getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName"), offlineMode);
     }
 
     /**
      * Downloads the app list from the specified URL.
-     * @param onlineListURL The URL to download the list from
+     *
+     * @param onlineListURL        The URL to download the list from
      * @param offlineCacheFileName The name of the offline cache file name
+     * @param offlineMode          If set to {@code true}, the cached app list will be returned
      * @throws JDOMException If the app list xml cannot be parsed
-     * @throws IOException If the app list cannot be downloaded for any reason
+     * @throws IOException   If the app list cannot be downloaded for any reason or the computer is offline (or {@code offlineMode == true}) and no cached app list exists
      */
-    public AppListFile(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
-        readFile(onlineListURL, offlineCacheFileName);
+    public AppListFile(URL onlineListURL, String offlineCacheFileName, boolean offlineMode) throws JDOMException, IOException {
+        readFile(onlineListURL, offlineCacheFileName, offlineMode);
+    }
+
+    private Document getOnlineDocument(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
+        Document res = new SAXBuilder().build(onlineListURL);
+        (new XMLOutputter(Format.getPrettyFormat())).output(res, new FileOutputStream(offlineCacheFileName));
+        return res;
+    }
+
+    private Document getOfflineCache(String offlineCacheFileName) throws JDOMException, IOException {
+        return new SAXBuilder().build(new File(offlineCacheFileName));
     }
 
     /**
      * Reads the specified app list file
-     * @param onlineListURL The URL to download the list from
+     *
+     * @param onlineListURL        The URL to download the list from
      * @param offlineCacheFileName The name of the offline cache file name
      * @throws JDOMException If the app list xml cannot be parsed
-     * @throws IOException If the app list cannot be downloaded for any reason
+     * @throws IOException   If the app list cannot be downloaded for any reason
      */
-    private void readFile(URL onlineListURL, String offlineCacheFileName) throws JDOMException, IOException {
+    private void readFile(URL onlineListURL, String offlineCacheFileName, boolean offlineMode) throws JDOMException, IOException {
         Document onlineAppList;
-        try {
-            onlineAppList = new SAXBuilder().build(onlineListURL);
 
-            (new XMLOutputter(Format.getPrettyFormat())).output(onlineAppList, new FileOutputStream(offlineCacheFileName));
-        } catch (UnknownHostException e) {
+        if (offlineMode) {
+            onlineAppList = getOfflineCache(offlineCacheFileName);
+        } else {
             try {
-                onlineAppList = new SAXBuilder().build(new File(offlineCacheFileName));
-            } catch (FileNotFoundException e1) {
-                throw new UnknownHostException("Could not connect to " + AppConfig.getRemoteConfig().getValue("appListXMLURL")
-                        + " and app list cache not found. \nPlease ensure a stable internet connection.");
+                onlineAppList = getOnlineDocument(onlineListURL, offlineCacheFileName);
+            } catch (UnknownHostException e) {
+                try {
+                    onlineAppList = new SAXBuilder().build(new File(offlineCacheFileName));
+                } catch (FileNotFoundException e1) {
+                    throw new UnknownHostException("Could not connect to " + AppConfig.getRemoteConfig().getValue("appListXMLURL")
+                            + " and app list cache not found. \nPlease ensure a stable internet connection.");
+                }
             }
         }
         Element fokLauncherElement = onlineAppList.getRootElement();
@@ -123,6 +140,7 @@ public class AppListFile {
 
     /**
      * Returns the model version of this file.
+     *
      * @return The model version of this file.
      */
     public String getModelVersion() {
@@ -131,6 +149,7 @@ public class AppListFile {
 
     /**
      * Sets the model version of this file.
+     *
      * @param modelVersion The model version to set
      */
     public void setModelVersion(String modelVersion) {
@@ -139,6 +158,7 @@ public class AppListFile {
 
     /**
      * Gets the list of apps defined in this app list file.
+     *
      * @return The list of apps defined in this app list file.
      */
     public AppList getAppList() {
@@ -147,6 +167,7 @@ public class AppListFile {
 
     /**
      * Sets the list of apps defined in this app list file.
+     *
      * @param appList The list of apps to set
      */
     public void setAppList(AppList appList) {

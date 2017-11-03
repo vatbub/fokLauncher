@@ -391,6 +391,7 @@ public class EntryClass extends Application {
 
     /**
      * The command line arguments to be passed to the auto-launch app.
+     *
      * @return The command line arguments to be passed to the auto-launch app or {@code null} if {@link #launchMode} {@code == MANUAL_WINDOW}.
      */
     public static String[] getAdditionalAutoLaunchStartupArgs() {
@@ -399,6 +400,7 @@ public class EntryClass extends Application {
 
     /**
      * Checks whether the --enableSnapshots option was supplied
+     *
      * @return whether the --enableSnapshots option was supplied
      */
     public static boolean isAutoLaunchSnapshotsEnabled() {
@@ -408,10 +410,11 @@ public class EntryClass extends Application {
     /**
      * Restarts the launcher gui. This means:
      * <ul>
-     *     <li>The FXML is reloaded</li>
-     *     <li>The controller is reinstantiated</li>
-     *     <li>user preferences are re-read</li>
+     * <li>The FXML is reloaded</li>
+     * <li>The controller is reinstantiated</li>
+     * <li>user preferences are re-read</li>
      * </ul>
+     *
      * @throws Exception If something happens during the relaunch
      */
     public static void restart() throws Exception {
@@ -420,11 +423,15 @@ public class EntryClass extends Application {
         }
         // reload preferences
         prefs = null;
+        if (getControllerInstance() != null) {
+            getControllerInstance().cleanup();
+        }
         entryClassInstance.start(entryClassInstance.stage);
     }
 
     /**
      * The stage of the current main window
+     *
      * @return The stage of the current main window
      */
     public static Stage getStage() {
@@ -437,6 +444,7 @@ public class EntryClass extends Application {
 
     /**
      * Returns {@code true} if this is the first launch after a launcher update.
+     *
      * @return {@code true} if this is the first launch after a launcher update.
      */
     public static boolean isFirstLaunchAfterUpdate() {
@@ -449,6 +457,7 @@ public class EntryClass extends Application {
 
     /**
      * Returns the key of the first launch message to be used .
+     *
      * @return The key of the first launch message to be used .
      */
     public static String getFirstUpdateMessageTextKey() {
@@ -535,9 +544,7 @@ public class EntryClass extends Application {
     public void stop() {
         try {
             UpdateChecker.cancelUpdateCompletion();
-            if (getControllerInstance().getCurrentlySelectedApp() != null) {
-                getControllerInstance().getCurrentlySelectedApp().cancelDownloadAndLaunch(getControllerInstance());
-            }
+            getControllerInstance().cleanup();
         } catch (Exception e) {
             FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "An error occurred but is not relevant as we are currently in the shutdown process. Possible reasons for this exception are: You tried to modify a view but it is not shown any more on the screen; You tried to cancel the app download but no download was in progress.", e);
         }

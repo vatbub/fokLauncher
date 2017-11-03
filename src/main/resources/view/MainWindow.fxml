@@ -68,7 +68,7 @@
           <GridPane fx:id="settingsGridView" GridPane.columnSpan="2" GridPane.rowIndex="3">
             <children>
               <CheckBox fx:id="enableSnapshotsCheckbox" mnemonicParsing="false" onAction="#enableSnapshotsCheckboxOnAction" text="%enableSnapshotsCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-              <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+              <CheckBox id="enableSnapshotsCheckbox" fx:id="workOfflineCheckbox" contentDisplay="TOP" disable="true" mnemonicParsing="false" onAction="#workOfflineCheckboxOnAction" selected="true" text="%workOfflineCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="2" />
               <CheckBox fx:id="launchLauncherAfterAppExitCheckbox" mnemonicParsing="false" onAction="#launchLauncherAfterAppExitCheckboxOnAction" text="%launchLauncherAfterAppExitCheckbox" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                   <ComboBox fx:id="languageSelector" maxWidth="1.7976931348623157E308" onAction="#languageSelectorOnAction" promptText="%languageSelector.promptText" GridPane.rowIndex="4">
                      <GridPane.margin>
