@@ -1332,13 +1332,15 @@ public class App {
                     try {
                         verList = getAllOnlineVersions();
                         verList.setEnsureNoDuplicates(true);
-                        verList.addAll(getCurrentlyInstalledVersions());
+                        VersionList currentlyInstalledVersions = getCurrentlyInstalledVersions();
+                        if (currentlyInstalledVersions != null) {
+                            verList.addAll(currentlyInstalledVersions);
+                        }
                         if (EntryClass.getControllerInstance().snapshotsEnabled()) {
                             verList.add(getLatestOnlineSnapshotVersion());
                         }
                     } catch (Exception e) {
-                        // Something happened, pretend
-                        // offline mode
+                        FOKLogger.log(App.class.getName(), Level.SEVERE, "Unable to download the version list, pretending offline mode...", e);
                         verList = getCurrentlyInstalledVersions();
                     }
 
