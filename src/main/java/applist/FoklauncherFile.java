@@ -53,7 +53,7 @@ public class FoklauncherFile {
                 // Not a file
                 throw new IOException("The specified file is not a file");
             } else if (!getSourceFile().canRead()) {
-                // Cannot write to file
+                // Cannot read to file
                 throw new IOException("The specified file is read-only");
             }
             try (FileReader fileReader = new FileReader(getSourceFile())) {

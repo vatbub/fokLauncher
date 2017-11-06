@@ -119,6 +119,55 @@ public class MVNCoordinatesTest {
         assertToString(mvnCoordinates.toString(releaseVersion), releaseVersion, false);
     }
 
+    @Test
+    public void equalsTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        Assert.assertTrue(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsUnequalRepoBaseURLTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(snapshotRepoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        Assert.assertFalse(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsUnequalSnapshotRepoBaseURLTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, repoBaseURL, groupId, artifactId, classifier);
+        Assert.assertFalse(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsUnequalGroupIdTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId + "ttt", artifactId, classifier);
+        Assert.assertFalse(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsUnequalArtifactIdTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId + "ttt", classifier);
+        Assert.assertFalse(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsUnequalClassifierTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId);
+        Assert.assertFalse(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
+    public void equalsWithDifferentClassTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
+        //noinspection EqualsBetweenInconvertibleTypes
+        Assert.assertFalse(mvnCoordinates1.equals("testString"));
+    }
+
     private void assertToString(String actual, Version version, boolean testClassifier) {
         String versionText = "<version>";
         if (version != null) {
