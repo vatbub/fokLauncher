@@ -3,17 +3,17 @@ package applist;
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +28,9 @@ public class FoklauncherFileTest {
     private static URL repoBaseURL;
     private static URL additionalInfoURL;
     private static URL snapshotRepoBaseURL;
-    private File testFile;
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private static String getFileContent(boolean includeClassifier) {
         String res = "#This file stores info about a java app. To open this file, get the foklauncher\n" +
@@ -57,17 +59,9 @@ public class FoklauncherFileTest {
         snapshotRepoBaseURL = new URL("https://oss.jfrog.org/artifactory/libs-snapshot");
     }
 
-    @After
-    public void cleanUp() throws IOException {
-        if (testFile != null && testFile.exists()) {
-            Files.delete(testFile.toPath());
-            testFile = null;
-        }
-    }
-
     @Test
     public void readFileTest() throws IOException {
-        testFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("testFile.foklauncher").toFile();
+        File testFile = temporaryFolder.newFile("testFile.foklauncher");
         FileUtils.writeStringToFile(testFile, getFileContent(true), Charset.forName("UTF-8"));
         FoklauncherFile foklauncherFile = new FoklauncherFile(testFile);
         Assert.assertEquals(testFile, foklauncherFile.getSourceFile());
@@ -84,7 +78,7 @@ public class FoklauncherFileTest {
     @Test
     public void readNonExistentValueTest() throws IOException {
         String defaultValue = "defaultValue";
-        testFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("testFile.foklauncher").toFile();
+        File testFile = temporaryFolder.newFile("testFile.foklauncher");
         FileUtils.writeStringToFile(testFile, getFileContent(false), Charset.forName("UTF-8"));
         FoklauncherFile foklauncherFile = new FoklauncherFile(testFile);
         Assert.assertNull(foklauncherFile.getValue(CLASSIFIER));
@@ -93,10 +87,7 @@ public class FoklauncherFileTest {
 
     @Test
     public void readNonExistentFileTest() throws IOException {
-        testFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("testFile.foklauncher").toFile();
-        if (testFile.exists()) {
-            Files.delete(testFile.toPath());
-        }
+        File testFile = temporaryFolder.newFile("nonexistentTestFile.foklauncher");
 
         FoklauncherFile foklauncherFile = new FoklauncherFile(testFile);
         Assert.assertEquals(testFile, foklauncherFile.getSourceFile());
@@ -111,11 +102,8 @@ public class FoklauncherFileTest {
     }
 
     @Test
-    public void readDirectoryTest() {
-        testFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("testDirectory").toFile();
-        if (!testFile.mkdir()) {
-            throw new IllegalStateException("Unable to create the test directory");
-        }
+    public void readDirectoryTest() throws IOException {
+        File testFile = temporaryFolder.newFolder("testDirectory");
         if (!testFile.isDirectory()) {
             throw new IllegalStateException("Test directory is supposed to be a directory");
         }
@@ -131,7 +119,7 @@ public class FoklauncherFileTest {
 
     @Test
     public void saveFileTest() throws IOException {
-        testFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("testFile.foklauncher").toFile();
+        File testFile = temporaryFolder.newFile("fileToSave.foklauncher");
         FoklauncherFile foklauncherFile = new FoklauncherFile(testFile);
         Map<FoklauncherFile.Property, String> values = new HashMap<>();
         values.put(NAME, name);
