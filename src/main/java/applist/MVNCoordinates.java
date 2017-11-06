@@ -220,10 +220,12 @@ public class MVNCoordinates {
         }
 
         MVNCoordinates that = (MVNCoordinates) obj;
-        return this.getGroupId().equals(that.getGroupId()) &&
+        boolean res = this.getGroupId().equals(that.getGroupId()) &&
                 this.getArtifactId().equals(that.getArtifactId()) &&
-                this.getClassifier().equals(that.getClassifier()) &&
                 this.getRepoBaseURL().equals(that.getRepoBaseURL()) &&
                 this.getSnapshotRepoBaseURL().equals(that.getSnapshotRepoBaseURL());
+
+        boolean classifierEqual = this.getClassifier() == null && that.getClassifier() == null || this.getClassifier() != null && that.getClassifier() != null && this.getClassifier().equals(that.getClassifier());
+        return res && classifierEqual;
     }
 }

@@ -162,6 +162,13 @@ public class MVNCoordinatesTest {
     }
 
     @Test
+    public void equalsNoClassifierTest() {
+        MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId);
+        MVNCoordinates mvnCoordinates2 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId);
+        Assert.assertTrue(mvnCoordinates1.equals(mvnCoordinates2));
+    }
+
+    @Test
     public void equalsWithDifferentClassTest() {
         MVNCoordinates mvnCoordinates1 = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
         //noinspection EqualsBetweenInconvertibleTypes
