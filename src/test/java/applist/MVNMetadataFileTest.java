@@ -1,5 +1,26 @@
 package applist;
 
+/*-
+ * #%L
+ * FOK Launcher
+ * %%
+ * Copyright (C) 2016 - 2017 Frederik Kammel
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.vatbub.common.updater.Version;
 import com.github.vatbub.common.updater.VersionList;
@@ -14,6 +35,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
@@ -53,18 +75,43 @@ public class MVNMetadataFileTest {
             throw new IllegalArgumentException("version list may not contain snapshots");
         }
 
+        VersionList effectiveVersionList = new VersionList(versions.size());
+        for (Version version : versions) {
+            boolean alreadyContained = false;
+            for (Version containedVersion : effectiveVersionList) {
+                if (containedVersion.getVersion().equals(version.getVersion())) {
+                    alreadyContained = true;
+                    break;
+                }
+            }
+
+            if (!alreadyContained) {
+                effectiveVersionList.add(version);
+            }
+        }
+
         Version latestVersion = Collections.max(versions);
+        Version latestRelease = null;
+        if (versions.containsRelease()) {
+            VersionList releasesOnly = versions.clone();
+            releasesOnly.removeSnapshots();
+            latestRelease = Collections.max(releasesOnly);
+        }
 
         StringBuilder res = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .append("<metadata>\n")
                 .append("  <groupId>").append(groupId).append("</groupId>\n")
                 .append("  <artifactId>").append(artifactId).append("</artifactId>\n")
                 .append("  <versioning>\n")
-                .append("    <latest>").append(latestVersion.getVersion()).append("</latest>\n")
-                .append("    <release>").append(latestVersion).append("</release>\n")
-                .append("    <versions>\n");
+                .append("    <latest>").append(latestVersion.getVersion()).append("</latest>\n");
 
-        for (Version version : versions) {
+        if (latestRelease != null) {
+            res.append("    <release>").append(latestRelease).append("</release>\n");
+        }
+
+        res.append("    <versions>\n");
+
+        for (Version version : effectiveVersionList) {
             res.append("      <version>").append(version.getVersion()).append("</version>\n");
         }
 
@@ -72,6 +119,44 @@ public class MVNMetadataFileTest {
                 .append("    <lastUpdated>").append(lastUpdated).append("</lastUpdated>\n")
                 .append("  </versioning>\n")
                 .append("</metadata>");
+        return res.toString();
+    }
+
+    private String getSnaphotMetadataContent(Version superVersion, VersionList snapshotVersions, List<String> extensionTypes) {
+        for (Version snapshotVersion : snapshotVersions) {
+            if (!snapshotVersion.getVersion().replace("-SNAPSHOT", "").equals(superVersion.getVersion().replace("-SNAPSHOT", ""))) {
+                throw new IllegalArgumentException("superVersion and all snapshot versions must have the same version number");
+            }
+        }
+
+        Version latest = Collections.max(snapshotVersions);
+
+        StringBuilder res = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+                .append("<metadata modelVersion=\"1.1.0\">\n")
+                .append("  <groupId>").append(groupId).append("</groupId>\n")
+                .append("  <artifactId>").append(groupId).append("</artifactId>\n")
+                .append("  <version>").append(superVersion.getVersion()).append("</version>\n")
+                .append("  <versioning>\n")
+                .append("    <snapshot>\n")
+                .append("      <timestamp>").append(latest.getTimestamp()).append("</timestamp>\n")
+                .append("      <buildNumber>").append(latest.getBuildNumber()).append("</buildNumber>\n")
+                .append("    </snapshot>\n")
+                .append("    <lastUpdated>").append(lastUpdated).append("</lastUpdated>\n")
+                .append("    <snapshotVersions>\n");
+
+        for (Version snapshotVersion : snapshotVersions) {
+            for (String extension : extensionTypes) {
+                res.append("      <snapshotVersion>\n")
+                        .append("        <extension>").append(extension).append("</extension>\n")
+                        .append("        <value>").append(snapshotVersion.toString(true)).append("</value>\n")
+                        .append("        <updated>").append(lastUpdated).append("</updated>\n")
+                        .append("      </snapshotVersion>\n");
+            }
+        }
+
+        res.append("    </snapshotVersions>\n")
+                .append("  </versioning>\n")
+                .append("</metadata>\n");
         return res.toString();
     }
 
@@ -98,7 +183,7 @@ public class MVNMetadataFileTest {
         Assert.assertEquals(latest, mvnMetadataFile.getLatest());
         Assert.assertEquals(latest, mvnMetadataFile.getLatestRelease());
 
-        for(Version version:mvnMetadataFile.getVersionList()){
+        for (Version version : mvnMetadataFile.getVersionList()) {
             Assert.assertTrue(versions.contains(version));
         }
 
