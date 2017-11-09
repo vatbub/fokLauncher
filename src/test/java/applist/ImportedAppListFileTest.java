@@ -23,7 +23,9 @@ package applist;
 
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
+import config.AppConfig;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,6 +58,88 @@ public class ImportedAppListFileTest {
 
     @Test
     public void readFileTest() throws IOException {
+        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles();
+        AppList expectedApps = getAppListFromFoklauncherFileList(foklauncherFiles);
+
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("importedAppsTestFile.xml").toFile();
+        FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles, false, false), Charset.forName("UTF-8"));
+
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile(underlyingFile.getAbsolutePath());
+        Assert.assertEquals(underlyingFile.getAbsolutePath(), importedAppListFile.getFileName());
+        for (App app : importedAppListFile.getAppList()) {
+            Assert.assertTrue(expectedApps.contains(app));
+        }
+    }
+
+    @Test
+    public void saveTest() throws IOException {
+        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles();
+        AppList expectedApps = getAppListFromFoklauncherFileList(foklauncherFiles);
+
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("importedAppsTestFile.xml").toFile();
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile(underlyingFile.getAbsolutePath());
+        importedAppListFile.setAppList(expectedApps);
+        importedAppListFile.saveFile();
+
+        String result = FileUtils.readFileToString(underlyingFile, Charset.forName("UTF-8"));
+        for (FoklauncherFile foklauncherFile : foklauncherFiles) {
+            Assert.assertThat(result, CoreMatchers.containsString(foklauncherFile.getSourceFile().getAbsolutePath()));
+        }
+    }
+
+    @Test
+    public void noModelVersionTest() throws IOException {
+        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles();
+
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("importedAppsTestFile.xml").toFile();
+        FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles, true, false), Charset.forName("UTF-8"));
+
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile(underlyingFile.getAbsolutePath());
+
+        Assert.assertNotNull(importedAppListFile.getAppList());
+        Assert.assertEquals(0, importedAppListFile.getAppList().size());
+    }
+
+    @Test
+    public void noAppListTest() throws IOException {
+        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles();
+
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("importedAppsTestFile.xml").toFile();
+        FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles, false, true), Charset.forName("UTF-8"));
+
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile(underlyingFile.getAbsolutePath());
+
+        Assert.assertNotNull(importedAppListFile.getAppList());
+        Assert.assertEquals(0, importedAppListFile.getAppList().size());
+    }
+
+    @Test
+    public void defaultConstructorTest() throws IOException {
+        // AppConfig.getRemoteConfig().getValue("importedAppListFileName")
+        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles();
+        AppList expectedApps = getAppListFromFoklauncherFileList(foklauncherFiles);
+
+        // points to the default location of the list file,
+        // if you change it here, you must also change it in ImportedAppListFile
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(AppConfig.getRemoteConfig().getValue("importedAppListFileName")).toFile();
+        FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles, false, false), Charset.forName("UTF-8"));
+
+        ImportedAppListFile importedAppListFile = new ImportedAppListFile();
+        Assert.assertEquals(underlyingFile.getAbsolutePath(), importedAppListFile.getFileName());
+        for (App app : importedAppListFile.getAppList()) {
+            Assert.assertTrue(expectedApps.contains(app));
+        }
+    }
+
+    private AppList getAppListFromFoklauncherFileList(List<FoklauncherFile> foklauncherFiles) throws IOException {
+        AppList res = new AppList();
+        for (FoklauncherFile foklauncherFile : foklauncherFiles) {
+            res.add(new App(foklauncherFile.getSourceFile()));
+        }
+        return res;
+    }
+
+    private List<FoklauncherFile> generateFokLauncherFiles() throws IOException {
         List<MVNCoordinates> mvnCoordinatesList = new ArrayList<>(2);
         List<String> names = new ArrayList<>(2);
         List<URL> changelogURLs = new ArrayList<>(2);
@@ -71,27 +155,14 @@ public class ImportedAppListFileTest {
         changelogURLs.add(new URL("https://github.com/vatbub/zorkClone/blob/master/CHANGELOG.md"));
         additionalInfoURLs.add(new URL("https://github.com/vatbub/zorkClone#zorkclone-"));
 
-        List<FoklauncherFile> foklauncherFiles = generateFokLauncherFiles(mvnCoordinatesList, names, changelogURLs, additionalInfoURLs);
-        AppList expectedApps = new AppList();
-        for (FoklauncherFile foklauncherFile : foklauncherFiles) {
-            expectedApps.add(new App(foklauncherFile.getSourceFile()));
-        }
-
-        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve("importedAppsTestFile.xml").toFile();
-        FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles), Charset.forName("UTF-8"));
-
-        ImportedAppListFile importedAppListFile = new ImportedAppListFile(underlyingFile.getAbsolutePath());
-        Assert.assertEquals(underlyingFile.getAbsolutePath(), importedAppListFile.getFileName());
-        for (App app : importedAppListFile.getAppList()) {
-            Assert.assertTrue(expectedApps.contains(app));
-        }
+        return generateFokLauncherFiles(mvnCoordinatesList, names, changelogURLs, additionalInfoURLs);
     }
 
     private List<FoklauncherFile> generateFokLauncherFiles(List<MVNCoordinates> mvnCoordinatesList, List<String> names, List<URL> changelogURLs, List<URL> additionalInfoURLs) throws IOException {
         List<FoklauncherFile> res = new ArrayList<>(mvnCoordinatesList.size());
         for (int i = 0; i < mvnCoordinatesList.size(); i++) {
             String fileSuffix = "";
-            if (mvnCoordinatesList.get(i).getClassifier()!=null){
+            if (mvnCoordinatesList.get(i).getClassifier() != null) {
                 fileSuffix = "_" + mvnCoordinatesList.get(i).getClassifier();
             }
             FoklauncherFile foklauncherFile = new FoklauncherFile(Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(mvnCoordinatesList.get(i).getGroupId() + "_" + mvnCoordinatesList.get(i).getArtifactId() + fileSuffix + ".foklauncher").toFile());
@@ -114,20 +185,25 @@ public class ImportedAppListFileTest {
         return res;
     }
 
-    private String getFileContent(List<FoklauncherFile> foklauncherFiles) {
+    private String getFileContent(List<FoklauncherFile> foklauncherFiles, boolean skipModelVersion, boolean skipAppList) {
         StringBuilder res = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-                .append("<fokLauncher>\n")
-                .append("  <modelVersion />\n")
-                .append("  <importedApps>\n");
+                .append("<fokLauncher>\n");
 
-        for (FoklauncherFile foklauncherFile : foklauncherFiles) {
-            res.append("    <app>\n")
-                    .append("      <fileName>").append(foklauncherFile.getSourceFile().getAbsolutePath()).append("</fileName>\n")
-                    .append("    </app>\n");
+        if (!skipModelVersion)
+            res.append("  <modelVersion />\n");
+
+        if (!skipAppList) {
+            res.append("  <importedApps>\n");
+
+            for (FoklauncherFile foklauncherFile : foklauncherFiles) {
+                res.append("    <app>\n")
+                        .append("      <fileName>").append(foklauncherFile.getSourceFile().getAbsolutePath()).append("</fileName>\n")
+                        .append("    </app>\n");
+            }
+
+            res.append("  </importedApps>\n");
         }
-
-        res.append("  </importedApps>\n")
-                .append("</fokLauncher>\n");
+        res.append("</fokLauncher>\n");
         return res.toString();
     }
 }
