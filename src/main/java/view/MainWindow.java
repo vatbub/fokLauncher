@@ -81,10 +81,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class MainWindow implements HidableUpdateProgressDialog {
-    private static final ImageView linkIconView = new ImageView(
-            new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
-    private static final ImageView downloadQueueIconView = new ImageView(
-            new Image(MainWindow.class.getResourceAsStream("down-arrow.png")));
+    private static final ImageView linkIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
+    private static final ImageView downloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow.png")));
+    private static final ImageView addToDownloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
     // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
@@ -103,6 +102,8 @@ public class MainWindow implements HidableUpdateProgressDialog {
     };
     @FXML
     public CheckBox launchLauncherAfterAppExitCheckbox;
+    @FXML
+    private Button addToDownloadQueueButton;
     private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private AppList apps;
     private Thread downloadAndLaunchThread = new Thread();
@@ -584,9 +585,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
         optionButton.setGraphic(optionIconView);
         appInfoButton.setGraphic(infoIconView);
         showDownloadQueueButton.setGraphic(downloadQueueIconView);
-
-        // Bind the disabled property of the launchButton to the linkButton
-        linkButton.disableProperty().bind(launchButton.disableProperty());
+        addToDownloadQueueButton.setGraphic(addToDownloadQueueIconView);
 
         // show gey icon when disabled
         linkButton.disableProperty().addListener((observable, oldValue, newValue) -> {
@@ -619,7 +618,19 @@ public class MainWindow implements HidableUpdateProgressDialog {
             }
         });
 
+        addToDownloadQueueButton.disableProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue){
+                addToDownloadQueueIconView.setImage((new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow_gray.png"))));
+            }else{
+                addToDownloadQueueIconView.setImage((new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png"))));
+            }
+        });
+
         optionButton.disableProperty().bind(launchButton.disableProperty());
+        linkButton.disableProperty().bind(launchButton.disableProperty());
+        addToDownloadQueueButton.disableProperty().bind(launchButton.disableProperty());
+
+        addToDownloadQueueButton.setTooltip(new Tooltip(getBundle().getString("addToDownloadQueueButton.hintText")));
 
         // TODO Add icon source
         // <div>Icons made by <a

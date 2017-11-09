@@ -52,6 +52,7 @@
                       <ProgressButton fx:id="launchButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#launchButtonOnAction" onDragDetected="#launchButtonOnDragDetected" text="%okButton.launch" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                          <HBox alignment="CENTER" layoutX="357.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
+                              <Button fx:id="addToDownloadQueueButton" mnemonicParsing="false" styleClass="transparentButton" />
                               <Button fx:id="linkButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#linkButtonOnAction" onDragDetected="#linkButtonOnDragDetected" onMousePressed="#linkButtonOnMousePressed" onMouseReleased="#linkButtonOnMouseReleased" styleClass="transparentButton" text="Icon" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <cursor>
                                     <Cursor fx:constant="OPEN_HAND" />
