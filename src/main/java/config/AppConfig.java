@@ -23,13 +23,11 @@ package config;
 
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.Config;
-import com.github.vatbub.common.core.logging.FOKLogger;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * Contains a wrapper for the launcher's remote config and additional config parameters.
@@ -39,9 +37,10 @@ public class AppConfig {
 
     static {
         try {
-            remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), true, "foklauncherConfigCache.properties", true);
+            reloadRemoteConfig();
         } catch (IOException e) {
-            FOKLogger.log(AppConfig.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            // rethrow
+            throw new IllegalStateException("Unable to parse the remote config URL", e);
         }
     }
 
@@ -75,9 +74,7 @@ public class AppConfig {
      */
     public static List<String> getSupportedFOKConfigModelVersion() {
         List<String> res = new ArrayList<>();
-
         res.add("0.0.1");
-
         return res;
     }
 
@@ -88,5 +85,13 @@ public class AppConfig {
      */
     public static Config getRemoteConfig() {
         return remoteConfig;
+    }
+
+    /**
+     * Reloads the remote config
+     * @throws IOException If the remote config URL is malformed or the remote config cannot be loaded for any reason
+     */
+    public static void reloadRemoteConfig() throws IOException {
+        remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), true, "foklauncherConfigCache.properties", true);
     }
 }
