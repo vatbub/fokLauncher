@@ -66,12 +66,12 @@ public class MVNMetadataFile {
             if (getLatest().isSnapshot()) {
                 updateVersionWithSnapshotInfo(getLatest());
             }
-        } else if (mavenMetadata.getRootElement().getChild(FileFormat.VERSION_TAG_NAME) != null) {
+        } /*else if (mavenMetadata.getRootElement().getChild(FileFormat.VERSION_TAG_NAME) != null) {
             setLatest(new Version(mavenMetadata.getRootElement().getChild(FileFormat.VERSION_TAG_NAME).getValue()));
             if (getLatest().isSnapshot()) {
                 updateVersionWithSnapshotInfo(getLatest());
             }
-        }
+        }*/
         if (versioningElement.getChild(FileFormat.LATEST_RELEASE_TAG_NAME) != null) {
             setLatestRelease(new Version(versioningElement.getChild(FileFormat.LATEST_RELEASE_TAG_NAME).getValue()));
         }
@@ -184,6 +184,7 @@ public class MVNMetadataFile {
 
     /**
      * Returns the latest available online release version.
+     *
      * @return The latest available online release version.
      */
     public Version getLatestRelease() {
@@ -192,6 +193,7 @@ public class MVNMetadataFile {
 
     /**
      * Sets the latest available online release version.
+     *
      * @param latestRelease The latest available online release version to set
      */
     public void setLatestRelease(Version latestRelease) {
@@ -200,6 +202,7 @@ public class MVNMetadataFile {
 
     /**
      * Returns the timestamp of the last app update
+     *
      * @return The timestamp of the last app update
      */
     public LocalDateTime getLastUpdated() {
@@ -208,6 +211,7 @@ public class MVNMetadataFile {
 
     /**
      * Sets the timestamp of the last app update
+     *
      * @param lastUpdated The timestamp to set
      */
     public void setLastUpdated(LocalDateTime lastUpdated) {

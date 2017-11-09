@@ -34,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,13 +51,23 @@ public class MVNMetadataFileTest {
     public WireMockRule wireMockRule = new WireMockRule(port);
 
     private String getStubURLString(boolean snapshotRepo) {
+        return getStubURLString(snapshotRepo, null);
+    }
+
+    private String getStubURLString(boolean snapshotRepo, Version snapshotVersion) {
         StringBuilder res = new StringBuilder("/");
         if (snapshotRepo) {
             res.append(snapshotRepoName);
         } else {
             res.append(repoName);
         }
-        res.append("/").append(groupId.replace('.', '/')).append("/").append(artifactId).append("/maven-metadata.xml");
+        res.append("/").append(groupId.replace('.', '/')).append("/").append(artifactId);
+
+        if (snapshotVersion != null) {
+            res.append("/").append(snapshotVersion.getVersion());
+        }
+
+        res.append("/maven-metadata.xml");
         return res.toString();
     }
 
@@ -71,10 +82,6 @@ public class MVNMetadataFileTest {
     }
 
     private String getRepoMetadataContent(VersionList versions) {
-        if (versions.containsSnapshot()) {
-            throw new IllegalArgumentException("version list may not contain snapshots");
-        }
-
         VersionList effectiveVersionList = new VersionList(versions.size());
         for (Version version : versions) {
             boolean alreadyContained = false;
@@ -122,36 +129,26 @@ public class MVNMetadataFileTest {
         return res.toString();
     }
 
-    private String getSnaphotMetadataContent(Version superVersion, VersionList snapshotVersions, List<String> extensionTypes) {
-        for (Version snapshotVersion : snapshotVersions) {
-            if (!snapshotVersion.getVersion().replace("-SNAPSHOT", "").equals(superVersion.getVersion().replace("-SNAPSHOT", ""))) {
-                throw new IllegalArgumentException("superVersion and all snapshot versions must have the same version number");
-            }
-        }
-
-        Version latest = Collections.max(snapshotVersions);
-
+    private String getSnaphotMetadataContent(Version snapshotVersion, List<String> extensionTypes) {
         StringBuilder res = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .append("<metadata modelVersion=\"1.1.0\">\n")
                 .append("  <groupId>").append(groupId).append("</groupId>\n")
                 .append("  <artifactId>").append(groupId).append("</artifactId>\n")
-                .append("  <version>").append(superVersion.getVersion()).append("</version>\n")
+                .append("  <version>").append(snapshotVersion.getVersion()).append("</version>\n")
                 .append("  <versioning>\n")
                 .append("    <snapshot>\n")
-                .append("      <timestamp>").append(latest.getTimestamp()).append("</timestamp>\n")
-                .append("      <buildNumber>").append(latest.getBuildNumber()).append("</buildNumber>\n")
+                .append("      <timestamp>").append(snapshotVersion.getTimestamp()).append("</timestamp>\n")
+                .append("      <buildNumber>").append(snapshotVersion.getBuildNumber()).append("</buildNumber>\n")
                 .append("    </snapshot>\n")
                 .append("    <lastUpdated>").append(lastUpdated).append("</lastUpdated>\n")
                 .append("    <snapshotVersions>\n");
 
-        for (Version snapshotVersion : snapshotVersions) {
-            for (String extension : extensionTypes) {
-                res.append("      <snapshotVersion>\n")
-                        .append("        <extension>").append(extension).append("</extension>\n")
-                        .append("        <value>").append(snapshotVersion.toString(true)).append("</value>\n")
-                        .append("        <updated>").append(lastUpdated).append("</updated>\n")
-                        .append("      </snapshotVersion>\n");
-            }
+        for (String extension : extensionTypes) {
+            res.append("      <snapshotVersion>\n")
+                    .append("        <extension>").append(extension).append("</extension>\n")
+                    .append("        <value>").append(snapshotVersion.toString(true)).append("</value>\n")
+                    .append("        <updated>").append(lastUpdated).append("</updated>\n")
+                    .append("      </snapshotVersion>\n");
         }
 
         res.append("    </snapshotVersions>\n")
@@ -185,6 +182,44 @@ public class MVNMetadataFileTest {
 
         for (Version version : mvnMetadataFile.getVersionList()) {
             Assert.assertTrue(versions.contains(version));
+        }
+
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        Assert.assertEquals(LocalDateTime.from(f.parse(lastUpdated)), mvnMetadataFile.getLastUpdated());
+    }
+
+    @Test
+    public void snapshotRepoTest() throws JDOMException, IOException {
+        VersionList versions = new VersionList(1);
+        Version version = new Version("0.0.3-SNAPSHOT", "1", "20161106.232243");
+        versions.add(version);
+        List<String> extensions = new ArrayList<>(3);
+        extensions.add("jar");
+        extensions.add("pom");
+
+        // main metadata
+        stubFor(get(urlEqualTo(getStubURLString(true)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(getRepoMetadataContent(versions))));
+
+        // snapshot metadata
+        stubFor(get(urlEqualTo(getStubURLString(true, version)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(getSnaphotMetadataContent(version, extensions))));
+
+        MVNCoordinates mvnCoordinates = new MVNCoordinates(getRepoURL(false), getRepoURL(true), groupId, artifactId);
+        MVNMetadataFile mvnMetadataFile = new MVNMetadataFile(mvnCoordinates, true);
+
+        Assert.assertEquals(mvnCoordinates, mvnMetadataFile.getMvnCoordinates());
+        Assert.assertEquals(version, mvnMetadataFile.getLatest());
+        Assert.assertNull(mvnMetadataFile.getLatestRelease());
+
+        for (Version versionToCheck : mvnMetadataFile.getVersionList()) {
+            Assert.assertEquals(version, versionToCheck);
         }
 
         DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
