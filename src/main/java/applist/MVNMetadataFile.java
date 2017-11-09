@@ -221,7 +221,7 @@ public class MVNMetadataFile {
     /**
      * Describes the file format of a metadata file
      */
-    public class FileFormat {
+    public static class FileFormat {
         public static final String VERSION_TAG_NAME = "version";
         public static final String VERSIONING_TAG_NAME = "versioning";
         public static final String LATEST_VERSION_TAG_NAME = "latest";
@@ -237,7 +237,7 @@ public class MVNMetadataFile {
     /**
      * Describes the file format of a snapshot metadata file
      */
-    public class SnapshotFileFormat {
+    public static class SnapshotFileFormat {
         public static final String VERSIONING_TAG_NAME = "versioning";
         public static final String LATEST_SNAPSHOT_TAG_NAME = "snapshot";
         public static final String TIMESTAMP_TAG_NAME = "timestamp";

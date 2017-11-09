@@ -177,7 +177,7 @@ public class AppListFile {
     /**
      * Describes the tag names used in an AppListFile
      */
-    public class FileFormat {
+    public static class FileFormat {
         public static final String MODEL_VERSION_TAG_NAME = "modelVersion";
         public static final String APP_LIST_TAG_NAME = "apps";
         public static final String APP_TAG_NAME = "app";

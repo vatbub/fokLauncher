@@ -149,7 +149,7 @@ public class ImportedAppListFile {
     /**
      * Describes the file format of a saved app list file
      */
-    public class FileFormat {
+    public static class FileFormat {
         public static final String ROOT_NODE_NAME = "fokLauncher";
         public static final String MODEL_VERSION_TAG_NAME = "modelVersion";
         public static final String APP_LIST_TAG_NAME = "importedApps";

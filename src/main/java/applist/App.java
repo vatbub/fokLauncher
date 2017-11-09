@@ -1258,6 +1258,35 @@ public class App {
         }
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof App)) {
+            return false;
+        } else {
+            App that = (App) obj;
+            if (!this.getMvnCoordinates().equals(that.getMvnCoordinates()))
+                return false;
+
+            if ((this.getChangelogURL() == null && that.getChangelogURL() != null) || (this.getChangelogURL() != null && that.getChangelogURL() == null))
+                return false;
+
+            if (!this.getName().equals(that.getName()))
+                return false;
+
+            if ((this.getAdditionalInfoURL() == null && that.getChangelogURL() != null) || (this.getAdditionalInfoURL() != null && that.getChangelogURL() == null))
+                return false;
+
+            if (this.isImported() != that.isImported())
+                return false;
+
+            if (this.isImported() && !this.getImportFile().equals(that.getImportFile()))
+                return false;
+
+            // all right
+            return true;
+        }
+    }
+
     /**
      * Returns {@link MVNCoordinates#toString()} if maven coordinates have been specified or the name of the app otherwise
      *

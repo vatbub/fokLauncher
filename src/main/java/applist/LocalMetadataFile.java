@@ -155,7 +155,7 @@ public class LocalMetadataFile {
     /**
      * Descries the file format of a local metadata file
      */
-    public class FileFormat {
+    public static class FileFormat {
         private FileFormat() {
             throw new IllegalStateException("Class may not be instantiated");
         }
