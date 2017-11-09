@@ -23,6 +23,8 @@ package view;
 
 import applist.App;
 import applist.AppList;
+import applist.DownloadQueue;
+import applist.DownloadQueueEntry;
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.StringCommon;
 import com.github.vatbub.common.core.logging.FOKLogger;
@@ -184,7 +186,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
                     appList.setItems(filteredData);
                     appList.setPlaceholder(new Label(bundle.getString("emptyAppList")));
 
-                    if (previouslySelectedIndex>=0){
+                    if (previouslySelectedIndex >= 0) {
                         appList.getSelectionModel().select(previouslySelectedIndex);
                     }
 
@@ -211,6 +213,9 @@ public class MainWindow implements HidableUpdateProgressDialog {
     private GridPane settingsGridView;
     @FXML
     private Button appInfoButton;
+    private DownloadQueue downloadQueue = new DownloadQueue();
+    @FXML
+    private TitledPane downloadQueueTitledPane;
 
     public static ResourceBundle getBundle() {
         return bundle;
@@ -240,6 +245,11 @@ public class MainWindow implements HidableUpdateProgressDialog {
         scheduledExecutorService.shutdownNow();
     }
 
+    /*public static MetricRegistry getMetricsRegistry()
+    {
+        return metricsRegistry;
+    }*/
+
     /**
      * Initiates the download and launch of the latest version of the specified app.
      *
@@ -261,11 +271,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
     public void launchAppFromGUI(App appToLaunch, @Nullable Version versionToLaunch, String... startupArgs) {
         launchAppFromGUI(appToLaunch, false, false, versionToLaunch, startupArgs);
     }
-
-    /*public static MetricRegistry getMetricsRegistry()
-    {
-        return metricsRegistry;
-    }*/
 
     /**
      * Initiates the download and launch of the latest version of the specified app.
@@ -563,6 +568,12 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @FXML
+    void addToDownloadQueueButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
+        //noinspection unchecked
+        downloadQueue.add(new DownloadQueueEntry(getCurrentlySelectedApp(), new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), getCurrentlySelectedApp(), 3), snapshotsEnabled()));
+    }
+
+    @FXML
         // This method is called by the FXMLLoader when initialization is
         // complete
     void initialize() {
@@ -579,6 +590,17 @@ public class MainWindow implements HidableUpdateProgressDialog {
         assert updateLink != null : "fx:id=\"updateLink\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert linkButton != null : "fx:id=\"linkButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
+
+        // bind the download queue count to the label text
+        downloadQueue.currentTotalDownloadCountProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.intValue() == 1) {
+                // Platform.runLater(() -> downloadQueueCountLabel.setText(""));
+                Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.oneDownload").replace("%n", newValue.toString())));
+            } else {
+                // Platform.runLater(() -> downloadQueueCountLabel.setText(newValue.toString()));
+                Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.moreDownloads").replace("%n", newValue.toString())));
+            }
+        });
 
         // add icons to buttons
         linkButton.setGraphic(linkIconView);
@@ -619,9 +641,9 @@ public class MainWindow implements HidableUpdateProgressDialog {
         });
 
         addToDownloadQueueButton.disableProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue){
+            if (newValue) {
                 addToDownloadQueueIconView.setImage((new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow_gray.png"))));
-            }else{
+            } else {
                 addToDownloadQueueIconView.setImage((new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png"))));
             }
         });

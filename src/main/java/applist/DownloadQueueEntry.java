@@ -28,13 +28,18 @@ public class DownloadQueueEntry {
     private App app;
     private HidableUpdateProgressDialog gui;
     private Version versionToDownload;
+    private boolean enableSnapshots;
 
     public DownloadQueueEntry() {
         this(null);
     }
 
     public DownloadQueueEntry(App app) {
-        this(app, (Version) null);
+        this(app, false);
+    }
+
+    public DownloadQueueEntry(App app, boolean enableSnapshots) {
+        this(app, null, null, enableSnapshots);
     }
 
     public DownloadQueueEntry(App app, Version versionToDownload) {
@@ -45,9 +50,18 @@ public class DownloadQueueEntry {
         this(app, gui, null);
     }
 
+    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, boolean enableSnapshots) {
+        this(app, gui, null, enableSnapshots);
+    }
+
     public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, Version versionToDownload) {
+        this(app, gui, versionToDownload, false);
+    }
+
+    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, Version versionToDownload, boolean enableSnapshots) {
         setApp(app);
         setGui(gui);
+        setEnableSnapshots(enableSnapshots);
         setVersionToDownload(versionToDownload);
     }
 
@@ -73,5 +87,13 @@ public class DownloadQueueEntry {
 
     public void setVersionToDownload(Version versionToDownload) {
         this.versionToDownload = versionToDownload;
+    }
+
+    public boolean isEnableSnapshots() {
+        return enableSnapshots;
+    }
+
+    public void setEnableSnapshots(boolean enableSnapshots) {
+        this.enableSnapshots = enableSnapshots;
     }
 }

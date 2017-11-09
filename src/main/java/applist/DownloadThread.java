@@ -21,14 +21,18 @@ package applist;
  */
 
 
+import com.github.vatbub.common.core.logging.FOKLogger;
 import org.jdom2.JDOMException;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
+import java.util.logging.Level;
 
 public class DownloadThread extends Thread {
     private static int downloadThreadCounter = 0;
     private boolean shutdownAfterDownload;
     private DownloadQueue queue;
+    private boolean busy;
 
     public DownloadThread(DownloadQueue queue) {
         this(null, queue);
@@ -59,25 +63,37 @@ public class DownloadThread extends Thread {
         return shutdownAfterDownload;
     }
 
+    public void setShutdownAfterDownload(boolean shutdownAfterDownload) {
+        this.shutdownAfterDownload = shutdownAfterDownload;
+    }
+
     @Override
     public void run() {
         while (getQueue().getCurrentQueueCount() > 0 && !isShutdownAfterDownload()) {
-            DownloadQueueEntry entry = getQueue().removeFirst();
             try {
+                DownloadQueueEntry entry = getQueue().removeFirst();
+                setBusy(true);
+
                 if (entry.getVersionToDownload() == null) {
                     // download latest
-                    entry.getApp().download(entry.getGui());
+                    if (entry.isEnableSnapshots())
+                        entry.getApp().downloadSnapshot(entry.getGui());
+                    else
+                        entry.getApp().download(entry.getGui());
                 } else {
                     entry.getApp().download(entry.getVersionToDownload(), entry.getGui());
                 }
-            } catch (IOException | JDOMException e) {
-                e.printStackTrace();
+
+
+                setBusy(false);
+
+                if (entry.getGui() != null) {
+                    entry.getGui().hide();
+                }
+            } catch (IOException | JDOMException | NoSuchElementException e) {
+                FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             }
         }
-    }
-
-    public void setShutdownAfterDownload(boolean shutdownAfterDownload) {
-        this.shutdownAfterDownload = shutdownAfterDownload;
     }
 
     public DownloadQueue getQueue() {
@@ -86,5 +102,14 @@ public class DownloadThread extends Thread {
 
     public void setQueue(DownloadQueue queue) {
         this.queue = queue;
+    }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
+    private void setBusy(boolean busy){
+        this.busy=busy;
+        getQueue().updateQueueCount();
     }
 }
