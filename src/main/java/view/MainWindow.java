@@ -84,7 +84,6 @@ import java.util.logging.Level;
 
 public class MainWindow implements HidableUpdateProgressDialog {
     private static final ImageView linkIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
-    private static final ImageView downloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow.png")));
     private static final ImageView addToDownloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
@@ -606,7 +605,6 @@ public class MainWindow implements HidableUpdateProgressDialog {
         linkButton.setGraphic(linkIconView);
         optionButton.setGraphic(optionIconView);
         appInfoButton.setGraphic(infoIconView);
-        showDownloadQueueButton.setGraphic(downloadQueueIconView);
         addToDownloadQueueButton.setGraphic(addToDownloadQueueIconView);
 
         // show gey icon when disabled
