@@ -93,13 +93,11 @@ public class DownloadThread extends Thread {
                     cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
                 }
 
-                if (cont) {
-                    // Execute only if not cancelled by user
-                    if (getCurrentEntry().isLaunchAfterDownload()) {
-                        getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload, getCurrentEntry().getStartupArgs());
-                    } else if (getCurrentEntry().getGui() != null) {
-                        getCurrentEntry().getGui().hide();
-                    }
+                // Execute only if not cancelled by user
+                if (cont && getCurrentEntry().isLaunchAfterDownload()) {
+                    getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload, getCurrentEntry().getStartupArgs());
+                } else if (getCurrentEntry().getGui() != null) {
+                    getCurrentEntry().getGui().hide();
                 }
             } catch (IOException | JDOMException | NoSuchElementException e) {
                 getCurrentEntry().getGui().hide();
