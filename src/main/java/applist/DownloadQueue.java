@@ -57,7 +57,7 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
         synchronized (threadPool) {
             for (DownloadThread thread : threadPool) {
                 DownloadQueueEntry entry = thread.getCurrentEntry();
-                if (entry != null && entry.getApp() == app)
+                if (entry != null && entry.getApp().equals(app))
                     return entry;
             }
         }
@@ -65,7 +65,7 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
         synchronized (this) {
             // Check the waiting queue
             for (DownloadQueueEntry entry : this) {
-                if (entry.getApp() == app)
+                if (entry.getApp().equals(app))
                     return entry;
             }
         }
