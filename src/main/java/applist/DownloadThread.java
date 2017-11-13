@@ -33,7 +33,7 @@ public class DownloadThread extends Thread {
     private static int downloadThreadCounter = 0;
     private boolean shutdownAfterDownload;
     private DownloadQueue queue;
-    private DownloadQueueEntry currentEntry;
+    private volatile DownloadQueueEntry currentEntry;
 
     public DownloadThread(DownloadQueue queue) {
         this(null, queue);
@@ -90,7 +90,7 @@ public class DownloadThread extends Thread {
                 if (getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui())) {
                     // Execute only if not cancelled by user
                     if (getCurrentEntry().isLaunchAfterDownload()) {
-                        getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload);
+                        getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload, getCurrentEntry().getStartupArgs());
                     } else if (getCurrentEntry().getGui() != null) {
                         getCurrentEntry().getGui().hide();
                     }

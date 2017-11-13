@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Predicate;
 
 public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
@@ -36,6 +37,7 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     private final IntegerProperty currentTotalDownloadCount = new SimpleIntegerProperty();
     private final List<DownloadThread> threadPool = new LinkedList<>();
     private volatile int parallelDownloadCount;
+    private boolean shutdown;
 
     public DownloadQueue() {
         this(2);
@@ -100,6 +102,7 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public DownloadQueueEntry set(int index, DownloadQueueEntry element) {
+        checkShutdown();
         DownloadQueueEntry res = super.set(index, element);
         updateQueueCount();
         monitorThreadCount();
@@ -172,8 +175,9 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public boolean add(DownloadQueueEntry entry) {
+        checkShutdown();
         boolean res = super.add(entry);
-        if (entry.getGui()!=null)
+        if (entry.getGui() != null)
             entry.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
@@ -190,9 +194,10 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public boolean addAll(Collection<? extends DownloadQueueEntry> c) {
+        checkShutdown();
         boolean res = super.addAll(c);
-        for(DownloadQueueEntry entry:c){
-            if (entry.getGui()!=null)
+        for (DownloadQueueEntry entry : c) {
+            if (entry.getGui() != null)
                 entry.getGui().enqueued();
         }
         updateQueueCount();
@@ -202,9 +207,10 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public boolean addAll(int index, Collection<? extends DownloadQueueEntry> c) {
+        checkShutdown();
         boolean res = super.addAll(index, c);
-        for(DownloadQueueEntry entry:c){
-            if (entry.getGui()!=null)
+        for (DownloadQueueEntry entry : c) {
+            if (entry.getGui() != null)
                 entry.getGui().enqueued();
         }
         updateQueueCount();
@@ -278,8 +284,9 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public void add(int index, DownloadQueueEntry element) {
+        checkShutdown();
         super.add(index, element);
-        if (element.getGui()!=null)
+        if (element.getGui() != null)
             element.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
@@ -287,8 +294,9 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public void addFirst(DownloadQueueEntry entry) {
+        checkShutdown();
         super.addFirst(entry);
-        if (entry.getGui()!=null)
+        if (entry.getGui() != null)
             entry.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
@@ -296,11 +304,17 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     @Override
     public void addLast(DownloadQueueEntry entry) {
-        if (entry.getGui()!=null)
+        checkShutdown();
+        if (entry.getGui() != null)
             entry.getGui().enqueued();
         super.addLast(entry);
         updateQueueCount();
         monitorThreadCount();
+    }
+
+    private void checkShutdown() {
+        if (isShutdown())
+            throw new RejectedExecutionException("Download queue is shutting down");
     }
 
     @Override
@@ -375,5 +389,23 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     public IntegerProperty currentTotalDownloadCountProperty() {
         return currentTotalDownloadCount;
+    }
+
+    public boolean isShutdown() {
+        return shutdown;
+    }
+
+    public void shutdown() {
+        this.shutdown = true;
+    }
+
+    public void shutdownAndCancelDownloads() {
+        shutdown();
+
+        for (DownloadThread thread : threadPool) {
+            if (thread.getCurrentEntry() != null) {
+                thread.getCurrentEntry().getApp().cancelDownloadAndLaunch(thread.getCurrentEntry().getGui());
+            }
+        }
     }
 }

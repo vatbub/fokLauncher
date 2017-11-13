@@ -30,40 +30,42 @@ public class DownloadQueueEntry {
     private Version versionToDownload;
     private boolean enableSnapshots;
     private boolean launchAfterDownload;
+    private String[] startupArgs;
 
-    public DownloadQueueEntry() {
-        this(null);
+    public DownloadQueueEntry(String... startupArgs) {
+        this(null, startupArgs);
     }
 
-    public DownloadQueueEntry(App app) {
-        this(app, false);
+    public DownloadQueueEntry(App app, String... startupArgs) {
+        this(app, false, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, boolean enableSnapshots) {
-        this(app, null, null, enableSnapshots);
+    public DownloadQueueEntry(App app, boolean enableSnapshots, String... startupArgs) {
+        this(app, null, null, enableSnapshots, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, Version versionToDownload) {
-        this(app, null, versionToDownload);
+    public DownloadQueueEntry(App app, Version versionToDownload, String... startupArgs) {
+        this(app, null, versionToDownload, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui) {
-        this(app, gui, null);
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, String... startupArgs) {
+        this(app, gui, null, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, boolean enableSnapshots) {
-        this(app, gui, null, enableSnapshots);
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, boolean enableSnapshots, String... startupArgs) {
+        this(app, gui, null, enableSnapshots, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload) {
-        this(app, gui, versionToDownload, false);
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, String... startupArgs) {
+        this(app, gui, versionToDownload, false, startupArgs);
     }
 
-    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, boolean enableSnapshots) {
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, boolean enableSnapshots, String... startupArgs) {
         setApp(app);
         setGui(gui);
         setEnableSnapshots(enableSnapshots);
         setVersionToDownload(versionToDownload);
+        setStartupArgs(startupArgs);
     }
 
     public App getApp() {
@@ -104,5 +106,13 @@ public class DownloadQueueEntry {
 
     public void setLaunchAfterDownload(boolean launchAfterDownload) {
         this.launchAfterDownload = launchAfterDownload;
+    }
+
+    public String[] getStartupArgs() {
+        return startupArgs;
+    }
+
+    public void setStartupArgs(String... startupArgs) {
+        this.startupArgs = startupArgs;
     }
 }

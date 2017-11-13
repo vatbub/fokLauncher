@@ -48,10 +48,6 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     private HidableProgressDialogWithEnqueuedNotification attachedGui = null;
 
     public DownloadQueueEntryView(MainWindow mainWindow, ListView<DownloadQueueEntryView> parent, App app) {
-        this(mainWindow, parent, app, 0);
-    }
-
-    public DownloadQueueEntryView(MainWindow mainWindow, ListView<DownloadQueueEntryView> parent, App app, double spacing) {
         // super(spacing);
         setMainWindow(mainWindow);
         setParent(parent);

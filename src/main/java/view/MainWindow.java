@@ -107,7 +107,6 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private Button addToDownloadQueueButton;
     private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private AppList apps;
-    private Thread downloadAndLaunchThread = new Thread();
     private App currentlySelectedApp = null;
     private int currentlySelectedIndex = -1;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
@@ -134,6 +133,15 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private CustomProgressBar progressBar;
     @FXML
     private CheckBox workOfflineCheckbox;
+    @FXML
+    private Hyperlink updateLink;
+    @FXML
+    private Label versionLabel;
+    @FXML
+    private GridPane settingsGridView;
+    @FXML
+    private Button appInfoButton;
+    private DownloadQueue downloadQueue = new DownloadQueue();
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -190,7 +198,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
                     }
 
                     // Only enable if no download is running
-                    if (downloadAndLaunchThread == null || !downloadAndLaunchThread.isAlive()) {
+                    if (!isMainDownloadRunning()) {
                         appList.setDisable(false);
                     }
                 });
@@ -204,15 +212,6 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             }
         }
     };
-    @FXML
-    private Hyperlink updateLink;
-    @FXML
-    private Label versionLabel;
-    @FXML
-    private GridPane settingsGridView;
-    @FXML
-    private Button appInfoButton;
-    private DownloadQueue downloadQueue = new DownloadQueue();
     @FXML
     private TitledPane downloadQueueTitledPane;
 
@@ -238,9 +237,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
      * Performs cleanup tasks. This method is expected to be called when the controlled stage is hidden.
      */
     public void cleanup() {
-        if (getCurrentlySelectedApp() != null) {
-            getCurrentlySelectedApp().cancelDownloadAndLaunch(this);
-        }
+        downloadQueue.shutdownAndCancelDownloads();
         scheduledExecutorService.shutdownNow();
     }
 
@@ -296,38 +293,33 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         DownloadQueueEntry entry = downloadQueue.getEntryForApp(appToLaunch);
         if (entry != null && entry.isEnableSnapshots() == snapshotsEnabled && entry.getVersionToDownload() == versionToDownload) {
             entry.setLaunchAfterDownload(true);
+            if (launchLauncherAfterAppExitCheckbox.isSelected() && !ignoreShowLauncherWhenAppExitsSetting) {
+                entry.getApp().addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+            } else {
+                entry.getApp().removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+            }
             if (entry.getGui() != null && entry.getGui() instanceof DownloadQueueEntryView) {
                 ((DownloadQueueEntryView) entry.getGui()).setAttachedGui(this);
             }
             return;
         }
 
-        if (downloadAndLaunchThread != null && downloadAndLaunchThread.isAlive()) {
-            throw new IllegalStateException("A download is already in progress!");
+        // Attach the on app exit handler if required
+        if (launchLauncherAfterAppExitCheckbox.isSelected() && !ignoreShowLauncherWhenAppExitsSetting) {
+            appToLaunch.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
+        } else {
+            appToLaunch.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
         }
 
-        downloadAndLaunchThread = new Thread(() -> {
-            try {
-                // Attach the on app exit handler if required
-                if (launchLauncherAfterAppExitCheckbox.isSelected() && !ignoreShowLauncherWhenAppExitsSetting) {
-                    appToLaunch.addEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-                } else {
-                    appToLaunch.removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
-                }
-
-                if (versionToDownload == null) {
-                    appToLaunch.downloadIfNecessaryAndLaunch(snapshotsEnabled, this, workOffline(), startupArgs);
-                } else {
-                    appToLaunch.downloadIfNecessaryAndLaunch(this, versionToDownload, workOffline(), startupArgs);
-                }
-            } catch (IOException | JDOMException e) {
-                this.showErrorMessage(FOKLogger.DEFAULT_ERROR_TEXT + ": \n" + e.getClass().getName() + "\n" + e.getMessage());
-                FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-            }
-        });
-
-        downloadAndLaunchThread.setName("downloadAndLaunchThread");
-        downloadAndLaunchThread.start();
+        DownloadQueueEntry entryToLaunch;
+        if (versionToDownload == null) {
+            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), snapshotsEnabled(), startupArgs);
+        } else {
+            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), versionToDownload, snapshotsEnabled(), startupArgs);
+        }
+        entryToLaunch.setLaunchAfterDownload(true);
+        ((DownloadQueueEntryView)entryToLaunch.getGui()).setAttachedGui(this);
+        downloadQueue.addFirst(entryToLaunch);
     }
 
     /**
@@ -528,9 +520,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     @FXML
     void launchButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         DownloadQueueEntry entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
-        boolean guiAttached = entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGui() == this;
 
-        if (!downloadAndLaunchThread.isAlive() && !guiAttached) {
+        if (!isMainDownloadRunning(entry)) {
             launchAppFromGUI(currentlySelectedApp, enableSnapshotsCheckbox.isSelected());
         } else {
             if (entry != null) {
@@ -539,6 +530,15 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
                 currentlySelectedApp.cancelDownloadAndLaunch(this);
             }
         }
+    }
+
+    public boolean isMainDownloadRunning() {
+        DownloadQueueEntry entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
+        return isMainDownloadRunning(entry);
+    }
+
+    public boolean isMainDownloadRunning(DownloadQueueEntry entry) {
+        return entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGui() == this;
     }
 
     @FXML
@@ -584,7 +584,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
     @FXML
     void addToDownloadQueueButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
-        downloadQueue.add(new DownloadQueueEntry(getCurrentlySelectedApp(), new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), getCurrentlySelectedApp(), 3), snapshotsEnabled()));
+        downloadQueue.add(new DownloadQueueEntry(getCurrentlySelectedApp(), new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), getCurrentlySelectedApp()), snapshotsEnabled()));
         updateLaunchButton();
     }
 
@@ -913,7 +913,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
         // Only update the button caption if no download is running and an app
         // is selected
-        if (!downloadAndLaunchThread.isAlive() && currentlySelectedApp != null) {
+        if (!isMainDownloadRunning() && currentlySelectedApp != null) {
             getAppStatus.setName("getAppStatus");
             getAppStatus.start();
         } else if (currentlySelectedApp == null) {
