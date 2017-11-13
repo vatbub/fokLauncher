@@ -197,6 +197,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     @Override
     public void operationCanceled() {
         currentStatus=DownloadStatus.CANCELLED;
+        Platform.runLater(() -> getParentCustom().getItems().remove(this));
         if (getAttachedGui() != null) {
             getAttachedGui().operationCanceled();
         }
