@@ -300,7 +300,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
                 entry.getApp().removeEventHandlerWhenLaunchedAppExits(showLauncherAgain);
             }
             if (entry.getGui() != null && entry.getGui() instanceof DownloadQueueEntryView) {
-                ((DownloadQueueEntryView) entry.getGui()).setAttachedGui(this);
+                ((DownloadQueueEntryView) entry.getGui()).addAttachedGui(this);
             }
             return;
         }
@@ -319,7 +319,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), versionToDownload, snapshotsEnabled(), startupArgs);
         }
         entryToLaunch.setLaunchAfterDownload(true);
-        ((DownloadQueueEntryView) entryToLaunch.getGui()).setAttachedGui(this);
+        ((DownloadQueueEntryView) entryToLaunch.getGui()).addAttachedGui(this);
         downloadQueue.addFirst(entryToLaunch);
     }
 
@@ -546,7 +546,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     public boolean isMainDownloadRunning(DownloadQueueEntry entry) {
-        return entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGui() == this;
+        return entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGuis().contains(this);
     }
 
     @FXML
@@ -924,7 +924,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         if (!isMainDownloadRunning() && currentlySelectedApp != null) {
             getAppStatus.setName("getAppStatus");
             getAppStatus.start();
-        } else if (currentlySelectedApp == null && appForAutoLaunch==null) {
+        } else if (currentlySelectedApp == null && appForAutoLaunch == null) {
             // disable the button
             launchButton.setDisable(true);
         }

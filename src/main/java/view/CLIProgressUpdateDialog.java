@@ -22,9 +22,8 @@ package view;
 
 
 import com.github.vatbub.common.core.logging.FOKLogger;
-import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 
-public class CLIProgressUpdateDialog implements HidableUpdateProgressDialog {
+public class CLIProgressUpdateDialog implements HidableProgressDialogWithEnqueuedNotification {
     @Override
     public void hide() {
         // do nothing
@@ -69,5 +68,10 @@ public class CLIProgressUpdateDialog implements HidableUpdateProgressDialog {
     @Override
     public void showErrorMessage(String s) {
         FOKLogger.severe(getClass().getName(), "Something went wrong: " + s);
+    }
+
+    @Override
+    public void enqueued() {
+        FOKLogger.info(getClass().getName(), "Download is enqueued...");
     }
 }
