@@ -111,6 +111,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private int currentlySelectedIndex = -1;
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     private Thread getAppListThread;
+    private App appForAutoLaunch;
     @FXML
     private ListView<App> appList;
     @FXML
@@ -318,7 +319,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), versionToDownload, snapshotsEnabled(), startupArgs);
         }
         entryToLaunch.setLaunchAfterDownload(true);
-        ((DownloadQueueEntryView)entryToLaunch.getGui()).setAttachedGui(this);
+        ((DownloadQueueEntryView) entryToLaunch.getGui()).setAttachedGui(this);
         downloadQueue.addFirst(entryToLaunch);
     }
 
@@ -533,7 +534,14 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     public boolean isMainDownloadRunning() {
-        DownloadQueueEntry entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
+        DownloadQueueEntry entry;
+        if (getCurrentlySelectedApp() != null)
+            entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
+        else if (appForAutoLaunch != null)
+            entry = downloadQueue.getEntryForApp(appForAutoLaunch);
+        else
+            return false;
+
         return isMainDownloadRunning(entry);
     }
 
@@ -772,7 +780,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
         // auto launch app if one was specified
         if (EntryClass.getAutoLaunchMVNCoordinates() != null) {
-            final App appForAutoLaunch = new App(EntryClass.getAutoLaunchMVNCoordinates().getArtifactId(), EntryClass.getAutoLaunchMVNCoordinates());
+            appForAutoLaunch = new App(EntryClass.getAutoLaunchMVNCoordinates().getArtifactId(), EntryClass.getAutoLaunchMVNCoordinates());
             launchAppFromGUI(appForAutoLaunch, EntryClass.isAutoLaunchSnapshotsEnabled() || enableSnapshotsCheckbox.isSelected(), true, EntryClass.getAdditionalAutoLaunchStartupArgs());
         }
 
@@ -916,7 +924,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         if (!isMainDownloadRunning() && currentlySelectedApp != null) {
             getAppStatus.setName("getAppStatus");
             getAppStatus.start();
-        } else if (currentlySelectedApp == null) {
+        } else if (currentlySelectedApp == null && appForAutoLaunch==null) {
             // disable the button
             launchButton.setDisable(true);
         }
