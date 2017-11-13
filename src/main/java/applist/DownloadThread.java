@@ -87,7 +87,13 @@ public class DownloadThread extends Thread {
                     versionToDownload = getCurrentEntry().getVersionToDownload();
                 }
 
-                if (getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui())) {
+                boolean cont = true;
+
+                if (!getCurrentEntry().getApp().isPresentOnHarddrive(versionToDownload)) {
+                    cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
+                }
+
+                if (cont) {
                     // Execute only if not cancelled by user
                     if (getCurrentEntry().isLaunchAfterDownload()) {
                         getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload, getCurrentEntry().getStartupArgs());
