@@ -21,14 +21,15 @@ package applist;
  */
 
 
-import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 import com.github.vatbub.common.updater.Version;
+import view.HidableProgressDialogWithEnqueuedNotification;
 
 public class DownloadQueueEntry {
     private App app;
-    private HidableUpdateProgressDialog gui;
+    private HidableProgressDialogWithEnqueuedNotification gui;
     private Version versionToDownload;
     private boolean enableSnapshots;
+    private boolean launchAfterDownload;
 
     public DownloadQueueEntry() {
         this(null);
@@ -46,19 +47,19 @@ public class DownloadQueueEntry {
         this(app, null, versionToDownload);
     }
 
-    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui) {
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui) {
         this(app, gui, null);
     }
 
-    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, boolean enableSnapshots) {
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, boolean enableSnapshots) {
         this(app, gui, null, enableSnapshots);
     }
 
-    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, Version versionToDownload) {
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload) {
         this(app, gui, versionToDownload, false);
     }
 
-    public DownloadQueueEntry(App app, HidableUpdateProgressDialog gui, Version versionToDownload, boolean enableSnapshots) {
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, boolean enableSnapshots) {
         setApp(app);
         setGui(gui);
         setEnableSnapshots(enableSnapshots);
@@ -73,11 +74,11 @@ public class DownloadQueueEntry {
         this.app = app;
     }
 
-    public HidableUpdateProgressDialog getGui() {
+    public HidableProgressDialogWithEnqueuedNotification getGui() {
         return gui;
     }
 
-    public void setGui(HidableUpdateProgressDialog gui) {
+    public void setGui(HidableProgressDialogWithEnqueuedNotification gui) {
         this.gui = gui;
     }
 
@@ -95,5 +96,13 @@ public class DownloadQueueEntry {
 
     public void setEnableSnapshots(boolean enableSnapshots) {
         this.enableSnapshots = enableSnapshots;
+    }
+
+    public boolean isLaunchAfterDownload() {
+        return launchAfterDownload;
+    }
+
+    public void setLaunchAfterDownload(boolean launchAfterDownload) {
+        this.launchAfterDownload = launchAfterDownload;
     }
 }

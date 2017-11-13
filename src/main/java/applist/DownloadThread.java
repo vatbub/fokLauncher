@@ -22,6 +22,7 @@ package applist;
 
 
 import com.github.vatbub.common.core.logging.FOKLogger;
+import com.github.vatbub.common.updater.Version;
 import org.jdom2.JDOMException;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class DownloadThread extends Thread {
     private static int downloadThreadCounter = 0;
     private boolean shutdownAfterDownload;
     private DownloadQueue queue;
-    private boolean busy;
+    private DownloadQueueEntry currentEntry;
 
     public DownloadThread(DownloadQueue queue) {
         this(null, queue);
@@ -71,27 +72,34 @@ public class DownloadThread extends Thread {
     public void run() {
         while (getQueue().getCurrentQueueCount() > 0 && !isShutdownAfterDownload()) {
             try {
-                DownloadQueueEntry entry = getQueue().removeFirst();
-                setBusy(true);
+                setCurrentEntry(getQueue().removeFirst());
 
-                if (entry.getVersionToDownload() == null) {
+                Version versionToDownload;
+
+                if (getCurrentEntry().getVersionToDownload() == null) {
                     // download latest
-                    if (entry.isEnableSnapshots())
-                        entry.getApp().downloadSnapshot(entry.getGui());
-                    else
-                        entry.getApp().download(entry.getGui());
+                    if (getCurrentEntry().isEnableSnapshots()) {
+                        versionToDownload = getCurrentEntry().getApp().getLatestOnlineSnapshotVersion();
+                    } else {
+                        versionToDownload = getCurrentEntry().getApp().getLatestOnlineVersion();
+                    }
                 } else {
-                    entry.getApp().download(entry.getVersionToDownload(), entry.getGui());
+                    versionToDownload = getCurrentEntry().getVersionToDownload();
                 }
 
-
-                setBusy(false);
-
-                if (entry.getGui() != null) {
-                    entry.getGui().hide();
+                if (getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui())) {
+                    // Execute only if not cancelled by user
+                    if (getCurrentEntry().isLaunchAfterDownload()) {
+                        getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload);
+                    } else if (getCurrentEntry().getGui() != null) {
+                        getCurrentEntry().getGui().hide();
+                    }
                 }
             } catch (IOException | JDOMException | NoSuchElementException e) {
+                getCurrentEntry().getGui().hide();
                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            } finally {
+                setCurrentEntry(null);
             }
         }
     }
@@ -105,11 +113,15 @@ public class DownloadThread extends Thread {
     }
 
     public boolean isBusy() {
-        return busy;
+        return getCurrentEntry() != null;
     }
 
-    private void setBusy(boolean busy){
-        this.busy=busy;
+    public DownloadQueueEntry getCurrentEntry() {
+        return currentEntry;
+    }
+
+    private void setCurrentEntry(DownloadQueueEntry currentEntry) {
+        this.currentEntry = currentEntry;
         getQueue().updateQueueCount();
     }
 }

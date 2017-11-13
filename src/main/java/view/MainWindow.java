@@ -29,7 +29,6 @@ import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.StringCommon;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.internet.Internet;
-import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 import com.github.vatbub.common.updater.UpdateChecker;
 import com.github.vatbub.common.updater.UpdateInfo;
 import com.github.vatbub.common.updater.Version;
@@ -82,7 +81,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-public class MainWindow implements HidableUpdateProgressDialog {
+@SuppressWarnings("unchecked")
+public class MainWindow implements HidableProgressDialogWithEnqueuedNotification {
     private static final ImageView linkIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
     private static final ImageView addToDownloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
@@ -293,6 +293,15 @@ public class MainWindow implements HidableUpdateProgressDialog {
      * @param startupArgs                           Additional startup args to be passed to the app's main method
      */
     public void launchAppFromGUI(App appToLaunch, boolean snapshotsEnabled, boolean ignoreShowLauncherWhenAppExitsSetting, @Nullable Version versionToDownload, String... startupArgs) {
+        DownloadQueueEntry entry = downloadQueue.getEntryForApp(appToLaunch);
+        if (entry != null && entry.isEnableSnapshots() == snapshotsEnabled && entry.getVersionToDownload() == versionToDownload) {
+            entry.setLaunchAfterDownload(true);
+            if (entry.getGui() != null && entry.getGui() instanceof DownloadQueueEntryView) {
+                ((DownloadQueueEntryView) entry.getGui()).setAttachedGui(this);
+            }
+            return;
+        }
+
         if (downloadAndLaunchThread != null && downloadAndLaunchThread.isAlive()) {
             throw new IllegalStateException("A download is already in progress!");
         }
@@ -518,10 +527,17 @@ public class MainWindow implements HidableUpdateProgressDialog {
     // Handler for Button[fx:id="launchButton"] onAction
     @FXML
     void launchButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
-        if (!downloadAndLaunchThread.isAlive()) {
+        DownloadQueueEntry entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
+        boolean guiAttached = entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGui() == this;
+
+        if (!downloadAndLaunchThread.isAlive() && !guiAttached) {
             launchAppFromGUI(currentlySelectedApp, enableSnapshotsCheckbox.isSelected());
         } else {
-            currentlySelectedApp.cancelDownloadAndLaunch(this);
+            if (entry != null) {
+                entry.getApp().cancelDownloadAndLaunch(entry.getGui());
+            } else {
+                currentlySelectedApp.cancelDownloadAndLaunch(this);
+            }
         }
     }
 
@@ -568,8 +584,18 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
     @FXML
     void addToDownloadQueueButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
-        //noinspection unchecked
         downloadQueue.add(new DownloadQueueEntry(getCurrentlySelectedApp(), new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), getCurrentlySelectedApp(), 3), snapshotsEnabled()));
+        updateLaunchButton();
+    }
+
+    private void updateDownloadCounter(int numberOfDownloads) {
+        if (numberOfDownloads == 1) {
+            // Platform.runLater(() -> downloadQueueCountLabel.setText(""));
+            Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.oneDownload").replace("%n", Integer.toString(numberOfDownloads))));
+        } else {
+            // Platform.runLater(() -> downloadQueueCountLabel.setText(newValue.toString()));
+            Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.moreDownloads").replace("%n", Integer.toString(numberOfDownloads))));
+        }
     }
 
     @FXML
@@ -592,12 +618,26 @@ public class MainWindow implements HidableUpdateProgressDialog {
 
         // bind the download queue count to the label text
         downloadQueue.currentTotalDownloadCountProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.intValue() == 1) {
-                // Platform.runLater(() -> downloadQueueCountLabel.setText(""));
-                Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.oneDownload").replace("%n", newValue.toString())));
+            updateDownloadCounter(newValue.intValue());
+        });
+
+        // update the counter for the first time
+        updateDownloadCounter(downloadQueue.getCurrentTotalDownloadCount());
+        ((ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent()).setSelectionModel(new NoSelectionModel<>());
+
+        downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                // expanded
+                ListView<DownloadQueueEntryView> listView = (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent();
+                double maxWidth = 0;
+                for (DownloadQueueEntryView view : listView.getItems()) {
+                    view.autosize();
+                    if (maxWidth < view.getWidth())
+                        maxWidth = view.getWidth();
+                }
+                downloadQueueTitledPane.setPrefWidth(maxWidth + 40);
             } else {
-                // Platform.runLater(() -> downloadQueueCountLabel.setText(newValue.toString()));
-                Platform.runLater(() -> downloadQueueTitledPane.setText(getBundle().getString("downloadQueueTitle.moreDownloads").replace("%n", newValue.toString())));
+                downloadQueueTitledPane.setPrefWidth(0);
             }
         });
 
@@ -815,7 +855,10 @@ public class MainWindow implements HidableUpdateProgressDialog {
             });
 
             try {
-                if (!workOfflineCheckbox.isSelected()) {
+                DownloadQueueEntry entry = downloadQueue.getEntryForApp(checkedApp);
+                if (entry != null) {
+                    setLaunchButtonText(checkedApp, false, bundle.getString("okButton.launchAfterDownload"));
+                } else if (!workOfflineCheckbox.isSelected()) {
                     // downloads are enabled
 
                     // enable the additional info button if applicable
@@ -905,7 +948,7 @@ public class MainWindow implements HidableUpdateProgressDialog {
     }
 
     @Override
-    public void preparePhaseStarted() {
+    public void enqueued() {
         Platform.runLater(() -> {
             appList.setDisable(true);
             launchButton.setDisable(false);
@@ -916,10 +959,17 @@ public class MainWindow implements HidableUpdateProgressDialog {
             launchButton.setStyle("-fx-background-color: transparent;");
             launchButton.setControlText(bundle.getString("okButton.cancelLaunch"));
             progressBar.setVisible(true);
-            progressBar.setProgressAnimated(0 / 4.0);
-            launchButton.setProgressText(bundle.getString("progress.preparing"));
+            progressBar.setProgressAnimated(-1);
+            launchButton.setProgressText(bundle.getString("progress.enqueued"));
 
             settingsGridView.setDisable(true);
+        });
+    }
+
+    @Override
+    public void preparePhaseStarted() {
+        Platform.runLater(() -> {
+            launchButton.setProgressText(bundle.getString("progress.preparing"));
         });
     }
 

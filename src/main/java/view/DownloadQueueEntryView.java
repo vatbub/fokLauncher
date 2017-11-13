@@ -22,7 +22,6 @@ package view;
 
 
 import applist.App;
-import com.github.vatbub.common.updater.HidableUpdateProgressDialog;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -31,10 +30,11 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
-public class DownloadQueueEntryView extends HBox implements HidableUpdateProgressDialog {
+public class DownloadQueueEntryView extends AnchorPane implements HidableProgressDialogWithEnqueuedNotification {
     private MainWindow mainWindow;
     private ListView<DownloadQueueEntryView> parent;
     private ProgressBar progressBar;
@@ -42,13 +42,17 @@ public class DownloadQueueEntryView extends HBox implements HidableUpdateProgres
     private Button cancelButton;
     private App app;
     private ImageView cancelButtonIcon = new ImageView(new Image(DownloadQueueEntryView.class.getResourceAsStream("cancel.png")));
+    private volatile DownloadStatus currentStatus;
+    private double kilobytesDownloaded;
+    private double totalKiloBytes;
+    private HidableProgressDialogWithEnqueuedNotification attachedGui = null;
 
     public DownloadQueueEntryView(MainWindow mainWindow, ListView<DownloadQueueEntryView> parent, App app) {
         this(mainWindow, parent, app, 0);
     }
 
     public DownloadQueueEntryView(MainWindow mainWindow, ListView<DownloadQueueEntryView> parent, App app, double spacing) {
-        super(spacing);
+        // super(spacing);
         setMainWindow(mainWindow);
         setParent(parent);
         setApp(app);
@@ -56,10 +60,12 @@ public class DownloadQueueEntryView extends HBox implements HidableUpdateProgres
     }
 
     private void buildViewAndAttachToParent() {
-        setAlignment(Pos.CENTER_LEFT);
-        setHgrow(this, Priority.ALWAYS);
+        // setAlignment(Pos.CENTER_LEFT);
+        // setHgrow(this, Priority.ALWAYS);
         progressBar = new ProgressBar(-1);
         progressLabel = new Label();
+        Label titleLabel = new Label(getApp().getName());
+        Label spacerLabel = new Label(" - ");
         cancelButton = new Button("", cancelButtonIcon);
         cancelButton.getStyleClass().add("transparentButton");
         cancelButton.disableProperty().addListener((observable, oldValue, newValue) -> {
@@ -72,67 +78,132 @@ public class DownloadQueueEntryView extends HBox implements HidableUpdateProgres
             }
         });
         cancelButton.setOnAction((event -> getApp().cancelDownloadAndLaunch(this)));
-        this.getChildren().addAll(progressBar, progressLabel, cancelButton);
+        setBottomAnchor(progressBar, 0.0);
+        setLeftAnchor(progressBar, 0.0);
+        setRightAnchor(progressBar, 0.0);
+        setTopAnchor(progressBar, 0.0);
+
+        HBox subBox = new HBox(5, titleLabel, spacerLabel, progressLabel, cancelButton);
+        HBox.setHgrow(subBox, Priority.ALWAYS);
+        subBox.setAlignment(Pos.CENTER_RIGHT);
+
+        setBottomAnchor(subBox, 0.0);
+        setLeftAnchor(subBox, 0.0);
+        setRightAnchor(subBox, 0.0);
+        setTopAnchor(subBox, 0.0);
+
+        this.getChildren().addAll(progressBar, subBox);
         getParentCustom().getItems().add(this);
     }
 
     @Override
     public void hide() {
+        currentStatus=DownloadStatus.DONE;
         Platform.runLater(() -> getParentCustom().getItems().remove(this));
+        if (getAttachedGui()!=null){
+            getAttachedGui().hide();
+        }
+    }
+
+    @Override
+    public void enqueued() {
+        currentStatus=DownloadStatus.ENQUEUED;
+        Platform.runLater(() -> {
+            progressBar.setProgress(-1);
+            progressLabel.setText(MainWindow.getBundle().getString("progress.enqueued"));
+        });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().enqueued();
+        }
     }
 
     @Override
     public void preparePhaseStarted() {
+        currentStatus=DownloadStatus.PREPARE_PHASE_STARTED;
         Platform.runLater(() -> {
             progressBar.setProgress(-1);
             progressLabel.setText(MainWindow.getBundle().getString("progress.preparing"));
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().preparePhaseStarted();
+        }
     }
 
     @Override
     public void downloadStarted() {
+        currentStatus=DownloadStatus.DOWNLOAD_STARTED;
         Platform.runLater(() -> {
             progressBar.setProgress(-1);
             progressLabel.setText(MainWindow.getBundle().getString("progress.downloading"));
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().downloadStarted();
+        }
     }
 
     @Override
     public void downloadProgressChanged(double kilobytesDownloaded, double totalKiloBytes) {
+        this.kilobytesDownloaded = kilobytesDownloaded;
+        this.totalKiloBytes = totalKiloBytes;
         Platform.runLater(() -> {
             progressBar.setProgress(kilobytesDownloaded / totalKiloBytes);
             progressLabel.setText(MainWindow.getBundle().getString("progress.downloading"));
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().downloadProgressChanged(kilobytesDownloaded, totalKiloBytes);
+        }
     }
 
     @Override
     public void installStarted() {
+        currentStatus=DownloadStatus.INSTALL_STARTED;
         Platform.runLater(() -> {
             progressBar.setProgress(-1);
             progressLabel.setText(MainWindow.getBundle().getString("progress.installing"));
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().installStarted();
+        }
     }
 
     @Override
     public void launchStarted() {
+        currentStatus=DownloadStatus.LAUNCH_STARTED;
         Platform.runLater(() -> {
             progressBar.setProgress(-1);
             progressLabel.setText(MainWindow.getBundle().getString("progress.launching"));
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().launchStarted();
+        }
     }
 
     @Override
     public void cancelRequested() {
+        currentStatus=DownloadStatus.CANCEL_REQUESTED;
         Platform.runLater(() -> {
             progressBar.setProgress(-1);
             progressLabel.setText(MainWindow.getBundle().getString("cancelRequested"));
             cancelButton.setDisable(true);
         });
+
+        if (getAttachedGui() != null) {
+            getAttachedGui().cancelRequested();
+        }
     }
 
     @Override
     public void operationCanceled() {
-        // do nothing
+        currentStatus=DownloadStatus.CANCELLED;
+        if (getAttachedGui() != null) {
+            getAttachedGui().operationCanceled();
+        }
     }
 
     @Override
@@ -162,5 +233,58 @@ public class DownloadQueueEntryView extends HBox implements HidableUpdateProgres
 
     public void setApp(App app) {
         this.app = app;
+    }
+
+    public DownloadStatus getCurrentStatus() {
+        return currentStatus;
+    }
+
+    public double getKilobytesDownloaded() {
+        return kilobytesDownloaded;
+    }
+
+    public double getTotalKiloBytes() {
+        return totalKiloBytes;
+    }
+
+    public HidableProgressDialogWithEnqueuedNotification getAttachedGui() {
+        return attachedGui;
+    }
+
+    public void setAttachedGui(HidableProgressDialogWithEnqueuedNotification attachedGui) {
+        this.attachedGui = attachedGui;
+
+        if (getCurrentStatus() == null)
+            return;
+
+        if (DownloadStatus.ENQUEUED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.enqueued();
+
+        if (DownloadStatus.PREPARE_PHASE_STARTED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.preparePhaseStarted();
+
+        if (DownloadStatus.DOWNLOAD_STARTED.ordinal() <= getCurrentStatus().ordinal()) {
+            attachedGui.downloadStarted();
+            attachedGui.downloadProgressChanged(kilobytesDownloaded, totalKiloBytes);
+        }
+
+        if (DownloadStatus.INSTALL_STARTED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.installStarted();
+
+        if (DownloadStatus.LAUNCH_STARTED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.launchStarted();
+
+        if (DownloadStatus.CANCEL_REQUESTED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.cancelRequested();
+
+        if (DownloadStatus.CANCELLED.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.operationCanceled();
+
+        if (DownloadStatus.DONE.ordinal() <= getCurrentStatus().ordinal())
+            attachedGui.hide();
+    }
+
+    public enum DownloadStatus {
+        ENQUEUED, PREPARE_PHASE_STARTED, DOWNLOAD_STARTED, INSTALL_STARTED, LAUNCH_STARTED, CANCEL_REQUESTED, CANCELLED, DONE
     }
 }

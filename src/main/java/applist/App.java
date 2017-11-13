@@ -751,7 +751,10 @@ public class App {
             }
             return;
         }
+        launch(gui, versionToLaunch, startupArgs);
+    }
 
+    public void launch(HidableUpdateProgressDialog gui, Version versionToLaunch, String... startupArgs) throws IOException {
         if (gui != null) {
             gui.launchStarted();
         }

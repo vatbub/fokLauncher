@@ -34,15 +34,42 @@ import java.util.function.Predicate;
 public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     private final IntegerProperty currentQueueCount = new SimpleIntegerProperty();
     private final IntegerProperty currentTotalDownloadCount = new SimpleIntegerProperty();
+    private final List<DownloadThread> threadPool = new LinkedList<>();
     private volatile int parallelDownloadCount;
-    private List<DownloadThread> threadPool = new LinkedList<>();
 
-    public DownloadQueue(){
+    public DownloadQueue() {
         this(2);
     }
 
-    public DownloadQueue(int parallelDownloadCount){
+    public DownloadQueue(int parallelDownloadCount) {
         setParallelDownloadCount(parallelDownloadCount);
+    }
+
+    /**
+     * Returns the {@link DownloadQueueEntry} for the specified app
+     *
+     * @param app The app to get the entry for
+     * @return The {@link DownloadQueueEntry} for the specified app or {@code null} if the specified app is not found in the queue.
+     */
+    public DownloadQueueEntry getEntryForApp(App app) {
+        synchronized (threadPool) {
+            for (DownloadThread thread : threadPool) {
+                DownloadQueueEntry entry = thread.getCurrentEntry();
+                if (entry != null && entry.getApp() == app)
+                    return entry;
+            }
+        }
+
+        synchronized (this) {
+            // Check the waiting queue
+            for (DownloadQueueEntry entry : this) {
+                if (entry.getApp() == app)
+                    return entry;
+            }
+        }
+
+        // no result found
+        return null;
     }
 
     private synchronized void monitorThreadCount() {
@@ -144,8 +171,10 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     }
 
     @Override
-    public boolean add(DownloadQueueEntry app) {
-        boolean res = super.add(app);
+    public boolean add(DownloadQueueEntry entry) {
+        boolean res = super.add(entry);
+        if (entry.getGui()!=null)
+            entry.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
         return res;
@@ -162,6 +191,10 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     @Override
     public boolean addAll(Collection<? extends DownloadQueueEntry> c) {
         boolean res = super.addAll(c);
+        for(DownloadQueueEntry entry:c){
+            if (entry.getGui()!=null)
+                entry.getGui().enqueued();
+        }
         updateQueueCount();
         monitorThreadCount();
         return res;
@@ -170,6 +203,10 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     @Override
     public boolean addAll(int index, Collection<? extends DownloadQueueEntry> c) {
         boolean res = super.addAll(index, c);
+        for(DownloadQueueEntry entry:c){
+            if (entry.getGui()!=null)
+                entry.getGui().enqueued();
+        }
         updateQueueCount();
         monitorThreadCount();
         return res;
@@ -242,20 +279,26 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     @Override
     public void add(int index, DownloadQueueEntry element) {
         super.add(index, element);
+        if (element.getGui()!=null)
+            element.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
     }
 
     @Override
-    public void addFirst(DownloadQueueEntry app) {
-        super.addFirst(app);
+    public void addFirst(DownloadQueueEntry entry) {
+        super.addFirst(entry);
+        if (entry.getGui()!=null)
+            entry.getGui().enqueued();
         updateQueueCount();
         monitorThreadCount();
     }
 
     @Override
-    public void addLast(DownloadQueueEntry app) {
-        super.addLast(app);
+    public void addLast(DownloadQueueEntry entry) {
+        if (entry.getGui()!=null)
+            entry.getGui().enqueued();
+        super.addLast(entry);
         updateQueueCount();
         monitorThreadCount();
     }
@@ -276,12 +319,12 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     synchronized void updateQueueCount() {
         currentQueueCount.set(size());
-        currentTotalDownloadCount.set(size()+getNumberOfCurrentlyRunningDownloads());
+        currentTotalDownloadCount.set(size() + getNumberOfCurrentlyRunningDownloads());
     }
 
-    public int getNumberOfCurrentlyRunningDownloads(){
-        int res=0;
-        for(DownloadThread downloadThread:threadPool){
+    public int getNumberOfCurrentlyRunningDownloads() {
+        int res = 0;
+        for (DownloadThread downloadThread : threadPool) {
             if (downloadThread.isBusy())
                 res++;
         }
@@ -308,12 +351,13 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     }
 
     private synchronized void cleanThreadPoolUp() {
-        List<DownloadThread> threadPoolCopy = new LinkedList<>(threadPool);
+        List<DownloadThread> threadsToRemove = new LinkedList<>();
         for (DownloadThread downloadThread : threadPool) {
             if (!downloadThread.isAlive())
-                threadPoolCopy.remove(downloadThread);
+                threadsToRemove.add(downloadThread);
         }
-        threadPool = threadPoolCopy;
+
+        threadPool.removeAll(threadsToRemove);
     }
 
     private int getNumberOfThreadsThatAreNotShuttingDown() {
