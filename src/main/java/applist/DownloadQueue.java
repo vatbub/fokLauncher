@@ -21,9 +21,7 @@ package applist;
  */
 
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -38,6 +36,8 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     private final List<DownloadThread> threadPool = new LinkedList<>();
     private volatile int parallelDownloadCount;
     private boolean shutdown;
+    private ObjectProperty<Runnable> onEmpty = new SimpleObjectProperty<>();
+    private ObjectProperty<Runnable> onShutdownCompleted = new SimpleObjectProperty<>();
 
     public DownloadQueue() {
         this(2);
@@ -45,6 +45,16 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
 
     public DownloadQueue(int parallelDownloadCount) {
         setParallelDownloadCount(parallelDownloadCount);
+        currentTotalDownloadCountProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.intValue() == 0) {
+                if (getOnEmpty() != null)
+                    getOnEmpty().run();
+                if (isShutdown()) {
+                    if (getOnShutdownCompleted() != null)
+                        getOnShutdownCompleted().run();
+                }
+            }
+        });
     }
 
     /**
@@ -407,5 +417,29 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
                 thread.getCurrentEntry().getApp().cancelDownloadAndLaunch(thread.getCurrentEntry().getGui());
             }
         }
+    }
+
+    public Runnable getOnShutdownCompleted() {
+        return onShutdownCompleted.get();
+    }
+
+    public void setOnShutdownCompleted(Runnable onShutdownCompleted) {
+        this.onShutdownCompleted.set(onShutdownCompleted);
+    }
+
+    public ObjectProperty<Runnable> onShutdownCompletedProperty() {
+        return onShutdownCompleted;
+    }
+
+    public Runnable getOnEmpty() {
+        return onEmpty.get();
+    }
+
+    public void setOnEmpty(Runnable onEmpty) {
+        this.onEmpty.set(onEmpty);
+    }
+
+    public ObjectProperty<Runnable> onEmptyProperty() {
+        return onEmpty;
     }
 }

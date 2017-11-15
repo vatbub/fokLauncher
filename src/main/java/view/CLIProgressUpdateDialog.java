@@ -26,7 +26,7 @@ import com.github.vatbub.common.core.logging.FOKLogger;
 public class CLIProgressUpdateDialog implements HidableProgressDialogWithEnqueuedNotification {
     @Override
     public void hide() {
-        // do nothing
+        FOKLogger.info(getClass().getName(), "Finished!");
     }
 
     @Override

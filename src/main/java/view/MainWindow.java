@@ -93,7 +93,9 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     public static final Runnable showLauncherAgain = () -> {
         // reset the ui
         try {
-            EntryClass.restart();
+            // EntryClass.restart();
+            EntryClass.getControllerInstance().updateLaunchButton();
+            EntryClass.getStage().setIconified(false);
         } catch (Exception e) {
             FOKLogger.log(MainWindow.class.getName(), Level.INFO,
                     "An error occurred while firing a handler for the LaunchedAppExited event, trying to run the handler using Platform.runLater...",
@@ -944,7 +946,33 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
     @Override
     public void hide() {
-        Platform.runLater(() -> EntryClass.getStage().hide());
+        Platform.runLater(() -> EntryClass.getStage().setIconified(true));
+
+        if (launchLauncherAfterAppExitCheckbox.isSelected()) {
+            Platform.runLater(() -> {
+                appList.setDisable(false);
+                launchButton.setDefaultButton(true);
+                optionButton.disableProperty().bind(launchButton.disableProperty());
+                progressBar.setPrefHeight(launchButton.getHeight());
+                launchButton.setStyle("");
+                progressBar.setVisible(false);
+                progressBar.setProgressAnimated(-1);
+                launchButton.setProgressText("");
+
+                settingsGridView.setDisable(false);
+            });
+
+        } else {
+            Platform.runLater(() ->{
+                progressBar.setProgressAnimated(-1);
+                launchButton.setProgressText(getBundle().getString("progress.waitForDownloadsToFinish"));
+                launchButton.setControlText("");
+            });
+
+            // exit the launcher once all downloads are complete
+            downloadQueue.shutdown();
+            downloadQueue.setOnShutdownCompleted(() -> Platform.runLater(() -> EntryClass.getStage().hide()));
+        }
     }
 
     // Handler for CheckBox[fx:id="enableSnapshotsCheckbox"] onAction
