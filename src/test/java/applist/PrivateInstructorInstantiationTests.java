@@ -21,12 +21,15 @@ package applist;
  */
 
 
+import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import config.AppConfig;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -36,6 +39,12 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class PrivateInstructorInstantiationTests {
+    @Before
+    public void setUp() throws IOException {
+        Common.resetInstance();
+        Common.getInstance().setAppName("fokprojectUnitTests");
+    }
+
     @Test
     public void instantiationTest() throws IllegalAccessException, InstantiationException, NoSuchMethodException {
         List<Class> classesToTest = new ArrayList<>();
@@ -53,14 +62,27 @@ public class PrivateInstructorInstantiationTests {
                 constructor.setAccessible(true);
                 constructor.newInstance();
                 Assert.fail("IllegalStateException expected, class that failed: " + clazz.getName());
-            } catch (IllegalStateException|InvocationTargetException e) {
+            } catch (IllegalStateException | InvocationTargetException e) {
                 FOKLogger.log(PrivateInstructorInstantiationTests.class.getName(), Level.INFO, "Success: Unable to instantiate class " + clazz.getName() + " due to a " + e.getClass().getName(), e);
                 Assert.assertTrue(getCauseList(e).containsThrowableOfType(IllegalStateException.class));
             }
         }
     }
 
-    private static class ThrowableList extends LinkedList<Throwable>{
+    private ThrowableList getCauseList(Throwable throwable) {
+        ThrowableList res = new ThrowableList();
+        getCauseList(throwable, res);
+        return res;
+    }
+
+    private void getCauseList(Throwable throwable, ThrowableList causes) {
+        causes.add(throwable);
+        if (throwable.getCause() != null) {
+            getCauseList(throwable.getCause(), causes);
+        }
+    }
+
+    private static class ThrowableList extends LinkedList<Throwable> {
         /**
          * Constructs an empty list.
          */
@@ -79,27 +101,14 @@ public class PrivateInstructorInstantiationTests {
             super(c);
         }
 
-        public boolean containsThrowableOfType(Class<? extends Throwable> throwableType){
-            for(Throwable throwable:this){
-                if (throwable.getClass().equals(throwableType)){
+        public boolean containsThrowableOfType(Class<? extends Throwable> throwableType) {
+            for (Throwable throwable : this) {
+                if (throwable.getClass().equals(throwableType)) {
                     return true;
                 }
             }
 
             return false;
-        }
-    }
-
-    private ThrowableList getCauseList(Throwable throwable){
-        ThrowableList res = new ThrowableList();
-        getCauseList(throwable, res);
-        return res;
-    }
-
-    private void getCauseList(Throwable throwable, ThrowableList causes){
-        causes.add(throwable);
-        if (throwable.getCause()!=null){
-            getCauseList(throwable.getCause(), causes);
         }
     }
 }

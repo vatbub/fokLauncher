@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URL;
 import java.net.UnknownHostException;
 
@@ -94,7 +95,7 @@ public class AppListFile {
         } else {
             try {
                 onlineAppList = getOnlineDocument(onlineListURL, offlineCacheFileName);
-            } catch (UnknownHostException e) {
+            } catch (ConnectException | UnknownHostException e) {
                 try {
                     onlineAppList = new SAXBuilder().build(new File(offlineCacheFileName));
                 } catch (FileNotFoundException e1) {

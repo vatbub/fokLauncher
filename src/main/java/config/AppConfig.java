@@ -34,8 +34,11 @@ import java.util.List;
  */
 public class AppConfig {
     private static Config remoteConfig;
+    private static List<String> supportedFOKConfigModelVersion = new ArrayList<>();
 
     static {
+        supportedFOKConfigModelVersion.add("0.0.1");
+
         try {
             reloadRemoteConfig();
         } catch (IOException e) {
@@ -73,9 +76,7 @@ public class AppConfig {
      * @return The list of supported model versions of foklauncher files
      */
     public static List<String> getSupportedFOKConfigModelVersion() {
-        List<String> res = new ArrayList<>();
-        res.add("0.0.1");
-        return res;
+        return supportedFOKConfigModelVersion;
     }
 
     /**
