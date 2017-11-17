@@ -10,7 +10,7 @@ import org.junit.Before;
 import java.io.IOException;
 import java.util.logging.Level;
 
-public class TestSuperClass {
+public abstract class TestSuperClass {
     @Before
     public void superSetUp(){
         Common.resetInstance();
