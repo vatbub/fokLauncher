@@ -43,7 +43,7 @@ public class AppListFileTest extends TestSuperClass {
     private final static String onlineModelVersion = "0.0.1_online";
     private final static String offlineModelVersion = "0.0.1_offline";
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
+    public final WireMockRule wireMockRule = new WireMockRule(8089);
     private String offlineCacheFileName;
     private URL testOnlineURL;
     private AppList expectedApps;

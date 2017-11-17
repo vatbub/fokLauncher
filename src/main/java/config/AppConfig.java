@@ -35,7 +35,7 @@ import java.util.List;
 public class AppConfig {
     private static AppConfig instance;
     private Config remoteConfig;
-    private List<String> supportedFOKConfigModelVersion = new ArrayList<>();
+    private final List<String> supportedFOKConfigModelVersion = new ArrayList<>();
 
     public AppConfig() {
         supportedFOKConfigModelVersion.add("0.0.1");

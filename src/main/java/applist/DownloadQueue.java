@@ -36,8 +36,8 @@ public class DownloadQueue extends LinkedList<DownloadQueueEntry> {
     private final List<DownloadThread> threadPool = new LinkedList<>();
     private volatile int parallelDownloadCount;
     private boolean shutdown;
-    private ObjectProperty<Runnable> onEmpty = new SimpleObjectProperty<>();
-    private ObjectProperty<Runnable> onShutdownCompleted = new SimpleObjectProperty<>();
+    private final ObjectProperty<Runnable> onEmpty = new SimpleObjectProperty<>();
+    private final ObjectProperty<Runnable> onShutdownCompleted = new SimpleObjectProperty<>();
 
     public DownloadQueue() {
         this(2);

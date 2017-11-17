@@ -32,7 +32,7 @@ import java.util.Properties;
  */
 public class FoklauncherFile {
     private Properties properties;
-    private File sourceFile;
+    private final File sourceFile;
 
     /**
      * Creates a new in-memory representation of the specified foklauncher file.

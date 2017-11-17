@@ -107,7 +107,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     public CheckBox launchLauncherAfterAppExitCheckbox;
     @FXML
     private Button addToDownloadQueueButton;
-    private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private AppList apps;
     private App currentlySelectedApp = null;
     private int currentlySelectedIndex = -1;
@@ -118,10 +118,6 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private ListView<App> appList;
     @FXML
     private TextField searchField;
-    @FXML
-    private Button showDownloadQueueButton;
-    @FXML
-    private Label downloadQueueCountLabel;
     @FXML
     private CheckBox enableSnapshotsCheckbox;
     @FXML
@@ -144,7 +140,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private GridPane settingsGridView;
     @FXML
     private Button appInfoButton;
-    private DownloadQueue downloadQueue = new DownloadQueue();
+    private final DownloadQueue downloadQueue = new DownloadQueue();
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -226,7 +222,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         bundle = bundleToSet;
     }
 
-    private static void initDataDogReporting(String apiKey) throws IOException {
+    @SuppressWarnings("unused")
+    private static void initDataDogReporting(String apiKey) {
         HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build();
         /*DatadogReporter reporter = DatadogReporter.forRegistry(metricsRegistry)
                 .withTransport(httpTransport)
@@ -535,6 +532,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isMainDownloadRunning() {
         DownloadQueueEntry entry;
         if (getCurrentlySelectedApp() != null)
@@ -548,7 +546,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     public boolean isMainDownloadRunning(DownloadQueueEntry entry) {
-        return entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGuis().contains(this);
+        return entry != null && entry.getGui() instanceof DownloadQueueEntryView && ((DownloadQueueEntryView) entry.getGui()).getAttachedGUIs().contains(this);
     }
 
     @FXML
@@ -627,9 +625,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         assert settingsGridView != null : "fx:id=\"settingsGridView\" was not injected: check your FXML file 'MainWindow.fxml'.";
 
         // bind the download queue count to the label text
-        downloadQueue.currentTotalDownloadCountProperty().addListener((observable, oldValue, newValue) -> {
-            updateDownloadCounter(newValue.intValue());
-        });
+        downloadQueue.currentTotalDownloadCountProperty().addListener((observable, oldValue, newValue) -> updateDownloadCounter(newValue.intValue()));
 
         // update the counter for the first time
         updateDownloadCounter(downloadQueue.getCurrentTotalDownloadCount());
@@ -772,7 +768,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             if (!workOfflineCheckbox.isSelected() && previousSelectionState) {
                 loadAppList();
             }
-            // update the launch button if offlinemode as enabled or disabled
+            // update the launch button if offline mode as enabled or disabled
             if (previousSelectionState != workOfflineCheckbox.isSelected()) {
                 updateLaunchButton();
             }
@@ -1004,9 +1000,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
     @Override
     public void preparePhaseStarted() {
-        Platform.runLater(() -> {
-            launchButton.setProgressText(bundle.getString("progress.preparing"));
-        });
+        Platform.runLater(() -> launchButton.setProgressText(bundle.getString("progress.preparing")));
     }
 
     @Override

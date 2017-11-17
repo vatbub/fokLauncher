@@ -184,7 +184,6 @@ public class App {
      *
      * @return The list of apps that were imported by the user.
      */
-    @SuppressWarnings("unused")
     public static AppList getImportedAppList() {
         AppList res = new ImportedAppListFile().getAppList();
         return res == null ? new AppList() : res;
@@ -311,7 +310,7 @@ public class App {
      * app is not yet installed locally. Takes snapshots into account.
      *
      * @return the currentlyInstalledVersion
-     * @see #isPresentOnHarddrive()
+     * @see #isPresentOnHardDrive()
      */
     public Version getCurrentlyInstalledVersion() {
         return getCurrentlyInstalledVersion(true);
@@ -323,7 +322,7 @@ public class App {
      *
      * @param snapshotsEnabled If {@code false}, snapshots will be removed from this list.
      * @return the currentlyInstalledVersion
-     * @see #isPresentOnHarddrive()
+     * @see #isPresentOnHardDrive()
      */
     public Version getCurrentlyInstalledVersion(boolean snapshotsEnabled) {
         try {
@@ -484,7 +483,7 @@ public class App {
      * @return {@code true} if any version of this app is already downloaded,
      * {@code false} otherwise.
      */
-    public boolean isPresentOnHarddrive() {
+    public boolean isPresentOnHardDrive() {
         // Check if metadata file is present
         return this.getCurrentlyInstalledVersion() != null;
     }
@@ -497,7 +496,7 @@ public class App {
      * downloaded, {@code false} otherwise.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean isPresentOnHarddrive(Version ver) {
+    public boolean isPresentOnHardDrive(Version ver) {
         // something went wrong, exception already logged
         return (localMetadataFile != null || loadLocalMetadataFile()) && localMetadataFile.getVersionList().contains(ver);
     }
@@ -541,7 +540,7 @@ public class App {
      * launching it, {@code false} otherwise
      */
     public boolean downloadRequired(boolean snapshotsEnabled) {
-        return (this.isPresentOnHarddrive() && (!snapshotsEnabled) && !this.getCurrentlyInstalledVersions().containsRelease()) || (!(this.isPresentOnHarddrive() && (!snapshotsEnabled)) && !(this.isPresentOnHarddrive() && snapshotsEnabled));
+        return (this.isPresentOnHardDrive() && (!snapshotsEnabled) && !this.getCurrentlyInstalledVersions().containsRelease()) || (!(this.isPresentOnHardDrive() && (!snapshotsEnabled)) && !(this.isPresentOnHardDrive() && snapshotsEnabled));
     }
 
     /**
@@ -570,7 +569,6 @@ public class App {
      * @param versionToCheck The version to be checked.
      * @return {@code true} if an update is available, {@code false} otherwise
      */
-    @SuppressWarnings("unused")
     public boolean updateAvailable(Version versionToCheck) {
         return versionToCheck.compareTo(this.getCurrentlyInstalledVersion()) > 0;
     }
@@ -582,7 +580,6 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    @SuppressWarnings("unused")
     public void downloadIfNecessaryAndLaunch(String... startupArgs) throws IOException, JDOMException {
         downloadIfNecessaryAndLaunch(null, startupArgs);
     }
@@ -607,7 +604,6 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    @SuppressWarnings("unused")
     public void downloadSnapshotIfNecessaryAndLaunch(String... startupArgs) throws IOException, JDOMException {
         downloadSnapshotIfNecessaryAndLaunch(null, startupArgs);
     }
@@ -647,7 +643,6 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    @SuppressWarnings("unused")
     public void launchWithoutDownload(String... startupArgs) throws IOException, JDOMException {
         launchWithoutDownload(false, startupArgs);
     }
@@ -658,7 +653,6 @@ public class App {
      * @throws IOException   If the maven metadata cannot be downloaded
      * @throws JDOMException If the maven metadata file is malformed
      */
-    @SuppressWarnings("unused")
     public void launchSnapshotWithoutDownload(String... startupArgs) throws IOException, JDOMException {
         launchWithoutDownload(true, startupArgs);
     }
@@ -731,10 +725,10 @@ public class App {
 
         // Continue by default, only cancel, when user cancelled
         boolean downloadPerformed = true;
-        if (!disableDownload && !this.isPresentOnHarddrive(versionToLaunch)) {
+        if (!disableDownload && !this.isPresentOnHardDrive(versionToLaunch)) {
             // app not downloaded at all or needs to be updated
             downloadPerformed = this.download(versionToLaunch, gui);
-        } else if (!this.isPresentOnHarddrive(versionToLaunch)) {
+        } else if (!this.isPresentOnHardDrive(versionToLaunch)) {
             // Download is disabled and app needs to be downloaded
             throw new IllegalStateException(
                     "The artifact needs to be downloaded prior to launch but download is disabled.");
@@ -827,7 +821,6 @@ public class App {
      * @throws IOException   If the version info cannot be read
      * @throws JDOMException If the version xml is malformed
      */
-    @SuppressWarnings("unused")
     public boolean download() throws IOException, JDOMException {
         return download(null);
     }
@@ -856,7 +849,7 @@ public class App {
      * @throws IOException   If the version info cannot be read
      * @throws JDOMException If the version xml is malformed
      */
-    @SuppressWarnings("unused")
+
     public boolean downloadSnapshot() throws IOException, JDOMException {
         return downloadSnapshot(null);
     }

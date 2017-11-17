@@ -60,7 +60,6 @@ public class AppList extends ArrayList<App> {
     /**
      * Clears the version cache of all apps in this list
      */
-    @SuppressWarnings("unused")
     public void clearVersionCache() {
         for (App app : this) {
             app.clearCache();
@@ -83,7 +82,6 @@ public class AppList extends ArrayList<App> {
      * @param mvnCoordinates The coordinates of the app to find
      * @return The first matching {@link App} or {@code null} if no app matches.
      */
-    @SuppressWarnings("unused")
     public App getAppByMavenCoordinates(MVNCoordinates mvnCoordinates) {
         for (App app : this) {
             if (app.getMvnCoordinates().equals(mvnCoordinates)) {

@@ -19,6 +19,7 @@
   #L%
   -->
 
+<!--suppress XmlDefaultAttributeValue -->
 <izpack:shortcuts version="5.0"
                   xmlns:izpack="http://izpack.org/schema/shortcuts"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

@@ -51,7 +51,7 @@ import java.util.logging.Level;
 /**
  * Class that contains the main method, handles the command line args and launches the JavaFX toolkit if required.
  * The decision to divide {@link MainWindow} into two parts ({@link MainWindow} and this class) was taken as
- * commadn line processing and framework resource management became too big tasks overtime and having them all together in one class just created a big mess.
+ * command line processing and framework resource management became too big tasks overtime and having them all together in one class just created a big mess.
  */
 public class EntryClass extends Application {
     private static EntryClass entryClassInstance;

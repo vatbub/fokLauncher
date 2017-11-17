@@ -130,7 +130,7 @@ public class MVNMetadataFileTest extends TestSuperClass {
         return res.toString();
     }
 
-    private String getSnaphotMetadataContent(Version snapshotVersion, List<String> extensionTypes) {
+    private String getSnapshotMetadataContent(Version snapshotVersion, List<String> extensionTypes) {
         StringBuilder res = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .append("<metadata modelVersion=\"1.1.0\">\n")
                 .append("  <groupId>").append(groupId).append("</groupId>\n")
@@ -210,7 +210,7 @@ public class MVNMetadataFileTest extends TestSuperClass {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(getSnaphotMetadataContent(version, extensions))));
+                        .withBody(getSnapshotMetadataContent(version, extensions))));
 
         MVNCoordinates mvnCoordinates = new MVNCoordinates(getRepoURL(false), getRepoURL(true), groupId, artifactId);
         MVNMetadataFile mvnMetadataFile = new MVNMetadataFile(mvnCoordinates, true);

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class DownloadThread extends Thread {
     private static int downloadThreadCounter = 0;
     private boolean shutdownAfterDownload;
@@ -89,7 +90,7 @@ public class DownloadThread extends Thread {
 
                 boolean cont = true;
 
-                if (!getCurrentEntry().getApp().isPresentOnHarddrive(versionToDownload)) {
+                if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
                     cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
                 }
 

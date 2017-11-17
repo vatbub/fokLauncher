@@ -32,7 +32,7 @@ public class GuiLanguage {
     private String defaultLocaleText;
 
     /**
-     * CReates a new instance.
+     * Creates a new instance.
      * @param locale The java {@code Locale}-object that represents the desired language
      * @param defaultLocale The text that should be used when no default gui language was defined by the user.
      */

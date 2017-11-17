@@ -110,14 +110,14 @@ public class MVNCoordinatesTest extends TestSuperClass {
     @Test
     public void toStringWithClassifierNoVersionTest() {
         MVNCoordinates mvnCoordinates = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
-        assertToString(mvnCoordinates.toString(), null, false);
+        assertToString(mvnCoordinates.toString(), null, true);
     }
 
     @Test
     public void toStringWithClassifierWithVersionTest() {
         MVNCoordinates mvnCoordinates = new MVNCoordinates(repoBaseURL, snapshotRepoBaseURL, groupId, artifactId, classifier);
-        assertToString(mvnCoordinates.toString(snapshotVersion), snapshotVersion, false);
-        assertToString(mvnCoordinates.toString(releaseVersion), releaseVersion, false);
+        assertToString(mvnCoordinates.toString(snapshotVersion), snapshotVersion, true);
+        assertToString(mvnCoordinates.toString(releaseVersion), releaseVersion, true);
     }
 
     @Test

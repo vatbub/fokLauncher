@@ -59,7 +59,7 @@ artifactId=<maven artifactId>
 
 Please make sure to escape all `:` in the urls (they should look like this then: `https\://oss.jfrog.org/artifactory/repo`)
 
-- Save the file as a textfile and give it a good name, e. g. `myAwsomeApp.foklauncher`
+- Save the file as a text-file and give it a good name, e. g. `myAwsomeApp.foklauncher`
 - Make sure that the file extension is `.foklauncher`
 - Prompt the user to download the launcher (You may send them over to [this url](https://bintray.com/vatbub/fokprojectsReleases/foklauncher#downloads))
 - Let the user download your `.foklauncher`-file

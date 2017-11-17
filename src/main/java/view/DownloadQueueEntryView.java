@@ -44,11 +44,11 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     private Label progressLabel;
     private Button cancelButton;
     private App app;
-    private ImageView cancelButtonIcon = new ImageView(new Image(DownloadQueueEntryView.class.getResourceAsStream("cancel.png")));
+    private final ImageView cancelButtonIcon = new ImageView(new Image(DownloadQueueEntryView.class.getResourceAsStream("cancel.png")));
     private volatile DownloadStatus currentStatus;
     private double kilobytesDownloaded;
     private double totalKiloBytes;
-    private List<HidableProgressDialogWithEnqueuedNotification> attachedGuis = new ArrayList<>();
+    private final List<HidableProgressDialogWithEnqueuedNotification> attachedGUIs = new ArrayList<>();
 
     public DownloadQueueEntryView(MainWindow mainWindow, ListView<DownloadQueueEntryView> parent, App app) {
         // super(spacing);
@@ -101,7 +101,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     public void hide() {
         currentStatus = DownloadStatus.DONE;
         Platform.runLater(() -> getParentCustom().getItems().remove(this));
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.hide();
         }
     }
@@ -114,7 +114,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.enqueued"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.enqueued();
         }
     }
@@ -127,7 +127,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.preparing"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.preparePhaseStarted();
         }
     }
@@ -140,7 +140,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.downloading"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.downloadStarted();
         }
     }
@@ -154,7 +154,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.downloading"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.downloadProgressChanged(kilobytesDownloaded, totalKiloBytes);
         }
     }
@@ -167,7 +167,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.installing"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.installStarted();
         }
     }
@@ -180,7 +180,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             progressLabel.setText(MainWindow.getBundle().getString("progress.launching"));
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.launchStarted();
         }
     }
@@ -194,7 +194,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
             cancelButton.setDisable(true);
         });
 
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.cancelRequested();
         }
     }
@@ -203,7 +203,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     public void operationCanceled() {
         currentStatus = DownloadStatus.CANCELLED;
         Platform.runLater(() -> getParentCustom().getItems().remove(this));
-        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGuis) {
+        for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.operationCanceled();
         }
     }
@@ -250,15 +250,15 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     }
 
     public boolean removeAttachedGui(HidableProgressDialogWithEnqueuedNotification guiToRemove) {
-        return attachedGuis.remove(guiToRemove);
+        return attachedGUIs.remove(guiToRemove);
     }
 
-    public List<HidableProgressDialogWithEnqueuedNotification> getAttachedGuis() {
-        return attachedGuis;
+    public List<HidableProgressDialogWithEnqueuedNotification> getAttachedGUIs() {
+        return attachedGUIs;
     }
 
     public void addAttachedGui(HidableProgressDialogWithEnqueuedNotification attachedGui) {
-        this.attachedGuis.add(attachedGui);
+        this.attachedGUIs.add(attachedGui);
 
         if (getCurrentStatus() == null)
             return;

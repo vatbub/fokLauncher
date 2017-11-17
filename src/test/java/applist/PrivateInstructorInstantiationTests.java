@@ -23,14 +23,12 @@ package applist;
 
 import com.github.vatbub.common.core.logging.FOKLogger;
 import config.TestSuperClass;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -78,18 +76,6 @@ public class PrivateInstructorInstantiationTests extends TestSuperClass {
          * Constructs an empty list.
          */
         public ThrowableList() {
-        }
-
-        /**
-         * Constructs a list containing the elements of the specified
-         * collection, in the order they are returned by the collection's
-         * iterator.
-         *
-         * @param c the collection whose elements are to be placed into this list
-         * @throws NullPointerException if the specified collection is null
-         */
-        public ThrowableList(@NotNull Collection<? extends Throwable> c) {
-            super(c);
         }
 
         public boolean containsThrowableOfType(Class<? extends Throwable> throwableType) {

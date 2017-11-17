@@ -47,7 +47,7 @@ public class LocalMetadataFileTest extends TestSuperClass {
     private static final Version snapshotVersion2 = new Version("0.0.1-SNAPSHOT", "3", "20171028.164750");
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void saveTest() throws IOException {

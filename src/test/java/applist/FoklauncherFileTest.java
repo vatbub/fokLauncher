@@ -52,7 +52,7 @@ public class FoklauncherFileTest extends TestSuperClass{
     private static URL snapshotRepoBaseURL;
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private static String getFileContent(boolean includeClassifier) {
         String res = "#This file stores info about a java app. To open this file, get the foklauncher\n" +
