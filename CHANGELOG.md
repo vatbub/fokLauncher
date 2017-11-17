@@ -17,7 +17,7 @@
 - Improve the launch time of the launcher when the internet connection is poor [\#44](https://github.com/vatbub/fokLauncher/issues/44)
 - Meta-Buttons not centered when user uses a custom screen scaling [\#43](https://github.com/vatbub/fokLauncher/issues/43)
 - Exception when importing the very first app [\#42](https://github.com/vatbub/fokLauncher/issues/42)
-- GUILanguage cannot be resetted [\#41](https://github.com/vatbub/fokLauncher/issues/41)
+- GUILanguage cannot be reset [\#41](https://github.com/vatbub/fokLauncher/issues/41)
 - Exporting app info results in IOException [\#40](https://github.com/vatbub/fokLauncher/issues/40)
 - Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
 
@@ -45,7 +45,7 @@
 
 **Fixed bugs:**
 
-- Two apps with the exact same maven coordinates but a different classifier cause the launcher to b eunable to launch any of them [\#28](https://github.com/vatbub/fokLauncher/issues/28)
+- Two apps with the exact same maven coordinates but a different classifier cause the launcher to be unable to launch any of them [\#28](https://github.com/vatbub/fokLauncher/issues/28)
 
 ## [foklauncher-0.0.9](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.9) (2016-12-03)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.0.8...foklauncher-0.0.9)
@@ -59,7 +59,7 @@
 
 - Closing the launcher does not cancel app downloads [\#24](https://github.com/vatbub/fokLauncher/issues/24)
 - Call MainWindow.showErrorMessage\("some text", false\) still makes the app quit [\#23](https://github.com/vatbub/fokLauncher/issues/23)
-- launchButton disappears on internet failiure [\#22](https://github.com/vatbub/fokLauncher/issues/22)
+- launchButton disappears on internet failure [\#22](https://github.com/vatbub/fokLauncher/issues/22)
 - When an update is downloaded, the log displays a confusing message [\#21](https://github.com/vatbub/fokLauncher/issues/21)
 - Weird launchButton when quickly changing the app selection [\#20](https://github.com/vatbub/fokLauncher/issues/20)
 
@@ -104,7 +104,7 @@
 - Finish translations [\#6](https://github.com/vatbub/fokLauncher/issues/6)
 - Build a gui to delete selected artifact versions [\#3](https://github.com/vatbub/fokLauncher/issues/3)
 - Build a gui to download and launch a specific version of artifacts [\#2](https://github.com/vatbub/fokLauncher/issues/2)
-- Download artifact versions in seprerate folders and save reference to all downloaded versions [\#1](https://github.com/vatbub/fokLauncher/issues/1)
+- Download artifact versions in separate folders and save reference to all downloaded versions [\#1](https://github.com/vatbub/fokLauncher/issues/1)
 
 **Fixed bugs:**
 
