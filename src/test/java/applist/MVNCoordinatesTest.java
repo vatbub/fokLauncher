@@ -22,6 +22,7 @@ package applist;
 
 
 import com.github.vatbub.common.updater.Version;
+import config.TestSuperClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,7 +30,7 @@ import org.junit.Test;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class MVNCoordinatesTest {
+public class MVNCoordinatesTest extends TestSuperClass {
     private static final String groupId = "com.vatbub.github";
     private static final String artifactId = "sampleArtifact";
     private static final String classifier = "jar-with-dependencies";

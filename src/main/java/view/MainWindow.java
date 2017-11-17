@@ -488,8 +488,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         // Check for new version ignoring ignored updates
         Thread updateThread = new Thread(() -> {
             try {
-                UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(new URL(AppConfig.getRemoteConfig().getValue("updateRepoBaseURL")),
-                        AppConfig.getRemoteConfig().getValue("groupID"), AppConfig.getRemoteConfig().getValue("artifactID"), AppConfig.getUpdateFileClassifier(),
+                UpdateInfo update = UpdateChecker.isUpdateAvailableCompareAppVersion(new URL(AppConfig.getInstance().getRemoteConfig().getValue("updateRepoBaseURL")),
+                        AppConfig.getInstance().getRemoteConfig().getValue("groupID"), AppConfig.getInstance().getRemoteConfig().getValue("artifactID"), AppConfig.getInstance().getUpdateFileClassifier(),
                         Common.getInstance().getPackaging());
                 Platform.runLater(() -> new UpdateAvailableDialog(update));
             } catch (MalformedURLException e) {
@@ -714,7 +714,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         Thread motdThread = new Thread(() -> {
             MOTD motd;
             try {
-                motd = MOTD.getLatestMOTD(new URL(AppConfig.getRemoteConfig().getValue("motdFeedUrl")));
+                motd = MOTD.getLatestMOTD(new URL(AppConfig.getInstance().getRemoteConfig().getValue("motdFeedUrl")));
                 if (!motd.isMarkedAsRead()) {
                     Platform.runLater(() -> new MOTDDialog(motd, motd.getEntry().getTitle()));
                 }

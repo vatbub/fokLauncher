@@ -504,8 +504,8 @@ public class EntryClass extends Application {
         try {
             Thread updateThread = new Thread(() -> {
                 try {
-                    UpdateInfo update = UpdateChecker.isUpdateAvailable(new URL(AppConfig.getRemoteConfig().getValue("updateRepoBaseURL")),
-                            AppConfig.getRemoteConfig().getValue("groupID"), AppConfig.getRemoteConfig().getValue("artifactID"), AppConfig.getUpdateFileClassifier(),
+                    UpdateInfo update = UpdateChecker.isUpdateAvailable(new URL(AppConfig.getInstance().getRemoteConfig().getValue("updateRepoBaseURL")),
+                            AppConfig.getInstance().getRemoteConfig().getValue("groupID"), AppConfig.getInstance().getRemoteConfig().getValue("artifactID"), AppConfig.getInstance().getUpdateFileClassifier(),
                             Common.getInstance().getPackaging());
                     if (update.showAlert) {
                         Platform.runLater(() -> new UpdateAvailableDialog(update));

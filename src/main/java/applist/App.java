@@ -365,7 +365,7 @@ public class App {
      * @return The location of this app's metadata file on disk
      */
     private File getLocationOfLocalMetadataFile() {
-        return getAbsolutePathToSubfolderToSaveApps().resolve(AppConfig.getRemoteConfig().getValue("appMetadataFileName")).toFile();
+        return getAbsolutePathToSubfolderToSaveApps().resolve(AppConfig.getInstance().getRemoteConfig().getValue("appMetadataFileName")).toFile();
     }
 
     /**
@@ -1564,7 +1564,7 @@ public class App {
      * @return The string with the folder path to the folder where this app's jars and metadata shall be saved.
      */
     private String getSubfolderToSaveApps() {
-        String res = AppConfig.getRemoteConfig().getValue("subfolderToSaveApps").replace("{FileSeparator}", File.separator)
+        String res = AppConfig.getInstance().getRemoteConfig().getValue("subfolderToSaveApps").replace("{FileSeparator}", File.separator)
                 .replace("{groupId}", getMvnCoordinates().getGroupId()).replace("{artifactId}", getMvnCoordinates().getArtifactId());
         if (getMvnCoordinates().getClassifier() == null) {
             // No classifier

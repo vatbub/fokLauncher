@@ -24,6 +24,7 @@ package applist;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.vatbub.common.updater.Version;
 import com.github.vatbub.common.updater.VersionList;
+import config.TestSuperClass;
 import org.jdom2.JDOMException;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -40,7 +41,7 @@ import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-public class MVNMetadataFileTest {
+public class MVNMetadataFileTest extends TestSuperClass {
     private final static String groupId = "com.github.vatbub";
     private final static String artifactId = "testArtifact";
     private final static String repoName = "repo";

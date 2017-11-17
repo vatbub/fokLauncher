@@ -21,15 +21,12 @@ package applist;
  */
 
 
-import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
-import config.AppConfig;
+import config.TestSuperClass;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -38,17 +35,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
-public class PrivateInstructorInstantiationTests {
-    @Before
-    public void setUp() throws IOException {
-        Common.resetInstance();
-        Common.getInstance().setAppName("fokprojectUnitTests");
-    }
+public class PrivateInstructorInstantiationTests extends TestSuperClass {
 
     @Test
     public void instantiationTest() throws IllegalAccessException, InstantiationException, NoSuchMethodException {
         List<Class> classesToTest = new ArrayList<>();
-        classesToTest.add(AppConfig.class);
         classesToTest.add(AppListFile.FileFormat.class);
         classesToTest.add(ImportedAppListFile.FileFormat.class);
         classesToTest.add(LocalMetadataFile.FileFormat.class);

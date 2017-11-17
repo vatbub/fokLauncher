@@ -33,10 +33,11 @@ import java.util.List;
  * Contains a wrapper for the launcher's remote config and additional config parameters.
  */
 public class AppConfig {
-    private static Config remoteConfig;
-    private static List<String> supportedFOKConfigModelVersion = new ArrayList<>();
+    private static AppConfig instance;
+    private Config remoteConfig;
+    private List<String> supportedFOKConfigModelVersion = new ArrayList<>();
 
-    static {
+    public AppConfig() {
         supportedFOKConfigModelVersion.add("0.0.1");
 
         try {
@@ -47,8 +48,42 @@ public class AppConfig {
         }
     }
 
-    private AppConfig() {
-        throw new IllegalStateException("Class may not be instantiated");
+    public static AppConfig getInstance() {
+        if (instance==null){
+            instance = new AppConfig();
+        }
+        return instance;
+    }
+
+    public static void resetInstance() {
+        instance=null;
+    }
+
+    /**
+     * Returns the list of supported model versions of foklauncher files
+     *
+     * @return The list of supported model versions of foklauncher files
+     */
+    public List<String> getSupportedFOKConfigModelVersion() {
+        return supportedFOKConfigModelVersion;
+    }
+
+    /**
+     * Returns the remote config.
+     *
+     * @return The remote config.
+     */
+    public Config getRemoteConfig() {
+        return remoteConfig;
+    }
+
+    /**
+     * Reloads the remote config
+     *
+     * @throws IOException If the remote config URL is malformed or the remote config cannot be loaded for any reason
+     */
+    public void reloadRemoteConfig() throws IOException {
+        remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), true, "foklauncherConfigCache.properties", true);
     }
 
     /**
@@ -56,7 +91,7 @@ public class AppConfig {
      *
      * @return The classifier to use for updates.
      */
-    public static String getUpdateFileClassifier() {
+    public String getUpdateFileClassifier() {
         String packaging = Common.getInstance().getPackaging();
         if (packaging != null) {
             if (packaging.equals("exe")) {
@@ -68,31 +103,5 @@ public class AppConfig {
             // no packaging found
             return getRemoteConfig().getValue("jarUpdateFileClassifier");
         }
-    }
-
-    /**
-     * Returns the list of supported model versions of foklauncher files
-     *
-     * @return The list of supported model versions of foklauncher files
-     */
-    public static List<String> getSupportedFOKConfigModelVersion() {
-        return supportedFOKConfigModelVersion;
-    }
-
-    /**
-     * Returns the remote config.
-     *
-     * @return The remote config.
-     */
-    public static Config getRemoteConfig() {
-        return remoteConfig;
-    }
-
-    /**
-     * Reloads the remote config
-     * @throws IOException If the remote config URL is malformed or the remote config cannot be loaded for any reason
-     */
-    public static void reloadRemoteConfig() throws IOException {
-        remoteConfig = new Config(new URL("https://www.dropbox.com/s/i8gyyd6hcio23k9/foklauncherremoteconfig.properties?dl=1"), AppConfig.class.getResource("defaultConfig.properties"), true, "foklauncherConfigCache.properties", true);
     }
 }

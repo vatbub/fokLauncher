@@ -24,6 +24,7 @@ package applist;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.updater.Version;
 import com.github.vatbub.common.updater.VersionList;
+import config.TestSuperClass;
 import org.apache.commons.io.FileUtils;
 import org.jdom2.JDOMException;
 import org.junit.Assert;
@@ -35,7 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-public class LocalMetadataFileTest {
+public class LocalMetadataFileTest extends TestSuperClass {
     private static final String groupId = "com.github.vatbub";
     private static final String artifactId = "testArtifact";
     private static final Version version0 = new Version("0.0.1");

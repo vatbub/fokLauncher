@@ -23,39 +23,33 @@ package config;
 
 import com.github.vatbub.common.core.Common;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class AppConfigTest {
-    @BeforeClass
-    public static void oneTimeSetUp(){
-        Common.resetInstance();
-        Common.getInstance().setAppName("fokprojectUnitTests");
-    }
+public class AppConfigTest extends TestSuperClass{
 
     @Test
     public void loadRemoteConfigTest() throws IOException {
-        AppConfig.reloadRemoteConfig();
-        Assert.assertNotNull(AppConfig.getRemoteConfig());
+        AppConfig.getInstance().reloadRemoteConfig();
+        Assert.assertNotNull(AppConfig.getInstance().getRemoteConfig());
     }
 
     @Test
     public void updateClassifierTest() {
         Common.getInstance().setMockPackaging("exe");
-        Assert.assertEquals(AppConfig.getRemoteConfig().getValue("exeUpdateFileClassifier"), AppConfig.getUpdateFileClassifier());
+        Assert.assertEquals(AppConfig.getInstance().getRemoteConfig().getValue("exeUpdateFileClassifier"), AppConfig.getInstance().getUpdateFileClassifier());
         Common.getInstance().setMockPackaging("jar");
 
-        Assert.assertEquals(AppConfig.getRemoteConfig().getValue("jarUpdateFileClassifier"), AppConfig.getUpdateFileClassifier());
+        Assert.assertEquals(AppConfig.getInstance().getRemoteConfig().getValue("jarUpdateFileClassifier"), AppConfig.getInstance().getUpdateFileClassifier());
 
         Common.getInstance().setMockPackaging(null);
-        Assert.assertEquals(AppConfig.getRemoteConfig().getValue("jarUpdateFileClassifier"), AppConfig.getUpdateFileClassifier());
+        Assert.assertEquals(AppConfig.getInstance().getRemoteConfig().getValue("jarUpdateFileClassifier"), AppConfig.getInstance().getUpdateFileClassifier());
     }
 
     @Test
     public void supportedFOKConfigModelVersionTest(){
-        Assert.assertNotNull(AppConfig.getSupportedFOKConfigModelVersion());
-        Assert.assertTrue(AppConfig.getSupportedFOKConfigModelVersion().size()>0);
+        Assert.assertNotNull(AppConfig.getInstance().getSupportedFOKConfigModelVersion());
+        Assert.assertTrue(AppConfig.getInstance().getSupportedFOKConfigModelVersion().size()>0);
     }
 }

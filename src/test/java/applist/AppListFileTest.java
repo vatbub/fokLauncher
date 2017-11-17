@@ -24,6 +24,7 @@ package applist;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.vatbub.common.core.Common;
 import config.AppConfig;
+import config.TestSuperClass;
 import org.apache.commons.io.FileUtils;
 import org.jdom2.JDOMException;
 import org.junit.Assert;
@@ -38,7 +39,7 @@ import java.nio.charset.Charset;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-public class AppListFileTest {
+public class AppListFileTest extends TestSuperClass {
     private final static String onlineModelVersion = "0.0.1_online";
     private final static String offlineModelVersion = "0.0.1_offline";
     @Rule
@@ -49,12 +50,10 @@ public class AppListFileTest {
 
     @Before
     public void setUp() throws IOException {
-        Common.resetInstance();
-        Common.getInstance().setAppName("fokprojectUnitTests");
-        offlineCacheFileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName");
+        offlineCacheFileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.getInstance().getRemoteConfig().getValue("appListCacheFileName");
 
-        AppConfig.getSupportedFOKConfigModelVersion().add(onlineModelVersion);
-        AppConfig.getSupportedFOKConfigModelVersion().add(offlineModelVersion);
+        AppConfig.getInstance().getSupportedFOKConfigModelVersion().add(onlineModelVersion);
+        AppConfig.getInstance().getSupportedFOKConfigModelVersion().add(offlineModelVersion);
 
         expectedApps = new AppList();
         expectedApps.add(new App("Hangman Solver", new MVNCoordinates(new URL("https://dl.bintray.com/vatbub/fokprojectsReleases"), new URL("https://oss.jfrog.org/artifactory/libs-snapshot"), "com.github.vatbub", "hangmanSolver", "jar-with-dependencies"), new URL("https://github.com/vatbub/hangman-solver#hangman-solver"), new URL("https://github.com/vatbub/hangman-solver/blob/master/CHANGELOG.md")));

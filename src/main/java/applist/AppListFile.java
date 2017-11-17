@@ -53,7 +53,7 @@ public class AppListFile {
      * @throws IOException   If the app list cannot be downloaded for any reason or the computer is offline (or {@code offlineMode == true}) and no cached app list exists
      */
     public AppListFile(boolean offlineMode) throws JDOMException, IOException {
-        this(new URL(AppConfig.getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("appListCacheFileName"), offlineMode);
+        this(new URL(AppConfig.getInstance().getRemoteConfig().getValue("appListXMLURL")), Common.getInstance().getAndCreateAppDataPath() + AppConfig.getInstance().getRemoteConfig().getValue("appListCacheFileName"), offlineMode);
     }
 
     /**
@@ -99,7 +99,7 @@ public class AppListFile {
                 try {
                     onlineAppList = new SAXBuilder().build(new File(offlineCacheFileName));
                 } catch (FileNotFoundException e1) {
-                    throw new UnknownHostException("Could not connect to " + AppConfig.getRemoteConfig().getValue("appListXMLURL")
+                    throw new UnknownHostException("Could not connect to " + AppConfig.getInstance().getRemoteConfig().getValue("appListXMLURL")
                             + " and app list cache not found. \nPlease ensure a stable internet connection.");
                 }
             }
@@ -108,7 +108,7 @@ public class AppListFile {
         setModelVersion(fokLauncherElement.getChild(FileFormat.MODEL_VERSION_TAG_NAME).getValue());
 
         // Check for unsupported modelVersion
-        if (!AppConfig.getSupportedFOKConfigModelVersion().contains(getModelVersion())) {
+        if (!AppConfig.getInstance().getSupportedFOKConfigModelVersion().contains(getModelVersion())) {
             throw new IllegalStateException(
                     "The modelVersion of the fokprojectsOnLauncher.xml file is not supported! (modelVersion is "
                             + modelVersion + ")");

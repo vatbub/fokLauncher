@@ -22,13 +22,11 @@ package applist;
 
 
 import com.github.vatbub.common.core.Common;
-import com.github.vatbub.common.core.logging.FOKLogger;
 import config.AppConfig;
+import config.TestSuperClass;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -37,24 +35,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
-public class ImportedAppListFileTest {
-    @BeforeClass
-    public static void oneTimeSetUp() {
-        Common.getInstance().setAppName("fokprojectUnitTests");
-    }
-
-    @After
-    public void cleanAppData() {
-        if (Common.getInstance().getAppDataPathAsFile().exists()) {
-            try {
-                FileUtils.deleteDirectory(Common.getInstance().getAppDataPathAsFile());
-            } catch (IOException e) {
-                FOKLogger.log(ImportedAppListFileTest.class.getName(), Level.INFO, "Unable to delete the test folder, ignoring that...", e);
-            }
-        }
-    }
+public class ImportedAppListFileTest extends TestSuperClass {
 
     @Test
     public void readFileTest() throws IOException {
@@ -121,7 +103,7 @@ public class ImportedAppListFileTest {
 
         // points to the default location of the list file,
         // if you change it here, you must also change it in ImportedAppListFile
-        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(AppConfig.getRemoteConfig().getValue("importedAppListFileName")).toFile();
+        File underlyingFile = Common.getInstance().getAndCreateAppDataPathAsFile().toPath().resolve(AppConfig.getInstance().getRemoteConfig().getValue("importedAppListFileName")).toFile();
         FileUtils.writeStringToFile(underlyingFile, getFileContent(foklauncherFiles, false, false), Charset.forName("UTF-8"));
 
         ImportedAppListFile importedAppListFile = new ImportedAppListFile();

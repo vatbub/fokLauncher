@@ -47,7 +47,7 @@ public class ImportedAppListFile {
      * Creates a new in-memory representation of the list of imported apps. The location of the file to read is taken from the app config.
      */
     public ImportedAppListFile() {
-        this(Common.getInstance().getAndCreateAppDataPath() + AppConfig.getRemoteConfig().getValue("importedAppListFileName"));
+        this(Common.getInstance().getAndCreateAppDataPath() + AppConfig.getInstance().getRemoteConfig().getValue("importedAppListFileName"));
     }
 
     /**

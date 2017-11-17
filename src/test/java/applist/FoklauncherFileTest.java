@@ -23,6 +23,7 @@ package applist;
 
 import com.github.vatbub.common.core.Common;
 import com.github.vatbub.common.core.logging.FOKLogger;
+import config.TestSuperClass;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,7 +41,7 @@ import java.util.Map;
 
 import static applist.FoklauncherFile.Property.*;
 
-public class FoklauncherFileTest {
+public class FoklauncherFileTest extends TestSuperClass{
     private static final String name = "Zork (prerelease)";
     private static final String groupId = "com.github.vatbub";
     private static final String classifier = "jar-with-dependencies";
