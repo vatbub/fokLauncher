@@ -690,7 +690,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         numberOfConcurrentDownloadsUpButton.setGraphic(upButtonIconView);
         numberOfConcurrentDownloadsDownButton.setGraphic(downButtonIconView);
 
-        // show gey icon when disabled
+        // show grey icon when disabled
         linkButton.disableProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 // disabled, select gray icon
@@ -981,7 +981,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     public void hide() {
         Platform.runLater(() -> EntryClass.getStage().setIconified(true));
 
-        if (launchLauncherAfterAppExitCheckbox.isSelected()) {
+        if (launchLauncherAfterAppExitCheckbox.isSelected() && appForAutoLaunch==null) {
             Platform.runLater(() -> {
                 appList.setDisable(false);
                 launchButton.setDefaultButton(true);
