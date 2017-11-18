@@ -23,6 +23,7 @@ package applist;
 
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.updater.Version;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jdom2.JDOMException;
 
 import java.io.IOException;
@@ -97,8 +98,20 @@ public class DownloadThread extends Thread {
                 // Execute only if not cancelled by user
                 if (cont) {
                     if (getCurrentEntry().isLaunchAfterDownload()) {
-                        getCurrentEntry().getApp().launch(getCurrentEntry().getGui(), versionToDownload, getCurrentEntry().getStartupArgs());
-                    } else if (getCurrentEntry().getGui() != null) {
+                        final DownloadQueueEntry currentEntryCopy = getCurrentEntry();
+                        new Thread(() -> {
+                            try {
+                                currentEntryCopy.getApp().launch(currentEntryCopy.getGui(), versionToDownload, currentEntryCopy.getStartupArgs());
+                            } catch (IOException e) {
+                                FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, "Unable to launch the app", e);
+                                if (currentEntryCopy.getGui()!=null){
+                                    currentEntryCopy.getGui().showErrorMessage("Unable to launch the app " + currentEntryCopy.getApp().getName() + "\n" + ExceptionUtils.getStackTrace(e));
+                                }
+                            }
+                        }).start();
+                    }
+
+                    if (getCurrentEntry().getGui() != null) {
                         getCurrentEntry().getGui().hide();
                     }
                 }
