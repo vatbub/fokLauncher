@@ -23,6 +23,7 @@ package applist;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.vatbub.common.core.Common;
+import com.github.vatbub.common.core.logging.FOKLogger;
 import config.AppConfig;
 import config.TestSuperClass;
 import org.apache.commons.io.FileUtils;
@@ -34,8 +35,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.logging.Level;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
@@ -48,13 +52,18 @@ public class AppListFileTest extends TestSuperClass {
     private URL testOnlineURL;
     private AppList expectedApps;
 
-    @Before
-    public void setUp() throws IOException {
-        offlineCacheFileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.getInstance().getRemoteConfig().getValue("appListCacheFileName");
-
+    private void setModelVersionsUp() {
         AppConfig.getInstance().getSupportedFOKConfigModelVersion().add(onlineModelVersion);
         AppConfig.getInstance().getSupportedFOKConfigModelVersion().add(offlineModelVersion);
+    }
 
+    @Before
+    public void setURLsUp() throws MalformedURLException {
+        offlineCacheFileName = Common.getInstance().getAndCreateAppDataPath() + AppConfig.getInstance().getRemoteConfig().getValue("appListCacheFileName");
+        testOnlineURL = new URL("http://localhost:8089/fokprojectsOnLauncher.xml");
+    }
+
+    private void setFilesUp() throws IOException {
         expectedApps = new AppList();
         expectedApps.add(new App("Hangman Solver", new MVNCoordinates(new URL("https://dl.bintray.com/vatbub/fokprojectsReleases"), new URL("https://oss.jfrog.org/artifactory/libs-snapshot"), "com.github.vatbub", "hangmanSolver", "jar-with-dependencies"), new URL("https://github.com/vatbub/hangman-solver#hangman-solver"), new URL("https://github.com/vatbub/hangman-solver/blob/master/CHANGELOG.md")));
         expectedApps.add(new App("Hangman Solver (Versions 0.0.14 and older)", new MVNCoordinates(new URL("https://dl.bintray.com/vatbub/fokprojectsSnapshots"), new URL("https://oss.jfrog.org/artifactory/libs-snapshot"), "fokprojects", "hangmanSolver", "jar-with-dependencies"), new URL("https://github.com/vatbub/hangman-solver#hangman-solver"), new URL("https://github.com/vatbub/hangman-solver/blob/master/CHANGELOG.md")));
@@ -68,7 +77,6 @@ public class AppListFileTest extends TestSuperClass {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(generateAppListContent(expectedApps, onlineModelVersion))));
-        testOnlineURL = new URL("http://localhost:8089/fokprojectsOnLauncher.xml");
     }
 
     private String generateAppListContent(AppList apps, String modelVersion) {
@@ -104,6 +112,8 @@ public class AppListFileTest extends TestSuperClass {
 
     @Test
     public void defaultConstructorOnlineTest() throws JDOMException, IOException {
+        setFilesUp();
+        setModelVersionsUp();
         assertAppListFile(new AppListFile(testOnlineURL, offlineCacheFileName, false), onlineModelVersion);
     }
 
@@ -120,12 +130,44 @@ public class AppListFileTest extends TestSuperClass {
 
     @Test
     public void noInternetTest() throws JDOMException, IOException {
+        setFilesUp();
         wireMockRule.stop();
+        setModelVersionsUp();
         assertAppListFile(new AppListFile(testOnlineURL, offlineCacheFileName, false), offlineModelVersion);
     }
 
     @Test
     public void defaultConstructorOfflineTest() throws JDOMException, IOException {
+        setFilesUp();
+        setModelVersionsUp();
         assertAppListFile(new AppListFile(testOnlineURL, offlineCacheFileName, true), offlineModelVersion);
+    }
+
+    @Test
+    public void illegalModelVersionTest() throws IOException {
+        setFilesUp();
+        try {
+            new AppListFile(testOnlineURL, offlineCacheFileName, false);
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            FOKLogger.log(AppListFileTest.class.getName(), Level.INFO, "Expected exception", e);
+        } catch (Exception e) {
+            FOKLogger.log(AppListFileTest.class.getName(), Level.SEVERE, "Unexpected exception", e);
+            Assert.fail("Unexpected exception: " + e.getClass().getName());
+        }
+    }
+
+    @Test
+    public void noInternetAndNoCacheFileTest() throws IOException {
+        wireMockRule.stop();
+        try {
+            new AppListFile(testOnlineURL, offlineCacheFileName, false);
+            Assert.fail("IllegalStateException expected");
+        } catch (UnknownHostException e) {
+            FOKLogger.log(AppListFileTest.class.getName(), Level.INFO, "Expected exception", e);
+        } catch (Exception e) {
+            FOKLogger.log(AppListFileTest.class.getName(), Level.SEVERE, "Unexpected exception", e);
+            Assert.fail("Unexpected exception: " + e.getClass().getName());
+        }
     }
 }
