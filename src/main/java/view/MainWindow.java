@@ -87,6 +87,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private static final ImageView addToDownloadQueueIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("down-arrow-hollow.png")));
     private static final ImageView optionIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("menu_gray.png")));
     private static final ImageView infoIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("info_gray.png")));
+    private static final ImageView upButtonIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("caret-arrow-up.png")));
+    private static final ImageView downButtonIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("caret-arrow-down.png")));
     // private static final EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
     // private static final MetricRegistry metricsRegistry = new MetricRegistry();
     private static ResourceBundle bundle;
@@ -103,11 +105,12 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         }
         Platform.setImplicitExit(true);
     };
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private final DownloadQueue downloadQueue = new DownloadQueue();
     @FXML
     public CheckBox launchLauncherAfterAppExitCheckbox;
     @FXML
     private Button addToDownloadQueueButton;
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private AppList apps;
     private App currentlySelectedApp = null;
     private int currentlySelectedIndex = -1;
@@ -132,15 +135,6 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private CustomProgressBar progressBar;
     @FXML
     private CheckBox workOfflineCheckbox;
-    @FXML
-    private Hyperlink updateLink;
-    @FXML
-    private Label versionLabel;
-    @FXML
-    private GridPane settingsGridView;
-    @FXML
-    private Button appInfoButton;
-    private final DownloadQueue downloadQueue = new DownloadQueue();
     private final Runnable getAppListRunnable = new Runnable() {
         @Override
         public void run() {
@@ -211,6 +205,20 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             }
         }
     };
+    @FXML
+    private Hyperlink updateLink;
+    @FXML
+    private Label versionLabel;
+    @FXML
+    private GridPane settingsGridView;
+    @FXML
+    private Button appInfoButton;
+    @FXML
+    private TextField numberOfConcurrentDownloadsTextField;
+    @FXML
+    private Button numberOfConcurrentDownloadsUpButton;
+    @FXML
+    private Button numberOfConcurrentDownloadsDownButton;
     @FXML
     private TitledPane downloadQueueTitledPane;
 
@@ -607,6 +615,20 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     @FXML
+    void numberOfConcurrentDownloadsUpButtonOnAction(ActionEvent event) {
+        numberOfConcurrentDownloadsTextField.setText(Integer.toString(Integer.parseInt(numberOfConcurrentDownloadsTextField.getText()) + 1));
+    }
+
+    @FXML
+    void numberOfConcurrentDownloadsDownButtonOnAction(ActionEvent event) {
+        numberOfConcurrentDownloadsTextField.setText(Integer.toString(Integer.parseInt(numberOfConcurrentDownloadsTextField.getText()) - 1));
+    }
+
+    private void loadNumberOfConcurrentDownloadsFromThePrefs() {
+        numberOfConcurrentDownloadsTextField.setText(EntryClass.getPrefs().getPreference("numberOfConcurrentDownloads", "2"));
+    }
+
+    @FXML
         // This method is called by the FXMLLoader when initialization is
         // complete
     void initialize() {
@@ -647,11 +669,26 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             }
         });
 
+        numberOfConcurrentDownloadsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                int intValue = Integer.parseInt(numberOfConcurrentDownloadsTextField.getText());
+                downloadQueue.setParallelDownloadCount(intValue);
+                EntryClass.getPrefs().setPreference("numberOfConcurrentDownloads", Integer.toString(intValue));
+            } catch (NumberFormatException e) {
+                FOKLogger.log(MainWindow.class.getName(), Level.INFO, "User entered unparsable string as the number of concurrent downloads", e);
+                loadNumberOfConcurrentDownloadsFromThePrefs();
+            }
+        });
+
+        loadNumberOfConcurrentDownloadsFromThePrefs();
+
         // add icons to buttons
         linkButton.setGraphic(linkIconView);
         optionButton.setGraphic(optionIconView);
         appInfoButton.setGraphic(infoIconView);
         addToDownloadQueueButton.setGraphic(addToDownloadQueueIconView);
+        numberOfConcurrentDownloadsUpButton.setGraphic(upButtonIconView);
+        numberOfConcurrentDownloadsDownButton.setGraphic(downButtonIconView);
 
         // show gey icon when disabled
         linkButton.disableProperty().addListener((observable, oldValue, newValue) -> {
@@ -959,7 +996,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             });
 
         } else {
-            Platform.runLater(() ->{
+            Platform.runLater(() -> {
                 progressBar.setProgressAnimated(-1);
                 launchButton.setProgressText(getBundle().getString("progress.waitForDownloadsToFinish"));
                 launchButton.setControlText("");
