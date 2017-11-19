@@ -507,21 +507,28 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
     @FXML
     void languageSelectorOnAction(@SuppressWarnings("unused") ActionEvent event) {
-        FOKLogger.info(MainWindow.class.getName(), "Switching gui language to: "
-                + languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex()));
-        EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.GUI_LANGUAGE.toString(), languageSelector.getItems()
-                .get(languageSelector.getSelectionModel().getSelectedIndex()).getLocale().getLanguage());
+        GuiLanguage selectedLanguage = languageSelector.getItems().get(languageSelector.getSelectionModel().getSelectedIndex());
+        FOKLogger.info(MainWindow.class.getName(), "Switching gui language to: " + selectedLanguage.toString());
+        EntryClass.getPrefs().setPreference(EntryClass.PrefKeys.GUI_LANGUAGE.toString(), selectedLanguage.getLocale().getLanguage());
 
-        // Restart gui
-        boolean implicitExit = Platform.isImplicitExit();
-        Platform.setImplicitExit(false);
-        EntryClass.getStage().hide();
-        try {
-            EntryClass.restart();
-        } catch (Exception e) {
-            FOKLogger.log(MainWindow.class.getName(), Level.INFO, "An error occurred while setting a new gui language", e);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, getBundle().getString("languageSelector.restartRequired"), ButtonType.YES, ButtonType.NO);
+        Optional<ButtonType> result = alert.showAndWait();
+
+        // reload the bundle for the current session
+        Locale.setDefault(selectedLanguage.getLocale());
+        setBundle(ResourceBundle.getBundle("view.MainWindow"));
+
+        if (result.isPresent()) {
+            if (result.get().equals(ButtonType.YES)) {
+                try {
+                    EntryClass.restart();
+                } catch (Exception e) {
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "Unable to restart the application", e);
+                    showErrorMessage(getBundle().getString("unableToRestartApplication") + "\n\n" + ExceptionUtils.getStackTrace(e));
+                    System.exit(1);
+                }
+            }
         }
-        Platform.setImplicitExit(implicitExit);
     }
 
     // Handler for Button[fx:id="launchButton"] onAction
@@ -615,12 +622,12 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     @FXML
-    void numberOfConcurrentDownloadsUpButtonOnAction(ActionEvent event) {
+    void numberOfConcurrentDownloadsUpButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         numberOfConcurrentDownloadsTextField.setText(Integer.toString(Integer.parseInt(numberOfConcurrentDownloadsTextField.getText()) + 1));
     }
 
     @FXML
-    void numberOfConcurrentDownloadsDownButtonOnAction(ActionEvent event) {
+    void numberOfConcurrentDownloadsDownButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
         numberOfConcurrentDownloadsTextField.setText(Integer.toString(Integer.parseInt(numberOfConcurrentDownloadsTextField.getText()) - 1));
     }
 
@@ -981,7 +988,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     public void hide() {
         Platform.runLater(() -> EntryClass.getStage().setIconified(true));
 
-        if (launchLauncherAfterAppExitCheckbox.isSelected() && appForAutoLaunch==null) {
+        if (launchLauncherAfterAppExitCheckbox.isSelected() && appForAutoLaunch == null) {
             Platform.runLater(() -> {
                 appList.setDisable(false);
                 launchButton.setDefaultButton(true);

@@ -426,6 +426,9 @@ public class EntryClass extends Application {
         if (getControllerInstance() != null) {
             getControllerInstance().cleanup();
         }
+        if (entryClassInstance.stage.isShowing()){
+            entryClassInstance.stage.hide();
+        }
         entryClassInstance.start(entryClassInstance.stage);
     }
 
