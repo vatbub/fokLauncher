@@ -692,6 +692,14 @@ public class App {
         fireLaunchedAppExits();
     }
 
+    public File getOutputFile(Version versionToDownload) {
+        return getAbsolutePathToSubfolderToSaveApps().resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
+    }
+
+    public LockDownloadFile getLockFile(Version versionToDownload){
+        return new LockDownloadFile(this, versionToDownload);
+    }
+
     /**
      * Downloads this artifact.
      *
@@ -757,7 +765,7 @@ public class App {
         }
 
         // Create empty file
-        File outputFile = getAbsolutePathToSubfolderToSaveApps().resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
+        File outputFile = getOutputFile(versionToDownload);
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {
@@ -766,6 +774,8 @@ public class App {
             }
             return false;
         }
+
+        getLockFile(versionToDownload).lock();
 
         // Download
         if (gui != null) {
@@ -809,6 +819,7 @@ public class App {
                                 fileOutputStream.close();
                                 in.close();
                                 Files.delete(outputFile.toPath());
+                                getLockFile(versionToDownload).unlock();
                                 if (gui != null) {
                                     gui.operationCanceled();
                                 }
@@ -822,6 +833,8 @@ public class App {
 
         // download version info
         downloadVersionInfo(versionToDownload);
+
+        getLockFile(versionToDownload).unlock();
 
         // Perform Cancel if requested
         if (cancelDownloadAndLaunch) {

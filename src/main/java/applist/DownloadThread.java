@@ -91,6 +91,10 @@ public class DownloadThread extends Thread {
 
                 boolean cont = true;
 
+                while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()){
+                    Thread.sleep(1000);
+                }
+
                 if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
                     cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
                 }
@@ -115,7 +119,7 @@ public class DownloadThread extends Thread {
                         getCurrentEntry().getGui().hide();
                     }
                 }
-            } catch (IOException | JDOMException | NoSuchElementException e) {
+            } catch (IOException | JDOMException | NoSuchElementException | InterruptedException e) {
                 getCurrentEntry().getGui().hide();
                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             } finally {
