@@ -42,6 +42,7 @@ import config.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -635,6 +636,19 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         numberOfConcurrentDownloadsTextField.setText(EntryClass.getPrefs().getPreference("numberOfConcurrentDownloads", "2"));
     }
 
+    private void updateDownloadQueuePaneWidth(){
+        ListView<DownloadQueueEntryView> listView = (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent();
+        double maxWidth = 0;
+        for (DownloadQueueEntryView view : listView.getItems()) {
+            view.autosize();
+            if (maxWidth < view.getWidth())
+                maxWidth = view.getWidth();
+        }
+        downloadQueueTitledPane.setPrefWidth(maxWidth + 40);
+    }
+
+    private ChangeListener downloadQueueEntryViewWidthChangeListener = (observable1, oldValue1, newValue1) -> updateDownloadQueuePaneWidth();
+
     @FXML
         // This method is called by the FXMLLoader when initialization is
         // complete
@@ -663,14 +677,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 // expanded
-                ListView<DownloadQueueEntryView> listView = (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent();
-                double maxWidth = 0;
-                for (DownloadQueueEntryView view : listView.getItems()) {
-                    view.autosize();
-                    if (maxWidth < view.getWidth())
-                        maxWidth = view.getWidth();
-                }
-                downloadQueueTitledPane.setPrefWidth(maxWidth + 40);
+                // resize the view with Platform.runLater to give the view a chance to calculate its width
+                Platform.runLater(this::updateDownloadQueuePaneWidth);
             } else {
                 downloadQueueTitledPane.setPrefWidth(0);
             }
