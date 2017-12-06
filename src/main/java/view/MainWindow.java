@@ -1,24 +1,24 @@
 package view;
 
-/*-
- * #%L
- * FOK Launcher
- * %%
- * Copyright (C) 2016 Frederik Kammel
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
+        /*-
+         * #%L
+         * FOK Launcher
+         * %%
+         * Copyright (C) 2016 Frederik Kammel
+         * %%
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *      http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         * #L%
+         */
 
 
 import applist.App;
@@ -41,6 +41,10 @@ import com.rometools.rome.io.FeedException;
 import config.AppConfig;
 import extended.CustomListCell;
 import extended.GuiLanguage;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -57,6 +61,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
+import javafx.util.Duration;
 import mslinks.ShellLink;
 import mslinks.ShellLinkException;
 import org.apache.commons.io.FilenameUtils;
@@ -636,7 +641,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         numberOfConcurrentDownloadsTextField.setText(EntryClass.getPrefs().getPreference("numberOfConcurrentDownloads", "2"));
     }
 
-    private void updateDownloadQueuePaneWidth(){
+    private void updateDownloadQueuePaneWidth() {
         ListView<DownloadQueueEntryView> listView = (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent();
         double maxWidth = 0;
         for (DownloadQueueEntryView view : listView.getItems()) {
@@ -644,10 +649,27 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             if (maxWidth < view.getWidth())
                 maxWidth = view.getWidth();
         }
-        downloadQueueTitledPane.setPrefWidth(maxWidth + 40);
+        KeyValue keyValue = new KeyValue(downloadQueueTitledPane.prefWidthProperty(), maxWidth + 40, Interpolator.EASE_BOTH);
+        KeyFrame keyFrame = new KeyFrame(Duration.seconds(1), keyValue);
+        Timeline timeline = new Timeline(keyFrame);
+        timeline.play();
     }
 
-    private ChangeListener downloadQueueEntryViewWidthChangeListener = (observable1, oldValue1, newValue1) -> updateDownloadQueuePaneWidth();
+    public void triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended() {
+        new Thread(() -> {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                FOKLogger.log(getClass().getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            }
+            Platform.runLater(() -> {
+                if (downloadQueueTitledPane.isExpanded())
+                    updateDownloadQueuePaneWidth();
+                else
+                    downloadQueueTitledPane.setPrefWidth(0);
+            });
+        }).start();
+    }
 
     @FXML
         // This method is called by the FXMLLoader when initialization is
@@ -674,15 +696,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         updateDownloadCounter(downloadQueue.getCurrentTotalDownloadCount());
         ((ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent()).setSelectionModel(new NoSelectionModel<>());
 
-        downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                // expanded
-                // resize the view with Platform.runLater to give the view a chance to calculate its width
-                Platform.runLater(this::updateDownloadQueuePaneWidth);
-            } else {
-                downloadQueueTitledPane.setPrefWidth(0);
-            }
-        });
+        downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended());
 
         numberOfConcurrentDownloadsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             try {

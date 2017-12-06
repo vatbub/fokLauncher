@@ -67,6 +67,11 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
         progressLabel = new Label();
         Label titleLabel = new Label(getApp().getName());
         Label spacerLabel = new Label(" - ");
+
+        progressLabel.textProperty().addListener((observable, oldValue, newValue) -> getMainWindow().triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended());
+        titleLabel.textProperty().addListener((observable, oldValue, newValue) -> getMainWindow().triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended());
+        spacerLabel.textProperty().addListener((observable, oldValue, newValue) -> getMainWindow().triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended());
+
         cancelButton = new Button("", cancelButtonIcon);
         cancelButton.getStyleClass().add("transparentButton");
         cancelButton.disableProperty().addListener((observable, oldValue, newValue) -> {
@@ -101,6 +106,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     public void hide() {
         currentStatus = DownloadStatus.DONE;
         Platform.runLater(() -> getParentCustom().getItems().remove(this));
+        getMainWindow().triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended();
         for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.hide();
         }
@@ -203,6 +209,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
     public void operationCanceled() {
         currentStatus = DownloadStatus.CANCELLED;
         Platform.runLater(() -> getParentCustom().getItems().remove(this));
+        getMainWindow().triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended();
         for (HidableProgressDialogWithEnqueuedNotification gui : attachedGUIs) {
             gui.operationCanceled();
         }
@@ -217,7 +224,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
         return mainWindow;
     }
 
-    public void setMainWindow(MainWindow mainWindow) {
+    private void setMainWindow(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
     }
 
@@ -225,7 +232,7 @@ public class DownloadQueueEntryView extends AnchorPane implements HidableProgres
         return parent;
     }
 
-    public void setParent(ListView<DownloadQueueEntryView> parent) {
+    private void setParent(ListView<DownloadQueueEntryView> parent) {
         this.parent = parent;
     }
 
