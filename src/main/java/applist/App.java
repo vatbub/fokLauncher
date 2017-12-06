@@ -1,24 +1,24 @@
 package applist;
 
-/*-
- * #%L
- * FOK Launcher
- * %%
- * Copyright (C) 2016 Frederik Kammel
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
+        /*-
+         * #%L
+         * FOK Launcher
+         * %%
+         * Copyright (C) 2016 Frederik Kammel
+         * %%
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *      http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         * #L%
+         */
 
 
 import com.github.vatbub.common.core.Common;
@@ -41,6 +41,7 @@ import org.apache.commons.lang.SystemUtils;
 import org.jdom2.JDOMException;
 import org.jetbrains.annotations.Nullable;
 import view.EntryClass;
+import view.HidableProgressDialogWithEnqueuedNotification;
 import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
@@ -601,8 +602,6 @@ public class App {
      */
     public void downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog gui, Version versionToLaunch,
                                              boolean disableDownload, String... startupArgs) throws IOException {
-        cancelDownloadAndLaunch = false;
-
         // Continue by default, only cancel, when user cancelled
         boolean downloadPerformed = true;
         if (!disableDownload && !this.isPresentOnHardDrive(versionToLaunch)) {
@@ -619,12 +618,9 @@ public class App {
         }
 
         // Perform Cancel if requested
-        if (cancelDownloadAndLaunch) {
-            if (gui != null) {
-                gui.operationCanceled();
-            }
+        if (performCancelIfRequested(gui))
             return;
-        }
+
         launch(gui, versionToLaunch, startupArgs);
     }
 
@@ -696,7 +692,7 @@ public class App {
         return getAbsolutePathToSubfolderToSaveApps().resolve(getMvnCoordinates().getJarFileName(versionToDownload)).toFile();
     }
 
-    public LockDownloadFile getLockFile(Version versionToDownload){
+    public LockDownloadFile getLockFile(Version versionToDownload) {
         return new LockDownloadFile(this, versionToDownload);
     }
 
@@ -713,6 +709,7 @@ public class App {
      */
     public boolean download(Version versionToDownload, @Nullable HidableUpdateProgressDialog gui)
             throws IOException {
+
         if (gui != null) {
             gui.preparePhaseStarted();
         }
@@ -721,12 +718,8 @@ public class App {
         URL artifactURL;
 
         // Perform Cancel if requested
-        if (cancelDownloadAndLaunch) {
-            if (gui != null) {
-                gui.operationCanceled();
-            }
+        if (performCancelIfRequested(gui))
             return false;
-        }
 
         if (versionToDownload.isSnapshot()) {
             // Snapshot
@@ -757,23 +750,15 @@ public class App {
         artifactURL = new URL(artifactURLBuilder.toString());
 
         // Perform Cancel if requested
-        if (cancelDownloadAndLaunch) {
-            if (gui != null) {
-                gui.operationCanceled();
-            }
+        if (performCancelIfRequested(gui))
             return false;
-        }
 
         // Create empty file
         File outputFile = getOutputFile(versionToDownload);
 
         // Perform Cancel if requested
-        if (cancelDownloadAndLaunch) {
-            if (gui != null) {
-                gui.operationCanceled();
-            }
+        if (performCancelIfRequested(gui))
             return false;
-        }
 
         getLockFile(versionToDownload).lock();
 
@@ -814,7 +799,7 @@ public class App {
                             }
 
                             // Perform Cancel if requested
-                            if (cancelDownloadAndLaunch) {
+                            if (isCancelDownloadAndLaunch()) {
                                 bufferedOutputStream.close();
                                 fileOutputStream.close();
                                 in.close();
@@ -823,6 +808,7 @@ public class App {
                                 if (gui != null) {
                                     gui.operationCanceled();
                                 }
+                                resetCancelDownloadAndLaunchFlag();
                                 return false;
                             }
                         }
@@ -837,12 +823,8 @@ public class App {
         getLockFile(versionToDownload).unlock();
 
         // Perform Cancel if requested
-        if (cancelDownloadAndLaunch) {
-            if (gui != null) {
-                gui.operationCanceled();
-            }
+        if (performCancelIfRequested(gui))
             return false;
-        }
 
         // Perform install steps (none at the moment)
         if (gui != null) {
@@ -881,6 +863,36 @@ public class App {
         if (gui != null) {
             gui.cancelRequested();
         }
+    }
+
+    /**
+     * Resets the internal cancelDownloadAndLaunchFlag to false, meaning that downloads may continue.
+     * If a download has already been cancelled, a call to this method will not restart the download.
+     * To restart the download and/or launch, the desired {@code download} or {@link #launch(HidableUpdateProgressDialog, Version, String...)} method must be called after.
+     *
+     * @see #cancelDownloadAndLaunch()
+     * @see #cancelDownloadAndLaunch(HidableUpdateProgressDialog)
+     * @see #download(Version, HidableUpdateProgressDialog)
+     * @see #downloadIfNecessaryAndLaunch(HidableUpdateProgressDialog, Version, boolean, String...)
+     * @see #downloadIfNecessaryAndLaunch(boolean, HidableUpdateProgressDialog, boolean, String...)
+     * @see #launch(HidableUpdateProgressDialog, Version, String...)
+     */
+    private void resetCancelDownloadAndLaunchFlag() {
+        cancelDownloadAndLaunch = false;
+    }
+
+    private boolean performCancelIfRequested(HidableUpdateProgressDialog gui) {
+        if (isCancelDownloadAndLaunch()) {
+            if (gui != null) {
+                gui.operationCanceled();
+            }
+            resetCancelDownloadAndLaunchFlag();
+        }
+        return isCancelDownloadAndLaunch();
+    }
+
+    private boolean isCancelDownloadAndLaunch() {
+        return cancelDownloadAndLaunch;
     }
 
     /**

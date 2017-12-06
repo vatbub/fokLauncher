@@ -91,7 +91,7 @@ public class DownloadThread extends Thread {
 
                 boolean cont = true;
 
-                while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()){
+                while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
                     Thread.sleep(1000);
                 }
 
@@ -108,7 +108,7 @@ public class DownloadThread extends Thread {
                                 currentEntryCopy.getApp().launch(currentEntryCopy.getGui(), versionToDownload, currentEntryCopy.getStartupArgs());
                             } catch (IOException e) {
                                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, "Unable to launch the app", e);
-                                if (currentEntryCopy.getGui()!=null){
+                                if (currentEntryCopy.getGui() != null) {
                                     currentEntryCopy.getGui().showErrorMessage("Unable to launch the app " + currentEntryCopy.getApp().getName() + "\n" + ExceptionUtils.getStackTrace(e));
                                 }
                             }
@@ -119,8 +119,10 @@ public class DownloadThread extends Thread {
                         getCurrentEntry().getGui().hide();
                     }
                 }
-            } catch (IOException | JDOMException | NoSuchElementException | InterruptedException e) {
+            } catch (IOException | JDOMException | InterruptedException e) {
+                FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 getCurrentEntry().getGui().hide();
+            } catch (NoSuchElementException e) {
                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
             } finally {
                 setCurrentEntry(null);
