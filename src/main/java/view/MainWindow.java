@@ -641,7 +641,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         numberOfConcurrentDownloadsTextField.setText(EntryClass.getPrefs().getPreference("numberOfConcurrentDownloads", "2"));
     }
 
-    private void updateDownloadQueuePaneWidth() {
+    private void updateDownloadQueuePaneWidth(boolean animate) {
         ListView<DownloadQueueEntryView> listView = (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent();
         double maxWidth = 0;
         for (DownloadQueueEntryView view : listView.getItems()) {
@@ -649,6 +649,12 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             if (maxWidth < view.getWidth())
                 maxWidth = view.getWidth();
         }
+
+        if (!animate) {
+            downloadQueueTitledPane.setPrefWidth(maxWidth + 40);
+            return;
+        }
+
         KeyValue keyValue = new KeyValue(downloadQueueTitledPane.prefWidthProperty(), maxWidth + 40, Interpolator.EASE_BOTH);
         KeyFrame keyFrame = new KeyFrame(Duration.seconds(1), keyValue);
         Timeline timeline = new Timeline(keyFrame);
@@ -656,6 +662,10 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     }
 
     public void triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended() {
+        triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended(true);
+    }
+
+    public void triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended(boolean animate) {
         new Thread(() -> {
             try {
                 Thread.sleep(10);
@@ -664,7 +674,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             }
             Platform.runLater(() -> {
                 if (downloadQueueTitledPane.isExpanded())
-                    updateDownloadQueuePaneWidth();
+                    updateDownloadQueuePaneWidth(animate);
                 else
                     downloadQueueTitledPane.setPrefWidth(0);
             });
@@ -696,7 +706,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         updateDownloadCounter(downloadQueue.getCurrentTotalDownloadCount());
         ((ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent()).setSelectionModel(new NoSelectionModel<>());
 
-        downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended());
+        downloadQueueTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> triggerUpdateOfDownloadQueuePaneWidthIfPaneIsExtended(false));
 
         numberOfConcurrentDownloadsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
