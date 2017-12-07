@@ -19,7 +19,6 @@
 - Exception when importing the very first app [\#42](https://github.com/vatbub/fokLauncher/issues/42)
 - GUILanguage cannot be reset [\#41](https://github.com/vatbub/fokLauncher/issues/41)
 - Exporting app info results in IOException [\#40](https://github.com/vatbub/fokLauncher/issues/40)
-- Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
 
 ## [foklauncher-0.1.2](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.2) (2017-07-26)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.1...foklauncher-0.1.2)
@@ -112,7 +111,6 @@
 - If the jar of the app is deleted, no error message is displayed [\#10](https://github.com/vatbub/fokLauncher/issues/10)
 - Infinite "Getting version info" when changing snapshot setting and no app is selected [\#9](https://github.com/vatbub/fokLauncher/issues/9)
 - Open app first time and enable snapshots, launcher wants to "Update & launch" instead of "Download & launch" [\#8](https://github.com/vatbub/fokLauncher/issues/8)
-- Infinite "Getting version info" on first launch with snapshots enabled [\#7](https://github.com/vatbub/fokLauncher/issues/7)
 - Bug on first launch [\#4](https://github.com/vatbub/fokLauncher/issues/4)
 
 ## [foklauncher-0.0.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.1) (2016-08-05)
