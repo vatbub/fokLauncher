@@ -177,9 +177,11 @@ public class EntryClass extends Application {
         } catch (ParseException e) {
             FOKLogger.log(EntryClass.class.getName(), Level.SEVERE, "Unable to parse the command line arguments", e);
             printHelpMessage();
+            System.exit(1);
         } catch (Exception e) {
             FOKLogger.log(EntryClass.class.getName(), Level.SEVERE, "Something went wrong while starting the launcher", e);
             printHelpMessage();
+            System.exit(1);
         }
     }
 

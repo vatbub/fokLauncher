@@ -2,22 +2,22 @@ package applist;
 
         /*-
          * #%L
- * FOK Launcher
- * %%
- * Copyright (C) 2016 Frederik Kammel
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+         * FOK Launcher
+         * %%
+         * Copyright (C) 2016 Frederik Kammel
+         * %%
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *      http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         * #L%
          */
 
 
@@ -762,65 +762,67 @@ public class App {
 
         getLockFile(versionToDownload).lock();
 
-        // Download
-        if (gui != null) {
-            gui.downloadStarted();
-        }
+        try {
+            // Download
+            if (gui != null) {
+                gui.downloadStarted();
+            }
 
-        FOKLogger.info(App.class.getName(), "Downloading artifact from " + artifactURL.toString() + "...");
-        FOKLogger.info(App.class.getName(), "Downloading to: " + outputFile.getAbsolutePath());
+            FOKLogger.info(App.class.getName(), "Downloading artifact from " + artifactURL.toString() + "...");
+            FOKLogger.info(App.class.getName(), "Downloading to: " + outputFile.getAbsolutePath());
 
-        HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
-        long completeFileSize = httpConnection.getContentLength();
-        //noinspection ResultOfMethodCallIgnored
-        outputFile.getParentFile().mkdirs();
+            HttpURLConnection httpConnection = (HttpURLConnection) (artifactURL.openConnection());
+            long completeFileSize = httpConnection.getContentLength();
+            //noinspection ResultOfMethodCallIgnored
+            outputFile.getParentFile().mkdirs();
 
-        try (NullOutputStream nullOutputStream = new NullOutputStream()) {
-            try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
-                try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
-                    try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 1024)) {
-                        byte[] data = new byte[1024];
-                        long downloadedFileSize = 0;
-                        int x;
-                        while ((x = in.read(data, 0, 1024)) >= 0) {
-                            downloadedFileSize += x;
+            try (NullOutputStream nullOutputStream = new NullOutputStream()) {
+                try (BufferedInputStream in = new BufferedInputStream(httpConnection.getInputStream())) {
+                    try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+                        try (BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream, 1024)) {
+                            byte[] data = new byte[1024];
+                            long downloadedFileSize = 0;
+                            int x;
+                            while ((x = in.read(data, 0, 1024)) >= 0) {
+                                downloadedFileSize += x;
 
-                            // update progress bar
-                            if (gui != null) {
-                                gui.downloadProgressChanged(downloadedFileSize / 1024.0,
-                                        completeFileSize / 1024.0);
-                            }
-
-                            bufferedOutputStream.write(data, 0, x);
-
-                            while (isDownloadPaused()) {
-                                // pause
-                                nullOutputStream.write(0);
-                            }
-
-                            // Perform Cancel if requested
-                            if (isCancelDownloadAndLaunch()) {
-                                bufferedOutputStream.close();
-                                fileOutputStream.close();
-                                in.close();
-                                Files.delete(outputFile.toPath());
-                                getLockFile(versionToDownload).unlock();
+                                // update progress bar
                                 if (gui != null) {
-                                    gui.operationCanceled();
+                                    gui.downloadProgressChanged(downloadedFileSize / 1024.0,
+                                            completeFileSize / 1024.0);
                                 }
-                                resetCancelDownloadAndLaunchFlag();
-                                return false;
+
+                                bufferedOutputStream.write(data, 0, x);
+
+                                while (isDownloadPaused()) {
+                                    // pause
+                                    nullOutputStream.write(0);
+                                }
+
+                                // Perform Cancel if requested
+                                if (isCancelDownloadAndLaunch()) {
+                                    bufferedOutputStream.close();
+                                    fileOutputStream.close();
+                                    in.close();
+                                    Files.delete(outputFile.toPath());
+                                    getLockFile(versionToDownload).unlock();
+                                    if (gui != null) {
+                                        gui.operationCanceled();
+                                    }
+                                    resetCancelDownloadAndLaunchFlag();
+                                    return false;
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // download version info
+            downloadVersionInfo(versionToDownload);
+        } finally {
+            getLockFile(versionToDownload).unlock();
         }
-
-        // download version info
-        downloadVersionInfo(versionToDownload);
-
-        getLockFile(versionToDownload).unlock();
 
         // Perform Cancel if requested
         if (performCancelIfRequested(gui))
