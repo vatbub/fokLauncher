@@ -91,7 +91,7 @@
         <myproduct.name>${project.name}</myproduct.name>
         <myproduct.version>${project.version}</myproduct.version>
 
-        <common.version>0.1.4-SNAPSHOT</common.version>
+        <common.version>0.1.5-SNAPSHOT</common.version>
     </properties>
 
     <build>
@@ -331,7 +331,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock</artifactId>
-            <version>2.14.0</version>
+            <version>2.17.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
