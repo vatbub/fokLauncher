@@ -917,9 +917,9 @@ public class App {
         String appFileName;
         if (getMvnCoordinates().getClassifier() == null) {
             // No classifier
-            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString() + ".jar";
+            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString(false) + ".jar";
         } else {
-            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString() + "-" + getMvnCoordinates().getClassifier()
+            appFileName = getMvnCoordinates().getArtifactId() + "-" + versionToDelete.toString(false) + "-" + getMvnCoordinates().getClassifier()
                     + ".jar";
         }
 
