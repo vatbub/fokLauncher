@@ -46,7 +46,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -787,6 +786,10 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             MOTD motd;
             try {
                 motd = MOTD.getLatestMOTD(new URL(AppConfig.getInstance().getRemoteConfig().getValue("motdFeedUrl")));
+                if (motd==null){
+                    FOKLogger.log(MainWindow.class.getName(), Level.SEVERE, "MOTD is null");
+                    return;
+                }
                 if (!motd.isMarkedAsRead()) {
                     Platform.runLater(() -> new MOTDDialog(motd, motd.getEntry().getTitle()));
                 }
@@ -975,11 +978,6 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
                 // update launch button accordingly
                 updateLaunchButton();
-
-                // Show error message
-                EntryClass.getControllerInstance().showErrorMessage(
-                        bundle.getString("updateLaunchButtonException") + "\n\n" + ExceptionUtils.getStackTrace(e),
-                        false);
             }
 
             // Do finishing touches to gui only if checkedApp still equals

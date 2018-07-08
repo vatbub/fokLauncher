@@ -41,7 +41,6 @@ import org.apache.commons.lang.SystemUtils;
 import org.jdom2.JDOMException;
 import org.jetbrains.annotations.Nullable;
 import view.EntryClass;
-import view.HidableProgressDialogWithEnqueuedNotification;
 import view.MainWindow;
 
 import javax.swing.filechooser.FileSystemView;
@@ -1106,7 +1105,7 @@ public class App {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof App)) {
+        if (!(obj instanceof App)) {
             return false;
         } else {
             App that = (App) obj;
