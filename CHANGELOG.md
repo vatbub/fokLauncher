@@ -13,6 +13,7 @@
 
 **Fixed bugs:**
 
+- Snapshot jars are not deleted [\#47](https://github.com/vatbub/fokLauncher/issues/47)
 - NullPointerException when loading the version list in the context menu [\#46](https://github.com/vatbub/fokLauncher/issues/46)
 - Improve the launch time of the launcher when the internet connection is poor [\#44](https://github.com/vatbub/fokLauncher/issues/44)
 - Meta-Buttons not centered when user uses a custom screen scaling [\#43](https://github.com/vatbub/fokLauncher/issues/43)
