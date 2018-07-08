@@ -9,9 +9,9 @@ package applist;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,9 @@ package applist;
 import com.github.vatbub.common.core.logging.FOKLogger;
 import com.github.vatbub.common.updater.Version;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.jdom2.JDOMException;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
@@ -75,37 +75,40 @@ public class DownloadThread extends Thread {
         while (getQueue().getCurrentQueueCount() > 0 && !isShutdownAfterDownload()) {
             try {
                 setCurrentEntry(getQueue().removeFirst());
-
-                Version versionToDownload;
-
-                if (getCurrentEntry().getVersionToDownload() == null) {
-                    // download latest
-                    if (getCurrentEntry().isEnableSnapshots()) {
-                        versionToDownload = getCurrentEntry().getApp().getLatestOnlineSnapshotVersion();
-                    } else {
-                        versionToDownload = getCurrentEntry().getApp().getLatestOnlineVersion();
-                    }
-                } else {
-                    versionToDownload = getCurrentEntry().getVersionToDownload();
-                }
-
                 boolean cont = true;
 
-                while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
-                    Thread.sleep(1000);
-                }
+                Version versionToDownload = getCurrentEntry().getApp().getCurrentlyInstalledVersion(getCurrentEntry().isEnableSnapshots());
+                try {
+                    if (getCurrentEntry().getVersionToDownload() == null) {
+                        // download latest
+                        if (getCurrentEntry().isEnableSnapshots()) {
+                            versionToDownload = getCurrentEntry().getApp().getLatestOnlineSnapshotVersion();
+                        } else {
+                            versionToDownload = getCurrentEntry().getApp().getLatestOnlineVersion();
+                        }
+                    } else {
+                        versionToDownload = getCurrentEntry().getVersionToDownload();
+                    }
 
-                if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
-                    cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
+                    while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
+                        Thread.sleep(1000);
+                    }
+
+                    if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
+                        cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
+                    }
+                } catch (UnknownHostException e) {
+                    FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
                 }
 
                 // Execute only if not cancelled by user
                 if (cont) {
                     if (getCurrentEntry().isLaunchAfterDownload()) {
                         final DownloadQueueEntry currentEntryCopy = getCurrentEntry();
+                        final Version finalVersionToDownload = versionToDownload;
                         new Thread(() -> {
                             try {
-                                currentEntryCopy.getApp().launch(currentEntryCopy.getGui(), versionToDownload, currentEntryCopy.getStartupArgs());
+                                currentEntryCopy.getApp().launch(currentEntryCopy.getGui(), finalVersionToDownload, currentEntryCopy.getStartupArgs());
                             } catch (IOException e) {
                                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, "Unable to launch the app", e);
                                 if (currentEntryCopy.getGui() != null) {
@@ -119,11 +122,13 @@ public class DownloadThread extends Thread {
                         getCurrentEntry().getGui().hide();
                     }
                 }
-            } catch (IOException | JDOMException | InterruptedException e) {
-                FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
-                getCurrentEntry().getGui().hide();
             } catch (NoSuchElementException e) {
                 FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+            } catch (Exception e) {
+                FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);
+                getCurrentEntry().getGui().hide();
+                getCurrentEntry().getApp().fireLaunchedAppExits();
+                getCurrentEntry().getGui().showErrorMessage(e.toString());
             } finally {
                 setCurrentEntry(null);
             }

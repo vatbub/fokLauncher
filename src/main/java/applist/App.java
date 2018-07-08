@@ -977,7 +977,7 @@ public class App {
     /**
      * Fires all handlers registered for the launchedAppExits event.
      */
-    private void fireLaunchedAppExits() {
+    protected void fireLaunchedAppExits() {
         FOKLogger.info(App.class.getName(), "The launched app exited and the LaunchedAppExits event is now fired.");
         for (Runnable handler : eventHandlersWhenLaunchedAppExits) {
             Platform.runLater(handler);
