@@ -6,6 +6,7 @@
 
 **Implemented enhancements:**
 
+- Useless error message for offline mode [\#49](https://github.com/vatbub/fokLauncher/issues/49)
 - Change the design of the progressbar to be more like bootstrap [\#45](https://github.com/vatbub/fokLauncher/issues/45)
 - Leverage apache commons-cli to parse the command line args [\#39](https://github.com/vatbub/fokLauncher/issues/39)
 - Add the option for a CLI-only mode where no GUI pops up at all [\#38](https://github.com/vatbub/fokLauncher/issues/38)
@@ -13,6 +14,7 @@
 
 **Fixed bugs:**
 
+- UnknownHostException not caught  when not connected to the internet [\#48](https://github.com/vatbub/fokLauncher/issues/48)
 - Snapshot jars are not deleted [\#47](https://github.com/vatbub/fokLauncher/issues/47)
 - NullPointerException when loading the version list in the context menu [\#46](https://github.com/vatbub/fokLauncher/issues/46)
 - Improve the launch time of the launcher when the internet connection is poor [\#44](https://github.com/vatbub/fokLauncher/issues/44)
