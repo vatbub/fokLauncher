@@ -1,5 +1,4 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <repositories>
@@ -20,7 +19,7 @@
             <url>http://jcenter.bintray.com</url>
         </repository>
         <repository>
-            <snapshots/>
+            <snapshots />
             <id>snapshots</id>
             <name>libs-snapshot</name>
             <url>https://oss.jfrog.org/artifactory/libs-snapshot</url>
@@ -50,14 +49,14 @@
     <parent>
         <groupId>com.github.vatbub</groupId>
         <artifactId>parentPom</artifactId>
-        <version>0.0.25-SNAPSHOT</version>
+        <version>0.0.24</version>
     </parent>
 
     <scm>
         <connection>scm:git:git@github.com:vatbub/${gitRepoName}.git</connection>
         <url>https://github.com/vatbub/${gitRepoName}</url>
         <developerConnection>scm:git:git@github.com:vatbub/${gitRepoName}.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>foklauncher-0.1.3</tag>
     </scm>
 
     <issueManagement>
@@ -71,7 +70,7 @@
     </ciManagement>
 
     <artifactId>foklauncher</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.1.3</version>
     <packaging>jar</packaging>
     <inceptionYear>2016</inceptionYear>
 
@@ -126,7 +125,7 @@
                         <configuration>
                             <tasks>
                                 <copy todir="${izpack.staging}/src/main/izpack">
-                                    <fileset dir="${basedir}/src/main/izpack/"/>
+                                    <fileset dir="${basedir}/src/main/izpack/" />
                                 </copy>
                             </tasks>
                         </configuration>
@@ -141,7 +140,7 @@
                             <tasks>
                                 <copy todir="${izpack.staging}/icons">
                                     <fileset dir="${basedir}/src/main/resources/view">
-                                        <include name="icon.*"/>
+                                        <include name="icon.*" />
                                     </fileset>
                                 </copy>
                             </tasks>
@@ -158,7 +157,7 @@
                             <tasks>
                                 <copy todir="${izpack.staging}/app">
                                     <fileset dir="${project.build.directory}">
-                                        <include name="*jar-with-dependencies.jar"/>
+                                        <include name="*jar-with-dependencies.jar" />
                                     </fileset>
                                 </copy>
                             </tasks>
@@ -337,27 +336,27 @@
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.core</artifactId>
-            <version>${common.version}</version>
+            <version>0.1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.internet</artifactId>
-            <version>${common.version}</version>
+            <version>0.1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.updater</artifactId>
-            <version>${common.version}</version>
+            <version>0.1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.motd</artifactId>
-            <version>${common.version}</version>
+            <version>0.1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>common.view.core</artifactId>
-            <version>${common.version}</version>
+            <version>0.1.4.1</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -382,7 +381,7 @@
         <dependency>
             <groupId>com.github.vatbub</groupId>
             <artifactId>safeAPIKeyStore.client</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
