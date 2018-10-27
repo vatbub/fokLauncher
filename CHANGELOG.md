@@ -105,13 +105,11 @@
 
 - Finish translations [\#6](https://github.com/vatbub/fokLauncher/issues/6)
 - Build a gui to delete selected artifact versions [\#3](https://github.com/vatbub/fokLauncher/issues/3)
-- Build a gui to download and launch a specific version of artifacts [\#2](https://github.com/vatbub/fokLauncher/issues/2)
 - Download artifact versions in separate folders and save reference to all downloaded versions [\#1](https://github.com/vatbub/fokLauncher/issues/1)
 
 **Fixed bugs:**
 
 - App would never exit in some cases [\#13](https://github.com/vatbub/fokLauncher/issues/13)
-- If the jar of the app is deleted, no error message is displayed [\#10](https://github.com/vatbub/fokLauncher/issues/10)
 - Infinite "Getting version info" when changing snapshot setting and no app is selected [\#9](https://github.com/vatbub/fokLauncher/issues/9)
 - Open app first time and enable snapshots, launcher wants to "Update & launch" instead of "Download & launch" [\#8](https://github.com/vatbub/fokLauncher/issues/8)
 - Infinite "Getting version info" on first launch with snapshots enabled [\#7](https://github.com/vatbub/fokLauncher/issues/7)
