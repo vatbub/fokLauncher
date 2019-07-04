@@ -7,7 +7,9 @@
 
 - Useless error message for offline mode [\#49](https://github.com/vatbub/fokLauncher/issues/49)
 - Change the design of the progressbar to be more like bootstrap [\#45](https://github.com/vatbub/fokLauncher/issues/45)
+- Leverage apache commons-cli to parse the command line args [\#39](https://github.com/vatbub/fokLauncher/issues/39)
 - Add the option for a CLI-only mode where no GUI pops up at all [\#38](https://github.com/vatbub/fokLauncher/issues/38)
+- Add possibility to supply custom startup args to the autolaunch application [\#37](https://github.com/vatbub/fokLauncher/issues/37)
 
 **Fixed bugs:**
 
@@ -16,6 +18,7 @@
 - NullPointerException when loading the version list in the context menu [\#46](https://github.com/vatbub/fokLauncher/issues/46)
 - Improve the launch time of the launcher when the internet connection is poor [\#44](https://github.com/vatbub/fokLauncher/issues/44)
 - Meta-Buttons not centered when user uses a custom screen scaling [\#43](https://github.com/vatbub/fokLauncher/issues/43)
+- Exception when importing the very first app [\#42](https://github.com/vatbub/fokLauncher/issues/42)
 - GUILanguage cannot be reset [\#41](https://github.com/vatbub/fokLauncher/issues/41)
 - Exporting app info results in IOException [\#40](https://github.com/vatbub/fokLauncher/issues/40)
 - Crash when GUI cannot be launched and autolaunch args are supplied [\#35](https://github.com/vatbub/fokLauncher/issues/35)
@@ -26,10 +29,15 @@
 **Implemented enhancements:**
 
 - Force enabled snapshot downloads for autolaunched apps with command line parameter [\#34](https://github.com/vatbub/fokLauncher/issues/34)
+- Create a "See changelog" button [\#30](https://github.com/vatbub/fokLauncher/issues/30)
 
 **Fixed bugs:**
 
 - Window not showing when launching the launcher through the installer shortcut [\#31](https://github.com/vatbub/fokLauncher/issues/31)
+
+**Closed issues:**
+
+- Remove the option from the installer to install the launcher to the AutoStart [\#33](https://github.com/vatbub/fokLauncher/issues/33)
 
 ## [foklauncher-0.1.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.1) (2016-12-11)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.0...foklauncher-0.1.1)
@@ -76,11 +84,13 @@
 **Implemented enhancements:**
 
 - Implement a message of the day [\#17](https://github.com/vatbub/fokLauncher/issues/17)
+- Add a "Show App info" button [\#16](https://github.com/vatbub/fokLauncher/issues/16)
 - Option "Show launcher again when app quits" [\#5](https://github.com/vatbub/fokLauncher/issues/5)
 
 **Fixed bugs:**
 
 - Custom GUI language is not applied to other dialogs [\#18](https://github.com/vatbub/fokLauncher/issues/18)
+- Fix Antivirus report of the WindowsExecutable [\#15](https://github.com/vatbub/fokLauncher/issues/15)
 
 ## [foklauncher-0.0.4](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.4) (2016-09-18)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.0.3...foklauncher-0.0.4)
@@ -93,6 +103,7 @@
 
 **Implemented enhancements:**
 
+- Finish translations [\#6](https://github.com/vatbub/fokLauncher/issues/6)
 - Build a gui to delete selected artifact versions [\#3](https://github.com/vatbub/fokLauncher/issues/3)
 - Build a gui to download and launch a specific version of artifacts [\#2](https://github.com/vatbub/fokLauncher/issues/2)
 - Download artifact versions in separate folders and save reference to all downloaded versions [\#1](https://github.com/vatbub/fokLauncher/issues/1)
@@ -102,7 +113,9 @@
 - App would never exit in some cases [\#13](https://github.com/vatbub/fokLauncher/issues/13)
 - If the jar of the app is deleted, no error message is displayed [\#10](https://github.com/vatbub/fokLauncher/issues/10)
 - Infinite "Getting version info" when changing snapshot setting and no app is selected [\#9](https://github.com/vatbub/fokLauncher/issues/9)
+- Open app first time and enable snapshots, launcher wants to "Update & launch" instead of "Download & launch" [\#8](https://github.com/vatbub/fokLauncher/issues/8)
 - Infinite "Getting version info" on first launch with snapshots enabled [\#7](https://github.com/vatbub/fokLauncher/issues/7)
+- Bug on first launch [\#4](https://github.com/vatbub/fokLauncher/issues/4)
 
 ## [foklauncher-0.0.1](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.0.1) (2016-08-05)
 
