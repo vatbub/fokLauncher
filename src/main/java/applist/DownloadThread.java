@@ -9,9 +9,9 @@ package applist;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,23 +79,25 @@ public class DownloadThread extends Thread {
 
                 Version versionToDownload = getCurrentEntry().getApp().getCurrentlyInstalledVersion(getCurrentEntry().isEnableSnapshots());
                 try {
-                    if (getCurrentEntry().getVersionToDownload() == null) {
-                        // download latest
-                        if (getCurrentEntry().isEnableSnapshots()) {
-                            versionToDownload = getCurrentEntry().getApp().getLatestOnlineSnapshotVersion();
+                    if (!getCurrentEntry().isDisableDownload()) {
+                        if (getCurrentEntry().getVersionToDownload() == null) {
+                            // download latest
+                            if (getCurrentEntry().isEnableSnapshots()) {
+                                versionToDownload = getCurrentEntry().getApp().getLatestOnlineSnapshotVersion();
+                            } else {
+                                versionToDownload = getCurrentEntry().getApp().getLatestOnlineVersion();
+                            }
                         } else {
-                            versionToDownload = getCurrentEntry().getApp().getLatestOnlineVersion();
+                            versionToDownload = getCurrentEntry().getVersionToDownload();
                         }
-                    } else {
-                        versionToDownload = getCurrentEntry().getVersionToDownload();
-                    }
 
-                    while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
-                        Thread.sleep(1000);
-                    }
+                        while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
+                            Thread.sleep(1000);
+                        }
 
-                    if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
-                        cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
+                        if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
+                            cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
+                        }
                     }
                 } catch (UnknownHostException e) {
                     FOKLogger.log(DownloadThread.class.getName(), Level.SEVERE, FOKLogger.DEFAULT_ERROR_TEXT, e);

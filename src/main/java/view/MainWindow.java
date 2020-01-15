@@ -326,9 +326,9 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
         DownloadQueueEntry entryToLaunch;
         if (versionToDownload == null) {
-            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), snapshotsEnabled(), startupArgs);
+            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), snapshotsEnabled(), workOffline(), startupArgs);
         } else {
-            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), versionToDownload, snapshotsEnabled(), startupArgs);
+            entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), versionToDownload, snapshotsEnabled(), workOffline(), startupArgs);
         }
         entryToLaunch.setLaunchAfterDownload(true);
         ((DownloadQueueEntryView) entryToLaunch.getGui()).addAttachedGui(this);

@@ -31,6 +31,7 @@ public class DownloadQueueEntry {
     private boolean enableSnapshots;
     private boolean launchAfterDownload;
     private String[] startupArgs;
+    private boolean disableDownload;
 
     public DownloadQueueEntry(String... startupArgs) {
         this(null, startupArgs);
@@ -56,16 +57,25 @@ public class DownloadQueueEntry {
         this(app, gui, null, enableSnapshots, startupArgs);
     }
 
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, boolean enableSnapshots, boolean disableDownload, String... startupArgs) {
+        this(app, gui, null, enableSnapshots, disableDownload, startupArgs);
+    }
+
     public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, String... startupArgs) {
         this(app, gui, versionToDownload, false, startupArgs);
     }
 
     public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, boolean enableSnapshots, String... startupArgs) {
+        this(app, gui, versionToDownload, enableSnapshots, false, startupArgs);
+    }
+
+    public DownloadQueueEntry(App app, HidableProgressDialogWithEnqueuedNotification gui, Version versionToDownload, boolean enableSnapshots, boolean disableDownload, String... startupArgs) {
         setApp(app);
         setGui(gui);
         setEnableSnapshots(enableSnapshots);
         setVersionToDownload(versionToDownload);
         setStartupArgs(startupArgs);
+        setDisableDownload(disableDownload);
     }
 
     public App getApp() {
@@ -114,5 +124,13 @@ public class DownloadQueueEntry {
 
     public void setStartupArgs(String... startupArgs) {
         this.startupArgs = startupArgs;
+    }
+
+    public boolean isDisableDownload() {
+        return disableDownload;
+    }
+
+    public void setDisableDownload(boolean disableDownload) {
+        this.disableDownload = disableDownload;
     }
 }
