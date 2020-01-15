@@ -86,6 +86,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import static org.awaitility.Awaitility.await;
+
 @SuppressWarnings("unchecked")
 public class MainWindow implements HidableProgressDialogWithEnqueuedNotification {
     private static final ImageView linkIconView = new ImageView(new Image(MainWindow.class.getResourceAsStream("link_gray.png")));
@@ -122,6 +124,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     private Date latestProgressBarUpdate = Date.from(Instant.now());
     private Thread getAppListThread;
     private App appForAutoLaunch;
+    private boolean offlineModeCheckPerformed = false;
     @FXML
     private ListView<App> appList;
     @FXML
@@ -325,6 +328,7 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
         }
 
         DownloadQueueEntry entryToLaunch;
+        waitForOfflineCheck();
         if (versionToDownload == null) {
             entryToLaunch = new DownloadQueueEntry(appToLaunch, new DownloadQueueEntryView(this, (ListView<DownloadQueueEntryView>) downloadQueueTitledPane.getContent(), appToLaunch), snapshotsEnabled(), workOffline(), startupArgs);
         } else {
@@ -365,6 +369,10 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
      */
     public boolean workOffline() {
         return workOfflineCheckbox.isSelected();
+    }
+
+    public void waitForOfflineCheck() {
+        await().until(() -> offlineModeCheckPerformed);
     }
 
     // Handler for AnchorPane[id="AnchorPane"] onDragDetected
@@ -539,7 +547,10 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
     // Handler for Button[fx:id="launchButton"] onAction
     @FXML
     void launchButtonOnAction(@SuppressWarnings("unused") ActionEvent event) {
-        DownloadQueueEntry entry = downloadQueue.getEntryForApp(getCurrentlySelectedApp());
+        App currentApp = getCurrentlySelectedApp();
+        if (currentApp == null)
+            currentApp = appForAutoLaunch;
+        DownloadQueueEntry entry = downloadQueue.getEntryForApp(currentApp);
 
         if (!isMainDownloadRunning(entry)) {
             launchAppFromGUI(currentlySelectedApp, enableSnapshotsCheckbox.isSelected());
@@ -851,6 +862,8 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
             if (previousSelectionState != workOfflineCheckbox.isSelected()) {
                 updateLaunchButton();
             }
+
+            offlineModeCheckPerformed = true;
         }, 0, 30, TimeUnit.SECONDS);
 
         loadAppList();
