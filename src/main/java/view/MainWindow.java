@@ -52,10 +52,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -79,8 +79,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -1140,16 +1140,24 @@ public class MainWindow implements HidableProgressDialogWithEnqueuedNotification
 
     @Override
     public void operationCanceled() {
-        FOKLogger.info(MainWindow.class.getName(), "Operation cancelled.");
+        FOKLogger.info(MainWindow.class.getName(), "Operation cancelled");
         Platform.setImplicitExit(true);
         appList.setDisable(false);
         progressBar.setVisible(false);
         optionButton.disableProperty().bind(launchButton.disableProperty());
-        Platform.runLater(() -> {
-            launchButton.setProgressText("");
-            settingsGridView.setDisable(false);
-            updateLaunchButton();
-        });
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                FOKLogger.log(getClass().getName(), Level.SEVERE, "Unable to sleep", e);
+            }
+
+            Platform.runLater(() -> {
+                launchButton.setProgressText("");
+                settingsGridView.setDisable(false);
+                updateLaunchButton();
+            });
+        }).start();
     }
 
     @Override
