@@ -30,6 +30,8 @@ import java.net.UnknownHostException;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+import static org.awaitility.Awaitility.await;
+
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class DownloadThread extends Thread {
     private static int downloadThreadCounter = 0;
@@ -91,9 +93,8 @@ public class DownloadThread extends Thread {
                             versionToDownload = getCurrentEntry().getVersionToDownload();
                         }
 
-                        while (getCurrentEntry().getApp().getLockFile(versionToDownload).isLocked()) {
-                            Thread.sleep(1000);
-                        }
+                        Version finalVersionToDownload = versionToDownload;
+                        await().until(() -> !getCurrentEntry().getApp().getLockFile(finalVersionToDownload).isLocked());
 
                         if (!getCurrentEntry().getApp().isPresentOnHardDrive(versionToDownload)) {
                             cont = getCurrentEntry().getApp().download(versionToDownload, getCurrentEntry().getGui());
