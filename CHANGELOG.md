@@ -1,5 +1,17 @@
 # Change Log
 
+## [Unreleased](https://github.com/vatbub/fokLauncher/tree/HEAD)
+
+[Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.3...HEAD)
+
+**Merged pull requests:**
+
+- Bump dropwizard-metrics-datadog from 1.1.13 to 1.1.14 [\#54](https://github.com/vatbub/fokLauncher/pull/54) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump wiremock from 2.19.0 to 2.25.1 [\#53](https://github.com/vatbub/fokLauncher/pull/53) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump metrics-core from 4.0.2 to 4.1.2 [\#52](https://github.com/vatbub/fokLauncher/pull/52) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump slf4j-nop from 1.6.0 to 1.7.30 [\#51](https://github.com/vatbub/fokLauncher/pull/51) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump rome from 1.11.1 to 1.12.2 [\#50](https://github.com/vatbub/fokLauncher/pull/50) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
 ## [foklauncher-0.1.3](https://github.com/vatbub/fokLauncher/tree/foklauncher-0.1.3) (2018-08-12)
 [Full Changelog](https://github.com/vatbub/fokLauncher/compare/foklauncher-0.1.2...foklauncher-0.1.3)
 
