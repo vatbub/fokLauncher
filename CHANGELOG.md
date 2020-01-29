@@ -6,6 +6,8 @@
 
 **Merged pull requests:**
 
+- Bump parentPom from 1.0.1-SNAPSHOT to 1.0.3-SNAPSHOT [\#56](https://github.com/vatbub/fokLauncher/pull/56) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump launch4j-maven-plugin from 1.7.23 to 1.7.25 [\#55](https://github.com/vatbub/fokLauncher/pull/55) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump dropwizard-metrics-datadog from 1.1.13 to 1.1.14 [\#54](https://github.com/vatbub/fokLauncher/pull/54) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump wiremock from 2.19.0 to 2.25.1 [\#53](https://github.com/vatbub/fokLauncher/pull/53) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump metrics-core from 4.0.2 to 4.1.2 [\#52](https://github.com/vatbub/fokLauncher/pull/52) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
