@@ -6,6 +6,7 @@
 
 **Merged pull requests:**
 
+- Bump build-helper-maven-plugin from 3.0.0 to 3.1.0 [\#64](https://github.com/vatbub/fokLauncher/pull/64) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump metrics-core from 4.1.2 to 4.1.5 [\#63](https://github.com/vatbub/fokLauncher/pull/63) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump wiremock from 2.26.0 to 2.26.3 [\#62](https://github.com/vatbub/fokLauncher/pull/62) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump wiremock from 2.25.1 to 2.26.0 [\#57](https://github.com/vatbub/fokLauncher/pull/57) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
