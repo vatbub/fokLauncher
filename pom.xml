@@ -396,7 +396,7 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>4.1.6</version>
+            <version>4.1.7</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
