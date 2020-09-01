@@ -10,6 +10,8 @@
 - Bump rome from 1.12.2 to 1.15.0 [\#79](https://github.com/vatbub/fokLauncher/pull/79) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump wiremock from 2.26.3 to 2.27.1 [\#77](https://github.com/vatbub/fokLauncher/pull/77) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump build-helper-maven-plugin from 3.1.0 to 3.2.0 [\#74](https://github.com/vatbub/fokLauncher/pull/74) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump commons-io from 2.6 to 2.7 [\#71](https://github.com/vatbub/fokLauncher/pull/71) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump awaitility from 4.0.2 to 4.0.3 [\#69](https://github.com/vatbub/fokLauncher/pull/69) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump metrics-core from 4.1.6 to 4.1.7 [\#67](https://github.com/vatbub/fokLauncher/pull/67) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump maven-antrun-plugin from 1.8 to 3.0.0 [\#66](https://github.com/vatbub/fokLauncher/pull/66) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump metrics-core from 4.1.5 to 4.1.6 [\#65](https://github.com/vatbub/fokLauncher/pull/65) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
