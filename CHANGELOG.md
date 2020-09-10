@@ -6,6 +6,7 @@
 
 **Merged pull requests:**
 
+- Bump commons-io from 2.7 to 2.8.0 [\#84](https://github.com/vatbub/fokLauncher/pull/84) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump metrics-core from 4.1.7 to 4.1.12.1 [\#81](https://github.com/vatbub/fokLauncher/pull/81) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump rome from 1.12.2 to 1.15.0 [\#79](https://github.com/vatbub/fokLauncher/pull/79) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump wiremock from 2.26.3 to 2.27.1 [\#77](https://github.com/vatbub/fokLauncher/pull/77) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
