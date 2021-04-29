@@ -1,0 +1,20 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: io.dropwizard.metrics:metrics-core
+    versions:
+    - 4.1.17
+    - 4.1.18
+    - 4.1.19
+  - dependency-name: com.akathist.maven.plugins.launch4j:launch4j-maven-plugin
+    versions:
+    - 2.0.1
+  - dependency-name: com.github.vatbub:mslinks
+    versions:
+    - 1.0.6
